@@ -161,22 +161,19 @@ app.add_middleware(
 app.include_router(
     productos.router,
     prefix="/v1/internal/products",  # 🔒 Prefijo personalizado
-    tags=["internal-data"],
-    dependencies=[verify_api_key]  # Autenticación requerida
+    tags=["internal-data"]
 )
 
 app.include_router(
     familias.router,
     prefix="/v1/internal/families",  # 🔒 Prefijo personalizado
-    tags=["internal-data"],
-    dependencies=[verify_api_key]
+    tags=["internal-data"]
 )
 
 app.include_router(
     bc3.router,
     prefix="/v1/internal/bc3",  # 🔒 Prefijo personalizado
-    tags=["internal-data"],
-    dependencies=[verify_api_key]
+    tags=["internal-data"]
 )
 
 
