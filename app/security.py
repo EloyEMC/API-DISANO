@@ -68,26 +68,34 @@ class APIKeyMiddleware(BaseHTTPMiddleware):
         if request.url.path in self.EXEMPT_PATHS:
             return await call_next(request)
 
-        # Get API key from header
+        # Get API keys from headers
         api_key = request.headers.get("X-API-Key")
+        admin_api_key = request.headers.get("X-Admin-API-Key")
 
-        if not api_key:
+        # Check if we have at least one API key
+        if not api_key and not admin_api_key:
             return JSONResponse(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                content={"detail": "API Key is required. Use X-API-Key header."}
+                content={"detail": "API Key is required. Use X-API-Key or X-Admin-API-Key header."}
             )
 
-        # Validate API key
-        valid_keys = get_api_keys()
-        if api_key not in valid_keys:
-            return JSONResponse(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                content={"detail": "Invalid API Key"}
-            )
+        # Validate regular API key if provided
+        if api_key:
+            valid_keys = get_api_keys()
+            if api_key in valid_keys:
+                return await call_next(request)
 
-        # Continue with the request
-        response = await call_next(request)
-        return response
+        # Validate admin API key if provided
+        if admin_api_key:
+            valid_admin_keys = get_admin_keys()
+            if admin_api_key in valid_admin_keys:
+                return await call_next(request)
+
+        # If we get here, neither key was valid
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"detail": "Invalid API Key"}
+        )
 
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
