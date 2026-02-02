@@ -14,13 +14,23 @@ from typing import Dict
 # Load environment variables
 load_dotenv()
 
-# Configuration
-API_KEYS = os.getenv("API_KEYS", "").split(",") if os.getenv("API_KEYS") else []
-ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
-
 # Rate limiting storage (in production, use Redis)
 rate_limit_store: Dict[str, list] = defaultdict(list)
-RATE_LIMIT = int(os.getenv("RATE_LIMIT_PER_MINUTE", "30"))
+
+def get_api_keys():
+    """Get API keys from environment"""
+    keys = os.getenv("API_KEYS", "")
+    if keys:
+        return keys.split(",")
+    return []
+
+def get_environment():
+    """Get environment from settings"""
+    return os.getenv("ENVIRONMENT", "development")
+
+def get_rate_limit():
+    """Get rate limit from settings"""
+    return int(os.getenv("RATE_LIMIT_PER_MINUTE", "30"))
 
 
 class APIKeyMiddleware(BaseHTTPMiddleware):
@@ -31,7 +41,7 @@ class APIKeyMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next):
         # In development, skip API key check
-        if ENVIRONMENT == "development":
+        if get_environment() == "development":
             return await call_next(request)
 
         # Check if path is exempt
@@ -48,7 +58,8 @@ class APIKeyMiddleware(BaseHTTPMiddleware):
             )
 
         # Validate API key
-        if api_key not in API_KEYS:
+        valid_keys = get_api_keys()
+        if api_key not in valid_keys:
             return JSONResponse(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 content={"detail": "Invalid API Key"}
@@ -86,12 +97,13 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         ]
 
         # Check rate limit
-        if len(rate_limit_store[client_id]) >= RATE_LIMIT:
+        rate_limit = get_rate_limit()
+        if len(rate_limit_store[client_id]) >= rate_limit:
             return JSONResponse(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
                 content={
-                    "detail": f"Rate limit exceeded. Maximum {RATE_LIMIT} requests per minute.",
-                    "limit": RATE_LIMIT,
+                    "detail": f"Rate limit exceeded. Maximum {rate_limit} requests per minute.",
+                    "limit": rate_limit,
                     "window": "1 minute"
                 },
                 headers={
@@ -109,8 +121,8 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         response = await call_next(request)
 
         # Add rate limit headers
-        remaining = RATE_LIMIT - len(rate_limit_store[client_id])
-        response.headers["X-RateLimit-Limit"] = str(RATE_LIMIT)
+        remaining = rate_limit - len(rate_limit_store[client_id])
+        response.headers["X-RateLimit-Limit"] = str(rate_limit)
         response.headers["X-RateLimit-Remaining"] = str(remaining)
         response.headers["X-RateLimit-Reset"] = str(int(current_time + 60))
 
@@ -165,7 +177,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["Referrer-Policy"] = "no-referrer"
 
         # HSTS (only in production with HTTPS)
-        if ENVIRONMENT == "production":
+        if get_environment() == "production":
             response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
 
         return response
