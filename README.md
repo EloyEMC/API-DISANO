@@ -1,182 +1,256 @@
-# API Disano
+# API DISANO
 
-API REST para consultar productos y tarifas de Disano con FastAPI y SQLite.
+API REST para consultar productos y tarifas de Disano (8,288 productos).
 
-## 🚀 Características
+## 🌐 Producción
 
-- **FastAPI** - Framework moderno y rápido para APIs
-- **SQLite** - Base de datos ligera con 8,288 productos
-- **Documentación automática** - Swagger UI y ReDoc
-- **Filtros avanzados** - Por marca, familia, búsqueda de texto
-- **Descripciones BC3** - 5,286 productos con descripciones técnicas
-- **CORS habilitado** - Para fácil integración frontend
+**URL**: https://api.eloymartinezcuesta.com
 
-## 📋 Requisitos
+**Estado**: ✅ Activa con seguridad
 
-- Python 3.11+
-- pip
+Ver [README_PRODUCTION.md](README_PRODUCTION.md) para información completa de producción, credenciales y uso.
 
-## 🔧 Instalación
+---
+
+## 🚀 Inicio Rápido
+
+### Instalación Local
 
 ```bash
-# Clonar o navegar al proyecto
-cd /Volumes/WEBS/API_DISANO
+# Clonar repositorio
+git clone https://github.com/EloyEMC/API-DISANO.git
+cd API-DISANO
 
 # Crear entorno virtual
 python3 -m venv venv
-source venv/bin/activate  # macOS/Linux
+source venv/bin/activate
 
 # Instalar dependencias
 pip install -r requirements.txt
 ```
 
-## ▶️ Ejecutar
+### Configuración
 
 ```bash
-# Modo desarrollo con autoreload
-python app/main.py
+# Copiar archivo de entorno
+cp .env.example .env
 
-# O con uvicorn directamente
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+# Editar configuración
+nano .env
 ```
 
-La API estará disponible en:
-- **API**: http://localhost:8000
-- **Documentación Swagger**: http://localhost:8000/docs
-- **Documentación ReDoc**: http://localhost:8000/redoc
+### Ejecutar
+
+```bash
+# Modo desarrollo
+uvicorn app.main:app --reload
+
+# Modo producción (con seguridad)
+# Editar .env: ENVIRONMENT=production
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
+
+---
+
+## 📡 Endpoints
+
+### Públicos (desarrollo)
+
+```bash
+GET /health          - Health check
+GET /docs            - Documentación interactiva (Swagger UI)
+GET /redoc           - Documentación alternativa (ReDoc)
+```
+
+### Protegidos (producción)
+
+Requieren API Key via header `X-API-Key`.
+
+```bash
+GET /api/productos/          - Listado de productos
+GET /api/productos/{codigo}  - Detalle de producto
+GET /api/familias/           - Listado de familias
+GET /api/bc3/                - Datos para generar BC3
+```
+
+---
+
+## 🔒 Seguridad
+
+### Capas de Seguridad Activas en Producción
+
+| Capa | Descripción |
+|------|-------------|
+| **API Key Authentication** | Requiere header `X-API-Key` válido |
+| **Rate Limiting** | 30 peticiones/minuto por cliente |
+| **User-Agent Filtering** | Bloquea scrapers (curl, python-requests, etc.) |
+| **Security Headers** | HSTS, X-Frame-Options, X-Content-Type-Options |
+| **CORS Restringido** | Solo dominios autorizados |
+| **Documentación Oculta** | `/docs` y `/redoc` retornan 404 |
+
+### Desarrollo vs Producción
+
+- **Desarrollo** (`ENVIRONMENT=development`):
+  - Sin autenticación
+  - Documentación pública
+  - CORS permitido para todos los orígenes
+
+- **Producción** (`ENVIRONMENT=production`):
+  - API Key requerida
+  - Documentación oculta
+  - CORS restringido
+
+---
 
 ## 📁 Estructura del Proyecto
 
 ```
-API_DISANO/
+API-DISANO/
 ├── app/
-│   ├── __init__.py
 │   ├── main.py              # Aplicación FastAPI
-│   ├── database.py          # Conexión SQLite
-│   ├── models.py            # Modelos Pydantic
+│   ├── security.py          # Módulos de seguridad
+│   ├── config.py            # Configuración (pydantic-settings)
 │   └── routers/             # Endpoints
-│       ├── __init__.py
-│       ├── productos.py     # Endpoint productos
-│       ├── familias.py      # Endpoint familias
-│       └── bc3.py           # Endpoint BC3
+│       ├── productos.py     # Gestión de productos
+│       ├── familias.py      # Gestión de familias
+│       └── bc3.py           # Datos para BC3
 ├── database/
-│   └── tarifa_disano.db     # Base de datos SQLite (23MB)
-├── tests/
-├── docs/
-├── requirements.txt
-└── README.md
+│   └── tarifa_disano.db     # SQLite (8,288 productos)
+├── scripts/
+│   ├── setup-production.sh  # Configuración de producción
+│   └── verify-deployment.sh  # Verificación de estado
+└── tests/                   # Tests (pendiente)
 ```
 
-## 📊 Endpoints
+---
 
-### Productos (`/api/productos`)
+## 🛠️ Scripts Disponibles
 
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| GET | `/` | Lista de productos con filtros |
-| GET | `/{codigo}` | Obtener producto por código |
-| GET | `/marca/{marca}` | Productos por marca |
-| GET | `/familia/{familia}` | Productos por familia |
+### setup-production.sh
+Configura el entorno de producción y genera API key segura.
 
-**Filtros disponibles:**
-- `skip`: Número de registros a saltar (paginación)
-- `limit`: Número máximo de registros (1-500)
-- `marca`: Filtrar por marca
-- `familia_web`: Filtrar por familia
-- `buscar`: Buscar en descripción
-- `con_bc3`: Solo productos con BC3
-- `con_imagen`: Solo productos con imagen
-
-### Familias (`/api/familias`)
-
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| GET | `/` | Lista de todas las familias |
-| GET | `/stats` | Estadísticas de todas las familias |
-| GET | `/{familia}` | Detalles de una familia |
-
-### BC3 (`/api/bc3`)
-
-| Método | Endpoint | Descripción |
-|--------|----------|-------------|
-| GET | `/` | Estadísticas generales BC3 |
-| GET | `/columnas` | Productos tipo Columna |
-| GET | `/articulaciones` | Productos tipo Articulación |
-| GET | `/tipo/{tipo}` | Productos por tipo BC3 |
-| GET | `/{codigo}` | Descripción BC3 de un producto |
-
-## 📖 Ejemplos de Uso
-
-### Obtener todos los productos
 ```bash
-curl http://localhost:8000/api/productos
+bash scripts/setup-production.sh
 ```
 
-### Buscar producto por código
+### verify-deployment.sh
+Verifica el estado del despliegue (auto-reinicio, auto-inicio).
+
 ```bash
-curl http://localhost:8000/api/productos/33036139
+bash scripts/verify-deployment.sh
 ```
 
-### Filtrar por marca con paginación
+---
+
+## 📚 Documentación
+
+- [README_PRODUCTION.md](README_PRODUCTION.md) - Guía completa de producción
+- [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) - Guía técnica de despliegue
+- [SECURITY_DEPLOYMENT.md](SECURITY_DEPLOYMENT.md) - Guía de seguridad
+- [VERIFICACION_SERVICIO.md](VERIFICACION_SERVICIO.md) - Verificación de auto-reinicio
+
+---
+
+## 🧪 Ejemplos de Uso
+
+### curl
+
 ```bash
-curl "http://localhost:8000/api/productos?marca=Disano&skip=0&limit=50"
+# Health check
+curl https://api.eloymartinezcuesta.com/health
+
+# Productos (requiere API Key en producción)
+curl -H "X-API-Key: TU_API_KEY" \
+     -H "User-Agent: Mozilla/5.0" \
+     https://api.eloymartinezcuesta.com/api/productos/?limit=10
 ```
 
-### Buscar en descripciones
+### Python
+
+```python
+import requests
+
+API_URL = "https://api.eloymartinezcuesta.com"
+API_KEY = "tu-api-key-aqui"
+
+headers = {
+    "X-API-Key": API_KEY,
+    "User-Agent": "Mozilla/5.0"
+}
+
+# Obtener productos
+response = requests.get(f"{API_URL}/api/productos/?limit=10", headers=headers)
+productos = response.json()
+
+# Buscar por código
+codigo = "11253300"
+response = requests.get(f"{API_URL}/api/productos/{codigo}", headers=headers)
+producto = response.json()
+```
+
+---
+
+## 🔧 Configuración
+
+### Variables de Entorno
+
 ```bash
-curl "http://localhost:8000/api/productos?buscar=led"
-```
+# Entorno
+ENVIRONMENT=production              # development | production
 
-### Solo productos con BC3
-```bash
-curl "http://localhost:8000/api/productos?con_bc3=true"
-```
-
-### Obtener columnas
-```bash
-curl http://localhost:8000/api/bc3/columnas
-```
-
-### Estadísticas de familias
-```bash
-curl http://localhost:8000/api/familias/stats
-```
-
-## 📊 Base de Datos
-
-- **Total productos**: 8,288
-- **Con BC3**: 5,286 (63.8%)
-- **Con imagen**: 7,758 (93.6%)
-- **Tamaño**: 23 MB
-
-## 🔒 Variables de Entorno (Opcional)
-
-Crear `.env`:
-```
-DATABASE_PATH=database/tarifa_disano.db
-API_HOST=0.0.0.0
+# API
+API_HOST=127.0.0.1
 API_PORT=8000
+
+# Seguridad
+API_KEYS=tu-api-key-generada-aqui
+RATE_LIMIT_PER_MINUTE=30
+
+# CORS (producción)
+CORS_ORIGINS=https://tu-dominio.com,https://www.tu-dominio.com
+
+# Base de datos
+DATABASE_PATH=database/tarifa_disano.db
 ```
 
-## 🧪 Testing
+---
+
+## 📦 Deployment
+
+Ver [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) para instrucciones completas de despliegue.
+
+### Resumen Rápido
+
+1. Clonar repositorio
+2. Crear entorno virtual e instalar dependencias
+3. Configurar variables de entorno
+4. Configurar Nginx
+5. Configurar SSL (Let's Encrypt)
+6. Crear servicio systemd
+7. Iniciar servicio
+
+---
+
+## 🧪 Tests
 
 ```bash
-# Ejecutar tests
+# Ejecutar tests (pendiente de implementar)
 pytest
 
-# Con cobertura
-pytest --cov=app
+# Con coverage
+pytest --cov=app tests/
 ```
 
-## 📝 Próximos Pasos
-
-- [ ] Añadir autenticación API Key
-- [ ] Implementar caché con Redis
-- [ ] Endpoints de búsqueda avanzada
-- [ ] Exportación a CSV/Excel
-- [ ] WebSocket para actualizaciones en tiempo real
-- [ ] Dockerfile para contenedorización
+---
 
 ## 📄 Licencia
 
-Uso interno para gestión de productos Disano.
+Este proyecto es privado y confidencial. Todos los derechos reservados.
+
+---
+
+## 👤 Autor
+
+Eloy Martínez Cuesta
+
+**Última actualización**: 2 de febrero de 2026
