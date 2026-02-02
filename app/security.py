@@ -32,6 +32,27 @@ def get_rate_limit():
     return int(os.getenv("RATE_LIMIT_PER_MINUTE", "30"))
 
 
+def get_admin_keys():
+    """Get admin API keys from environment"""
+    keys = os.getenv("ADMIN_API_KEYS", "")
+    if keys:
+        return keys.split(",")
+    return []
+
+
+def verify_admin_api_key(request: Request) -> bool:
+    """Verify if request has a valid admin API key"""
+    if get_environment() == "development":
+        return True
+
+    admin_api_key = request.headers.get("X-Admin-API-Key")
+    if not admin_api_key:
+        return False
+
+    valid_admin_keys = get_admin_keys()
+    return admin_api_key in valid_admin_keys
+
+
 class APIKeyMiddleware(BaseHTTPMiddleware):
     """Middleware to validate API Key on every request"""
 

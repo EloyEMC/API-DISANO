@@ -59,3 +59,51 @@ class BC3Descripcion(BaseModel):
     descripcion_corta: Optional[str] = None
     descripcion_larga: Optional[str] = None
     product_type: Optional[str] = None
+
+
+# Modelos para endpoints de escritura (admin)
+class ProductoCreate(BaseModel):
+    """Modelo para crear un nuevo producto"""
+    codigo: str = Field(..., min_length=1, max_length=50)
+    marca: Optional[str] = None
+    referencia: Optional[str] = None
+    descripcion: str = Field(..., min_length=1)
+    pvp: Optional[float] = Field(None, ge=0)
+    imagen: Optional[str] = None
+    img_url: Optional[str] = None
+    url_ficha_tec: Optional[str] = None
+    descontinuado: bool = False
+    familia_web: Optional[str] = None
+    descripcion_corta: Optional[str] = None
+    bc3_descripcion_corta: Optional[str] = None
+    bc3_descripcion_larga: Optional[str] = None
+    bc3_product_type: Optional[str] = None
+
+
+class ProductoUpdate(BaseModel):
+    """Modelo para actualizar un producto existente"""
+    marca: Optional[str] = None
+    referencia: Optional[str] = None
+    descripcion: Optional[str] = None
+    pvp: Optional[float] = Field(None, ge=0)
+    imagen: Optional[str] = None
+    img_url: Optional[str] = None
+    url_ficha_tec: Optional[str] = None
+    descontinuado: Optional[bool] = None
+    familia_web: Optional[str] = None
+    descripcion_corta: Optional[str] = None
+    bc3_descripcion_corta: Optional[str] = None
+    bc3_descripcion_larga: Optional[str] = None
+    bc3_product_type: Optional[str] = None
+
+
+class ProductoPrecioUpdate(BaseModel):
+    """Modelo para actualizar solo el precio de un producto"""
+    pvp: float = Field(..., ge=0, description="Nuevo PVP del producto")
+
+
+class AdminResponse(BaseModel):
+    """Respuesta de operaciones admin"""
+    success: bool
+    message: str
+    data: Optional[dict] = None
