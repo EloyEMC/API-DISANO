@@ -6,13 +6,12 @@ from fastapi import Request, HTTPException, status
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 import os
-from dotenv import load_dotenv
 import time
 from collections import defaultdict
 from typing import Dict
 
-# Load environment variables
-load_dotenv()
+# Note: Don't use load_dotenv() - systemd passes env vars directly
+# from dotenv import load_dotenv
 
 # Rate limiting storage (in production, use Redis)
 rate_limit_store: Dict[str, list] = defaultdict(list)
