@@ -20,6 +20,8 @@ class ProductoBase(BaseModel):
     descontinuado: Optional[bool] = None
     familia_web: Optional[str] = Field(None, alias="Familia_WEB")
     descripcion_corta: Optional[str] = None
+    raee_a: Optional[float] = Field(None, alias="RAEE_A")
+    raee_l: Optional[float] = Field(None, alias="RAEE_L")
 
     class Config:
         populate_by_name = True
@@ -75,6 +77,8 @@ class ProductoCreate(BaseModel):
     descontinuado: bool = False
     familia_web: Optional[str] = None
     descripcion_corta: Optional[str] = None
+    raee_a: Optional[float] = None
+    raee_l: Optional[float] = None
     bc3_descripcion_corta: Optional[str] = None
     bc3_descripcion_larga: Optional[str] = None
     bc3_product_type: Optional[str] = None
@@ -92,6 +96,8 @@ class ProductoUpdate(BaseModel):
     descontinuado: Optional[bool] = None
     familia_web: Optional[str] = None
     descripcion_corta: Optional[str] = None
+    raee_a: Optional[float] = None
+    raee_l: Optional[float] = None
     bc3_descripcion_corta: Optional[str] = None
     bc3_descripcion_larga: Optional[str] = None
     bc3_product_type: Optional[str] = None
