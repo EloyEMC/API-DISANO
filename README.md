@@ -1,256 +1,254 @@
-# API DISANO
+# 📦 API DISANO
 
-API REST para consultar productos y tarifas de Disano (8,288 productos).
-
-## 🌐 Producción
-
-**URL**: https://api.eloymartinezcuesta.com
-
-**Estado**: ✅ Activa con seguridad
-
-Ver [README_PRODUCTION.md](README_PRODUCTION.md) para información completa de producción, credenciales y uso.
+API REST FastAPI para catálogo eléctrico DISANO/FOSNOVA con autenticación y BC3.
 
 ---
 
-## 🚀 Inicio Rápido
-
-### Instalación Local
+## 🚀 QUICK START
 
 ```bash
-# Clonar repositorio
+# 1. Clonar
 git clone https://github.com/EloyEMC/API-DISANO.git
 cd API-DISANO
 
-# Crear entorno virtual
+# 2. Entorno virtual
 python3 -m venv venv
 source venv/bin/activate
-
-# Instalar dependencias
 pip install -r requirements.txt
-```
 
-### Configuración
-
-```bash
-# Copiar archivo de entorno
+# 3. Configurar
 cp .env.example .env
+nano .env  # Editar API_KEYS
 
-# Editar configuración
-nano .env
-```
-
-### Ejecutar
-
-```bash
-# Modo desarrollo
+# 4. Ejecutar
 uvicorn app.main:app --reload
-
-# Modo producción (con seguridad)
-# Editar .env: ENVIRONMENT=production
-uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
+
+📍 **URL local:** http://localhost:8000
+📍 **API docs:** http://localhost:8000/docs
 
 ---
 
-## 📡 Endpoints
+## 📖 GUÍAS DE DOCUMENTACIÓN
 
-### Públicos (desarrollo)
+**Para trabajar eficientemente con este proyecto:**
 
+| Archivo | Cuándo leerlo |
+|---------|---------------|
+| **PROYECTO.md** | 🎯 PUNTO DE PARTIDA - Contexto general para la IA |
+| **VARIABLES_ENTORNO.md** | 🔐 Configurar variables de entorno |
+| **app/GUIA_DESARROLLO.md** | 📝 Modificar código en `app/` |
+| **app/routers/GUIA_ENDPOINTS.md** | 🛣️ Crear/modificar endpoints |
+| **app/security/GUIA_SEGURIDAD.md** | 🔒 Sistema de seguridad |
+| **ACCESO_VPS.md** | 🌐 Desplegar en servidor Hetzner |
+
+---
+
+## 🌐 PRODUCCIÓN
+
+**URL:** https://api.eloymartinezcuesta.com
+
+**Ejemplo de uso:**
 ```bash
-GET /health          - Health check
-GET /docs            - Documentación interactiva (Swagger UI)
-GET /redoc           - Documentación alternativa (ReDoc)
+curl -H "X-API-Key: tu-api-key" \
+     https://api.eloymartinezcuesta.com/api/productos/?limit=5
 ```
 
-### Protegidos (producción)
+**Documentación producción:** `README_PRODUCTION.md`
 
-Requieren API Key via header `X-API-Key`.
+---
 
+## 📡 ENDPOINTS PRINCIPALES
+
+| Endpoint | Auth | Descripción |
+|----------|------|-------------|
+| `GET /health` | ❌ | Health check |
+| `GET /api/productos/` | ✅ | Listar productos (filtros: limit, marca, familia, buscar) |
+| `GET /api/productos/{codigo}` | ✅ | Obtener producto por código |
+| `POST /api/admin/productos` | 🔒 | Crear producto (admin) |
+| `PUT /api/admin/productos/{codigo}` | 🔒 | Actualizar producto (admin) |
+| `GET /api/familias/` | ✅ | Listar familias |
+| `GET /api/bc3/{codigo}` | ✅ | Datos BC3 |
+
+**Leyenda:** ❌ Público | ✅ API Key | 🔒 Admin Key
+
+---
+
+## 🗄️ BASE DE DATOS
+
+**Sistema:** SQLite
+**Ubicación:** `database/tarifa_disano.db`
+**Productos:** ~8,288
+**Campos:** 38 por producto
+
+**Campos importantes:**
+- `CÓDIGO` - Código único del producto
+- `DESCRIPCION` - Descripción completa
+- `PVP_26_01_26` - Precio de venta
+- `MARCA` - Disano o Fosnova
+- `Familia_WEB` - Familia web
+- `RAEE_A`, `RAEE_L` - Residuos RAEE
+- `bc3_descripcion_corta` - Descripción BC3
+
+---
+
+## 🔒 SEGURIDAD
+
+### Autenticación
+- **Header:** `X-API-Key`
+- **Dos niveles:** Normal (consultas) / Admin (CRUD)
+
+### Rate Limiting
+- **Por cliente:** 30 requests/min
+- **Global:** 1000 requests/min
+- **Burst:** 10 requests
+
+### Protección anti-scraping
+- Detección de patrones
+- Filtrado de User-Agent
+- Bloqueo automático
+
+**Detalles:** `app/security/GUIA_SEGURIDAD.md`
+
+---
+
+## 🏗️ ARQUITECTURA
+
+```
+API_DISANO/
+├── app/                    # Código principal
+│   ├── config.py           # ⚠️ Configuración centralizada
+│   ├── models.py           # Modelos Pydantic
+│   ├── main.py              # Punto de entrada
+│   ├── routers/            # Endpoints API
+│   └── security/           # 🔒 Sistema de seguridad
+├── database/               # SQLite
+├── scripts/               # Despliegue
+├── .env.example           # Variables de entorno
+└── requirements.txt        # Dependencias
+```
+
+**Documentación estructura:** `PROYECTO.md`
+
+---
+
+## 🛠️ DESARROLLO
+
+### Modificar código
 ```bash
-GET /api/productos/          - Listado de productos
-GET /api/productos/{codigo}  - Detalle de producto
-GET /api/familias/           - Listado de familias
-GET /api/bc3/                - Datos para generar BC3
+# Ver guía completa
+cat app/GUIA_DESARROLLO.md
+
+# Ejemplo rápido
+uvicorn app.main:app --reload
+# Editar archivos en app/
+# Los cambios se recargan automáticamente
 ```
 
----
-
-## 🔒 Seguridad
-
-### Capas de Seguridad Activas en Producción
-
-| Capa | Descripción |
-|------|-------------|
-| **API Key Authentication** | Requiere header `X-API-Key` válido |
-| **Rate Limiting** | 30 peticiones/minuto por cliente |
-| **User-Agent Filtering** | Bloquea scrapers (curl, python-requests, etc.) |
-| **Security Headers** | HSTS, X-Frame-Options, X-Content-Type-Options |
-| **CORS Restringido** | Solo dominios autorizados |
-| **Documentación Oculta** | `/docs` y `/redoc` retornan 404 |
-
-### Desarrollo vs Producción
-
-- **Desarrollo** (`ENVIRONMENT=development`):
-  - Sin autenticación
-  - Documentación pública
-  - CORS permitido para todos los orígenes
-
-- **Producción** (`ENVIRONMENT=production`):
-  - API Key requerida
-  - Documentación oculta
-  - CORS restringido
-
----
-
-## 📁 Estructura del Proyecto
-
-```
-API-DISANO/
-├── app/
-│   ├── main.py              # Aplicación FastAPI
-│   ├── security.py          # Módulos de seguridad
-│   ├── config.py            # Configuración (pydantic-settings)
-│   └── routers/             # Endpoints
-│       ├── productos.py     # Gestión de productos
-│       ├── familias.py      # Gestión de familias
-│       └── bc3.py           # Datos para BC3
-├── database/
-│   └── tarifa_disano.db     # SQLite (8,288 productos)
-├── scripts/
-│   ├── setup-production.sh  # Configuración de producción
-│   └── verify-deployment.sh  # Verificación de estado
-└── tests/                   # Tests (pendiente)
-```
-
----
-
-## 🛠️ Scripts Disponibles
-
-### setup-production.sh
-Configura el entorno de producción y genera API key segura.
-
-```bash
-bash scripts/setup-production.sh
-```
-
-### verify-deployment.sh
-Verifica el estado del despliegue (auto-reinicio, auto-inicio).
-
-```bash
-bash scripts/verify-deployment.sh
-```
-
----
-
-## 📚 Documentación
-
-- [README_PRODUCTION.md](README_PRODUCTION.md) - Guía completa de producción
-- [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) - Guía técnica de despliegue
-- [SECURITY_DEPLOYMENT.md](SECURITY_DEPLOYMENT.md) - Guía de seguridad
-- [VERIFICACION_SERVICIO.md](VERIFICACION_SERVICIO.md) - Verificación de auto-reinicio
-
----
-
-## 🧪 Ejemplos de Uso
-
-### curl
-
-```bash
-# Health check
-curl https://api.eloymartinezcuesta.com/health
-
-# Productos (requiere API Key en producción)
-curl -H "X-API-Key: TU_API_KEY" \
-     -H "User-Agent: Mozilla/5.0" \
-     https://api.eloymartinezcuesta.com/api/productos/?limit=10
-```
-
-### Python
-
+### Añadir endpoint
 ```python
-import requests
+# app/routers/mis_endpoints.py
+from fastapi import APIRouter
+from app.security.api_key import get_api_key
 
-API_URL = "https://api.eloymartinezcuesta.com"
-API_KEY = "tu-api-key-aqui"
+router = APIRouter()
 
-headers = {
-    "X-API-Key": API_KEY,
-    "User-Agent": "Mozilla/5.0"
-}
+@router.get("/nuevo-endpoint")
+async def mi_endpoint(api_key: str = Depends(get_api_key)):
+    return {"mensaje": "ok"}
+```
 
-# Obtener productos
-response = requests.get(f"{API_URL}/api/productos/?limit=10", headers=headers)
-productos = response.json()
+### Testing
+```bash
+# Sin auth (401)
+curl http://localhost:8000/api/productos/
 
-# Buscar por código
-codigo = "11253300"
-response = requests.get(f"{API_URL}/api/productos/{codigo}", headers=headers)
-producto = response.json()
+# Con auth
+curl -H "X-API-Key: tu-key" http://localhost:8000/api/productos/
+
+# Con filtros
+curl -H "X-API-Key: tu-key" \
+     "http://localhost:8000/api/productos/?limit=5&marca=Disano"
 ```
 
 ---
 
-## 🔧 Configuración
+## 🚀 DESPLIEGUE
 
-### Variables de Entorno
-
+### Local
 ```bash
-# Entorno
-ENVIRONMENT=production              # development | production
-
-# API
-API_HOST=127.0.0.1
-API_PORT=8000
-
-# Seguridad
-API_KEYS=tu-api-key-generada-aqui
-RATE_LIMIT_PER_MINUTE=30
-
-# CORS (producción)
-CORS_ORIGINS=https://tu-dominio.com,https://www.tu-dominio.com
-
-# Base de datos
-DATABASE_PATH=database/tarifa_disano.db
+uvicorn app.main:app --reload
 ```
 
----
-
-## 📦 Deployment
-
-Ver [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) para instrucciones completas de despliegue.
-
-### Resumen Rápido
-
-1. Clonar repositorio
-2. Crear entorno virtual e instalar dependencias
-3. Configurar variables de entorno
-4. Configurar Nginx
-5. Configurar SSL (Let's Encrypt)
-6. Crear servicio systemd
-7. Iniciar servicio
-
----
-
-## 🧪 Tests
-
+### Producción (Hetzner VPS)
 ```bash
-# Ejecutar tests (pendiente de implementar)
-pytest
+# Ver guía completa
+cat ACCESO_VPS.md
 
-# Con coverage
+# Resumen rápido
+ssh root@46.62.227.64
+cd /var/www/API-DISANO
+git pull
+systemctl restart api-disano
+```
+
+**Detalles:** `ACCESO_VPS.md` y `DEPLOYMENT_GUIDE.md`
+
+---
+
+## 📝 REGLAS DE CONTRIBUTIÓN
+
+### ✅ HACER
+1. Usar `app/config.py` para configuración
+2. Validar con Pydantic (`app/models.py`)
+3. Usar `app/security/` para seguridad
+4. Commitear cambios: `git commit -m "feat: descripción"`
+
+### ❌ NO HACER
+1. NO hardcodear configuración
+2. NO usar `app/security.py` (legacy)
+3. NO repetir lógica de validación
+4. NO commitear `.env` (está en .gitignore)
+
+---
+
+## 🧪 TESTING
+
+### pytest (pendiente)
+```bash
+pytest tests/
 pytest --cov=app tests/
 ```
 
+### curl
+```bash
+# Health
+curl http://localhost:8000/health
+
+# Productos
+curl -H "X-API-Key: your-key" \
+     http://localhost:8000/api/productos/?limit=1
+```
+
 ---
 
-## 📄 Licencia
+## 📚 DOCUMENTACIÓN ADICIONAL
 
-Este proyecto es privado y confidencial. Todos los derechos reservados.
+| Archivo | Contenido |
+|---------|-----------|
+| `README_PRODUCTION.md` | Guía de producción completa |
+| `DEPLOYMENT_GUIDE.md` | Guía técnica de despliegue |
+| `ARQUITECTURA.md` | Arquitectura detallada |
+| `ACCESO_VPS.md` | Credenciales y acceso VPS |
 
 ---
 
-## 👤 Autor
+## 📄 LICENCIA
 
-Eloy Martínez Cuesta
+**Todos los derechos reservados** - Proyecto privado y confidencial.
 
-**Última actualización**: 2 de febrero de 2026
+---
+
+**Última actualización:** 14 Feb 2026
+**Estado:** ✅ Activo en producción
+**Versión:** 2.0
