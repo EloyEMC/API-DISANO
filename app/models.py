@@ -22,6 +22,8 @@ class ProductoBase(BaseModel):
     descripcion_corta: Optional[str] = None
     raee_a: Optional[float] = Field(None, alias="RAEE_A")
     raee_l: Optional[float] = Field(None, alias="RAEE_L")
+    bc3_descripcion_completa: Optional[str] = None
+    url_imagen: Optional[str] = None
 
     class Config:
         populate_by_name = True
@@ -61,6 +63,7 @@ class BC3Descripcion(BaseModel):
     descripcion_corta: Optional[str] = None
     descripcion_larga: Optional[str] = None
     product_type: Optional[str] = None
+    bc3_descripcion_completa: Optional[str] = None
 
 
 # Modelos para endpoints de escritura (admin)
@@ -82,6 +85,8 @@ class ProductoCreate(BaseModel):
     bc3_descripcion_corta: Optional[str] = None
     bc3_descripcion_larga: Optional[str] = None
     bc3_product_type: Optional[str] = None
+    bc3_descripcion_completa: Optional[str] = None
+    url_imagen: Optional[str] = None
 
 
 class ProductoUpdate(BaseModel):
@@ -101,6 +106,8 @@ class ProductoUpdate(BaseModel):
     bc3_descripcion_corta: Optional[str] = None
     bc3_descripcion_larga: Optional[str] = None
     bc3_product_type: Optional[str] = None
+    bc3_descripcion_completa: Optional[str] = None
+    url_imagen: Optional[str] = None
 
 
 class ProductoPrecioUpdate(BaseModel):

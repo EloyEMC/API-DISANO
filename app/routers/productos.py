@@ -171,8 +171,9 @@ async def create_producto(
                     [CÓDIGO], MARCA, REFERENCIA, DESCRIPCION,
                     [PVP_26_01_26], imagen, img_url, url_ficha_tec,
                     descontinuado, [Familia_WEB], descripcion_corta,
-                    bc3_descripcion_corta, bc3_descripcion_larga, bc3_product_type
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    bc3_descripcion_corta, bc3_descripcion_larga, bc3_product_type,
+                    bc3_descripcion_completa, url_imagen
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 producto.codigo,
                 producto.marca,
@@ -187,7 +188,9 @@ async def create_producto(
                 producto.descripcion_corta,
                 producto.bc3_descripcion_corta,
                 producto.bc3_descripcion_larga,
-                producto.bc3_product_type
+                producto.bc3_product_type,
+                producto.bc3_descripcion_completa,
+                producto.url_imagen
             ))
             conn.commit()
 
@@ -295,6 +298,14 @@ async def update_producto(
             if producto.bc3_product_type is not None:
                 update_fields.append("bc3_product_type = ?")
                 params.append(producto.bc3_product_type)
+
+            if producto.bc3_descripcion_completa is not None:
+                update_fields.append("bc3_descripcion_completa = ?")
+                params.append(producto.bc3_descripcion_completa)
+
+            if producto.url_imagen is not None:
+                update_fields.append("url_imagen = ?")
+                params.append(producto.url_imagen)
 
             if not update_fields:
                 raise HTTPException(
