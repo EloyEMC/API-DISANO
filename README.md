@@ -74,6 +74,113 @@ curl -H "X-API-Key: tu-api-key" \
 
 ---
 
+## 🔄 API Version 2.0 - Field Standardization
+
+### Overview
+The API has been updated to Version 2.0 with standardized field names following REST API best practices.
+
+### Key Changes
+
+#### Field Name Changes
+Old field names have been standardized to snake_case:
+
+| Old Name (V1) | New Name (V2) | Type |
+|-----------------|----------------|------|
+| `CÓDIGO` | `codigo` | String |
+| `DESCRIPCION` | `descripcion` | String |
+| `PVP_26_01_26` | `pvp` | Float (static) |
+| `MARCA` | `marca` | String |
+| `Familia_WEB` | `familia_web` | String |
+| `Url_ficha_tec` | `url_ficha_tec` | String |
+
+#### Important: Both PVP Fields Maintained
+- `pvp`: New static field containing current price
+- `PVP_26_01_26`: Historical field with date (kept for audit/history)
+
+### Versioned Endpoints
+
+#### V1 Endpoints (Backward Compatible)
+**Available until**: 30 days from deprecation announcement
+
+```python
+GET /api/productos/      # Uses old field names (CÓDIGO, DESCRIPCION, etc.)
+GET /api/productos/{codigo}
+```
+
+#### V2 Endpoints (New Standard)
+**Available**: Now (recommended)
+
+```python
+GET /api/productos/v2/    # Uses new field names (codigo, descripcion, pvp, etc.)
+GET /api/productos/v2/{codigo}
+```
+
+### Migration Guide
+
+For detailed migration instructions, see:
+- **Migration Guide**: `docs/MIGRATION_GUIDE_V1_V2.md`
+- **Field Mapping**: `docs/API_MIGRATION_MAPPING.json`
+
+### Benefits of V2
+
+- ✅ Standard snake_case naming (industry standard)
+- ✅ No fallback logic needed in client code
+- ✅ More readable and maintainable code
+- ✅ Complete field documentation
+- ✅ Price history maintained with both PVP fields
+- ✅ Backward compatibility during transition period
+
+### Timeline
+
+- **V1 Available**: Now until deprecation date + 30 days
+- **V2 Available**: Now (recommended)
+- **V1 Deprecation**: TBD + 30 days
+- **V1 Sunset**: TBD + 60 days
+
+### Quick Migration Example
+
+#### From V1 to V2
+
+```python
+# BEFORE (V1)
+import requests
+
+response = requests.get(
+    "https://api.eloymartinezcuesta.com/api/productos/",
+    headers={"X-API-Key": "your-api-key"}
+)
+
+for product in response:
+    codigo = product["CÓDIGO"]
+    descripcion = product["DESCRIPCION"]
+    pvp = product["PVP_26_01_26"]
+
+# AFTER (V2)
+response = requests.get(
+    "https://api.eloymartinezcuesta.com/api/productos/v2/",
+    headers={"X-API-Key": "your-api-key"}
+)
+
+for product in response:
+    codigo = product["codigo"]
+    descripcion = product["descripcion"]
+    pvp = product["pvp"]
+```
+
+### Support
+
+If you have questions about migrating to V2:
+- 📧 Email: support@api.eloymartinezcuesta.com
+- 📚 Documentation: See `docs/MIGRATION_GUIDE_V1_V2.md`
+- 🌐 Status: Check API status at https://api.eloymartinezcuesta.com/status
+
+---
+
+**Last Updated**: 2026-03-22
+**API Version**: 2.0
+
+---
+
 ## 🗄️ BASE DE DATOS
 
 **Sistema:** SQLite

@@ -18,7 +18,7 @@ Funciones:
     verify_api_key: Dependency que valida X-API-Key header
 """
 
-from fastapi import Header, HTTPException, status
+from fastapi import Header, HTTPException, status, Request
 from typing import Optional
 from app.config import get_settings
 from app.security.logging_config import logger, log_security_event
@@ -89,3 +89,42 @@ async def verify_api_key(
     logger.info(f"API Key validada correctamente: {key_preview}")
 
     return key_preview
+
+
+async def verify_admin_api_key(request: Request) -> bool:
+    """
+    Verifica si la petición tiene una admin API key válida.
+
+    Esta función verifica el header X-Admin-API-Key contra la lista de admin keys
+    configurada en settings.admin_api_keys.
+
+    Args:
+        request: Objeto Request de FastAPI
+
+    Returns:
+        bool: True si la admin API key es válida
+
+    Raises:
+        HTTPException 403: Si no hay admin API key o es inválida
+    """
+    x_admin_api_key = request.headers.get("X-Admin-API-Key")
+
+    if not x_admin_api_key:
+        logger.warning("Intento de acceso admin sin admin API key")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required. Use X-Admin-API-Key header."
+        )
+
+    if x_admin_api_key not in settings.admin_api_keys:
+        key_preview = f"{x_admin_api_key[:8]}..." if len(x_admin_api_key) > 8 else x_admin_api_key
+        logger.warning(f"Intento de acceso admin con key inválida: {key_preview}")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required. Use X-Admin-API-Key header."
+        )
+
+    key_preview = f"{x_admin_api_key[:8]}..." if len(x_admin_api_key) > 8 else x_admin_api_key
+    logger.info(f"Admin API Key validada correctamente: {key_preview}")
+
+    return True

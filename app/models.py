@@ -1,5 +1,9 @@
 """
-Modelos de datos para la API
+API DISANO - NEW PYDANTIC MODELS (V2.0)
+
+Migrated to snake_case standard naming convention.
+
+This file replaces app/models.py with standardized field names.
 """
 
 from pydantic import BaseModel, Field
@@ -7,30 +11,357 @@ from typing import Optional
 from datetime import datetime
 
 
-class ProductoBase(BaseModel):
-    """Modelo base de producto"""
-    codigo: str = Field(..., alias="CÓDIGO")
-    marca: Optional[str] = None
-    referencia: Optional[str] = None
-    descripcion: Optional[str] = Field(None, alias="DESCRIPCION")
-    pvp: Optional[float] = Field(None, alias="PVP_26_01_26")
-    imagen: Optional[str] = None
-    img_url: Optional[str] = None
-    url_ficha_tec: Optional[str] = None
-    descontinuado: Optional[bool] = None
-    familia_web: Optional[str] = Field(None, alias="Familia_WEB")
-    descripcion_corta: Optional[str] = None
-    raee_a: Optional[float] = Field(None, alias="RAEE_A")
-    raee_l: Optional[float] = Field(None, alias="RAEE_L")
-    bc3_descripcion_completa: Optional[str] = None
-    url_imagen: Optional[str] = None
+class ProductoBaseV2(BaseModel):
+    """
+    Modelo base de producto V2.0
+
+    Nombres de campos estandarizados a snake_case
+    siguiendo mejores prácticas de APIs REST.
+    """
+
+    # ============================================
+    # IDENTIFICATION FIELDS (snake_case)
+    # ============================================
+    codigo: str = Field(
+        ...,
+        description="Código del producto",
+        min_length=1,
+        max_length=50
+    )
+    codigo_web: Optional[str] = Field(
+        None,
+        description="Código web"
+    )
+    marca: Optional[str] = Field(
+        None,
+        description="Marca del producto"
+    )
+    referencia: Optional[str] = Field(
+        None,
+        description="Referencia"
+    )
+    ean13: Optional[float] = Field(
+        None,
+        description="Código EAN 13"
+    )
+
+    # ============================================
+    # DESCRIPTION FIELDS (snake_case)
+    # ============================================
+    descripcion: Optional[str] = Field(
+        None,
+        description="Descripción del producto"
+    )
+    descripcion_corta: Optional[str] = Field(
+        None,
+        description="Descripción corta"
+    )
+
+    # ============================================
+    # PRICE FIELDS (static + historical)
+    # ============================================
+    pvp: Optional[float] = Field(
+        None,
+        description="Precio de venta público actual (static field)",
+        ge=0
+    )
+    pvp_by_date: Optional[float] = Field(
+        None,
+        alias="PVP_26_01_26",
+        description="Precio histórico con fecha en nombre (PVP_DD_MM_YY). Mantenido para auditoría y referencia histórica."
+    )
+
+    # ============================================
+    # UNIT FIELDS (snake_case)
+    # ============================================
+    up_log: Optional[float] = Field(
+        None,
+        description="Unidades por log"
+    )
+    u_caja: Optional[int] = Field(
+        None,
+        description="Unidades por caja",
+        ge=0
+    )
+
+    # ============================================
+    # CLASSIFICATION FIELDS (snake_case)
+    # ============================================
+    dto: Optional[str] = Field(
+        None,
+        description="DTO"
+    )
+    clase_etim: Optional[str] = Field(
+        None,
+        description="Clase ETIM"
+    )
+
+    # ============================================
+    # DIMENSION FIELDS - WEIGHTS (snake_case)
+    # ============================================
+    peso_bruto_kg: Optional[float] = Field(
+        None,
+        description="Peso bruto en KG"
+    )
+    peso_bruto_gr: Optional[float] = Field(
+        None,
+        description="Peso bruto en gramos"
+    )
+    peso_neto_kg: Optional[float] = Field(
+        None,
+        description="Peso neto en KG"
+    )
+    peso_neto_gr: Optional[float] = Field(
+        None,
+        description="Peso neto en gramos"
+    )
+
+    # ============================================
+    # DIMENSION FIELDS - LENGTHS (snake_case)
+    # ============================================
+    longitud_m: Optional[float] = Field(
+        None,
+        description="Longitud en metros"
+    )
+    longitud_mm: Optional[float] = Field(
+        None,
+        description="Longitud en milímetros"
+    )
+    ancho_m: Optional[float] = Field(
+        None,
+        description="Ancho en metros"
+    )
+    ancho_mm: Optional[float] = Field(
+        None,
+        description="Ancho en milímetros"
+    )
+    alto_m: Optional[float] = Field(
+        None,
+        description="Alto en metros"
+    )
+    altura_mm: Optional[float] = Field(
+        None,
+        description="Altura en milímetros"
+    )
+
+    # ============================================
+    # DIMENSION FIELDS - VOLUMES (snake_case)
+    # ============================================
+    volumen_dm3: Optional[float] = Field(
+        None,
+        description="Volumen en dm³"
+    )
+    cm3: Optional[float] = Field(
+        None,
+        description="Volumen en cm³"
+    )
+
+    # ============================================
+    # CLASSIFICATION FIELDS (snake_case)
+    # ============================================
+    Serie_familia_1: Optional[str] = Field(
+        None,
+        description="Serie familia 1"
+    )
+    familia_web: Optional[str] = Field(
+        None,
+        description="Familia web"
+    )
+    familia_catalogo: Optional[str] = Field(
+        None,
+        description="Familia catálogo"
+    )
+    familia_catalogo_ptl: Optional[str] = Field(
+        None,
+        description="Familia catálogo PTL"
+    )
+
+    # ============================================
+    # IMAGE FIELDS (snake_case)
+    # ============================================
+    imagen: Optional[str] = Field(
+        None,
+        description="Nombre de imagen"
+    )
+    img_url: Optional[str] = Field(
+        None,
+        description="URL de imagen optimizada"
+    )
+    url_imagen: Optional[str] = Field(
+        None,
+        description="URL de imagen directa"
+    )
+
+    # ============================================
+    # TECHNICAL SHEET FIELDS (snake_case)
+    # ============================================
+    url_ficha_tec: Optional[str] = Field(
+        None,
+        description="URL de ficha técnica"
+    )
+
+    # ============================================
+    # STATUS FIELDS (snake_case)
+    # ============================================
+    descontinuado: Optional[bool] = Field(
+        None,
+        description="Producto discontinuado"
+    )
+
+    # ============================================
+    # RAEE FIELDS (standard, keeping as is)
+    # ============================================
+    raee_a: Optional[float] = Field(
+        None,
+        description="RAEE Aparatos (€)"
+    )
+    raee_l: Optional[float] = Field(
+        None,
+        description="RAEE Lámparas (€)"
+    )
+    raee_t: Optional[float] = Field(
+        None,
+        description="RAEE Total (€)"
+    )
+
+    class Config:
+        populate_by_name = True
+        json_schema_extra = {
+            "example": {
+                "codigo": "33036139",
+                "descripcion": "3275 MINISTELVIO LED 67W CLD RAL7021 3000K",
+                "pvp": 676.0,
+                "PVP_26_01_26": 676.0,
+                "marca": "Disano",
+                "familia_web": "Luminarias viales"
+            }
+        }
+
+
+class ProductoV2(ProductoBaseV2):
+    """
+    Modelo completo de producto V2.0
+
+    Incluye campos BC3 con nombres estandarizados.
+    """
+
+    # ============================================
+    # BC3 FIELDS (snake_case, standard format)
+    # ============================================
+    bc3_descripcion_corta: Optional[str] = Field(
+        None,
+        description="Descripción BC3 corta"
+    )
+    bc3_descripcion_larga: Optional[str] = Field(
+        None,
+        description="Descripción BC3 larga"
+    )
+    bc3_product_type: Optional[str] = Field(
+        None,
+        description="Tipo de producto BC3"
+    )
+    bc3_descripcion_completa: Optional[str] = Field(
+        None,
+        description="Descripción BC3 completa"
+    )
+    bc3_processed_at: Optional[datetime] = Field(
+        None,
+        description="Fecha de procesamiento BC3"
+    )
 
     class Config:
         populate_by_name = True
 
 
-class Producto(ProductoBase):
-    """Modelo completo de producto con BC3"""
+class ProductoListV2(BaseModel):
+    """
+    Modelo para lista de productos V2.0
+
+    Nombres estandarizados para paginación.
+    """
+    total: int = Field(..., description="Total de productos")
+    page: int = Field(..., description="Número de página actual")
+    page_size: int = Field(..., description="Elementos por página")
+    items: list[ProductoV2] = Field(..., description="Lista de productos")
+
+
+class FamiliaStatsV2(BaseModel):
+    """
+    Estadísticas de familia V2.0
+    """
+    familia: str = Field(..., description="Nombre de familia")
+    total_productos: int = Field(..., description="Total productos en familia")
+    con_bc3: int = Field(..., description="Productos con descripción BC3")
+    con_imagen: int = Field(..., description="Productos con imagen")
+    descontinuados: int = Field(..., description="Productos discontinuados")
+
+
+class BC3DescripcionV2(BaseModel):
+    """
+    Descripción BC3 V2.0
+    """
+    codigo: str = Field(..., description="Código del producto")
+    descripcion_corta: Optional[str] = Field(
+        None,
+        description="Descripción BC3 corta"
+    )
+    descripcion_larga: Optional[str] = Field(
+        None,
+        description="Descripción BC3 larga"
+    )
+    product_type: Optional[str] = Field(
+        None,
+        description="Tipo de producto"
+    )
+    bc3_descripcion_completa: Optional[str] = Field(
+        None,
+        description="Descripción BC3 completa"
+    )
+
+
+# ============================================
+# BACKWARD COMPATIBILITY MODELS (V1)
+# ============================================
+
+class ProductoBaseV1(BaseModel):
+    """
+    Modelo base de producto V1.0 (BACKWARD COMPATIBLE)
+
+    Mantiene nombres antiguos para sistemas que aún los usan.
+    """
+    CÓDIGO: Optional[str] = Field(None, alias="codigo")
+    marca: Optional[str] = None
+    referencia: Optional[str] = None
+    DESCRIPCION: Optional[str] = Field(None, alias="descripcion")
+    pvp: Optional[float] = Field(
+        None,
+        description="Precio de venta público actual (static field)",
+        ge=0
+    )
+    PVP_26_01_26: Optional[float] = Field(
+        None,
+        alias="pvp_by_date",
+        description="Precio histórico con fecha en nombre (PVP_DD_MM_YY). Mantenido para auditoría y referencia histórica."
+    )
+    imagen: Optional[str] = None
+    img_url: Optional[str] = None
+    Url_ficha_tec: Optional[str] = Field(None, alias="url_ficha_tec")
+    descontinuado: Optional[bool] = None
+    Familia_WEB: Optional[str] = Field(None, alias="familia_web")
+    descripcion_corta: Optional[str] = None
+    RAEE_A: Optional[float] = None
+    RAEE_L: Optional[float] = None
+
+    class Config:
+        populate_by_name = True
+
+
+class ProductoV1(ProductoBaseV1):
+    """
+    Modelo completo de producto V1.0 (BACKWARD COMPATIBLE)
+
+    Mantiene compatibilidad con sistemas que usan nombres antiguos.
+    """
     bc3_descripcion_corta: Optional[str] = None
     bc3_descripcion_larga: Optional[str] = None
     bc3_product_type: Optional[str] = None
@@ -40,40 +371,26 @@ class Producto(ProductoBase):
         populate_by_name = True
 
 
-class ProductoList(BaseModel):
-    """Modelo para lista de productos con paginación"""
-    total: int
-    page: int
-    page_size: int
-    items: list[Producto]
+# ============================================
+# ADMIN MODELS (create/update)
+# ============================================
 
+class ProductoCreateV2(BaseModel):
+    """
+    Modelo para crear producto V2.0
 
-class FamiliaStats(BaseModel):
-    """Estadísticas de familia"""
-    familia: str
-    total_productos: int
-    con_bc3: int
-    con_imagen: int
-    descontinuados: int
-
-
-class BC3Descripcion(BaseModel):
-    """Descripción BC3"""
-    codigo: str
-    descripcion_corta: Optional[str] = None
-    descripcion_larga: Optional[str] = None
-    product_type: Optional[str] = None
-    bc3_descripcion_completa: Optional[str] = None
-
-
-# Modelos para endpoints de escritura (admin)
-class ProductoCreate(BaseModel):
-    """Modelo para crear un nuevo producto"""
+    Usa nombres estandarizados snake_case.
+    """
     codigo: str = Field(..., min_length=1, max_length=50)
     marca: Optional[str] = None
     referencia: Optional[str] = None
     descripcion: str = Field(..., min_length=1)
-    pvp: Optional[float] = Field(None, ge=0)
+    pvp: Optional[float] = Field(None, ge=0, description="Precio de venta público actual (static field)")
+    pvp_by_date: Optional[float] = Field(
+        None,
+        alias="PVP_26_01_26",
+        description="Precio histórico con fecha en nombre (PVP_DD_MM_YY). Mantenido para auditoría y referencia histórica."
+    )
     imagen: Optional[str] = None
     img_url: Optional[str] = None
     url_ficha_tec: Optional[str] = None
@@ -88,13 +405,28 @@ class ProductoCreate(BaseModel):
     bc3_descripcion_completa: Optional[str] = None
     url_imagen: Optional[str] = None
 
+    # Dimensions (optional for brevity)
+    peso_bruto_kg: Optional[float] = None
+    longitud_m: Optional[float] = None
+    ancho_m: Optional[float] = None
+    alto_m: Optional[float] = None
 
-class ProductoUpdate(BaseModel):
-    """Modelo para actualizar un producto existente"""
+
+class ProductoUpdateV2(BaseModel):
+    """
+    Modelo para actualizar producto V2.0
+
+    Todos los campos opcionales para actualización parcial.
+    """
     marca: Optional[str] = None
     referencia: Optional[str] = None
     descripcion: Optional[str] = None
-    pvp: Optional[float] = Field(None, ge=0)
+    pvp: Optional[float] = Field(None, ge=0, description="Precio de venta público actual (static field)")
+    pvp_by_date: Optional[float] = Field(
+        None,
+        alias="PVP_26_01_26",
+        description="Precio histórico con fecha en nombre (PVP_DD_MM_YY). Mantenido para auditoría y referencia histórica."
+    )
     imagen: Optional[str] = None
     img_url: Optional[str] = None
     url_ficha_tec: Optional[str] = None
@@ -110,13 +442,51 @@ class ProductoUpdate(BaseModel):
     url_imagen: Optional[str] = None
 
 
-class ProductoPrecioUpdate(BaseModel):
-    """Modelo para actualizar solo el precio de un producto"""
+class ProductoPrecioUpdateV2(BaseModel):
+    """
+    Modelo para actualizar precio V2.0
+
+    Campo pvp estático (sin fecha en nombre).
+    """
     pvp: float = Field(..., ge=0, description="Nuevo PVP del producto")
 
 
+class AdminResponseV2(BaseModel):
+    """
+    Respuesta de operaciones admin V2.0
+    """
+    success: bool = Field(..., description="Indica si la operación fue exitosa")
+    message: str = Field(..., description="Mensaje de respuesta")
+    data: Optional[dict] = Field(None, description="Datos adicionales")
+
+
 class AdminResponse(BaseModel):
-    """Respuesta de operaciones admin"""
+    """Respuesta de operaciones admin (legacy - for backward compatibility)"""
     success: bool
     message: str
     data: Optional[dict] = None
+
+
+# ============================================
+# EXPORT LIST (for easy reference)
+# ============================================
+
+__all__ = [
+    # V2.0 Models (New standard)
+    "ProductoBaseV2",
+    "ProductoV2",
+    "ProductoListV2",
+    "FamiliaStatsV2",
+    "BC3DescripcionV2",
+
+    # V1.0 Models (Backward compatibility)
+    "ProductoBaseV1",
+    "ProductoV1",
+
+    # Admin Models
+    "ProductoCreateV2",
+    "ProductoUpdateV2",
+    "ProductoPrecioUpdateV2",
+    "AdminResponseV2",
+    "AdminResponse",
+]

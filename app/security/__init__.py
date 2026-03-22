@@ -30,7 +30,7 @@ Uso típico:
         pass
 """
 
-from app.security.api_key import verify_api_key
+from app.security.api_key import verify_api_key, verify_admin_api_key
 from app.security.rate_limiter import limiter, get_api_key_identifier, rate_limit_exceeded_handler
 from app.security.user_agent_filter import is_user_agent_allowed, get_user_agent_info
 from app.security.scraping_detector import ScrapingDetector, detector
@@ -39,6 +39,7 @@ from app.security.logging_config import logger, setup_logging, log_access_reques
 __all__ = [
     # API Key
     "verify_api_key",
+    "verify_admin_api_key",
 
     # Rate Limiting
     "limiter",

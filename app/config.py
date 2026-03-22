@@ -31,6 +31,7 @@ class Settings(BaseSettings):
     # Security - API Keys
     api_keys: List[str] = []
     api_key_header: str = "X-API-Key"
+    admin_api_keys: List[str] = []
 
     # Security - Rate Limiting
     rate_limit_enabled: bool = True
