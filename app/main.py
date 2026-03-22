@@ -6,7 +6,7 @@ FastAPI con SQLite - CON SEGURIDAD
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import productos, familias, bc3
-from app.security import (
+from app.middleware import (
     APIKeyMiddleware,
     RateLimitMiddleware,
     UserAgentMiddleware,
