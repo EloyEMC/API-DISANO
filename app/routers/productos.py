@@ -262,29 +262,6 @@ async def get_productos_v2(
         return [map_row_to_v2(row) for row in rows]
 
 
-@router.get("/v2/{codigo}", response_model=ProductoV2)
-async def get_producto_v2(codigo: str):
-    """
-    Obtener un producto V2 por su código.
-
-    API versión 2 (nombres estándar snake_case).
-    Usa campos snake_case: codigo, descripcion, pvp.
-
-    - **codigo**: Código del producto (ej: "33036139")
-    """
-    with get_db_connection() as conn:
-        cursor = conn.execute(
-            "SELECT * FROM productos WHERE [CÓDIGO] = ?",
-            (codigo,)
-        )
-        row = cursor.fetchone()
-
-        if not row:
-            raise HTTPException(status_code=404, detail=f"Producto {codigo} no encontrado")
-
-        return map_row_to_v2(row)
-
-
 @router.get("/v2/marca/{marca}", response_model=List[ProductoV2])
 async def get_productos_por_marca_v2(
     marca: str,
@@ -325,6 +302,29 @@ async def get_productos_por_familia_v2(
         )
         rows = cursor.fetchall()
         return [dict(row) for row in rows]
+
+
+@router.get("/v2/{codigo}", response_model=ProductoV2)
+async def get_producto_v2(codigo: str):
+    """
+    Obtener un producto V2 por su código.
+
+    API versión 2 (nombres estándar snake_case).
+    Usa campos snake_case: codigo, descripcion, pvp.
+
+    - **codigo**: Código del producto (ej: "33036139")
+    """
+    with get_db_connection() as conn:
+        cursor = conn.execute(
+            "SELECT * FROM productos WHERE [CÓDIGO] = ?",
+            (codigo,)
+        )
+        row = cursor.fetchone()
+
+        if not row:
+            raise HTTPException(status_code=404, detail=f"Producto {codigo} no encontrado")
+
+        return map_row_to_v2(row)
 
 
 # =============================================================================
