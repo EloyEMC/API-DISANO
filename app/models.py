@@ -262,7 +262,7 @@ class ProductoBaseV2(BaseModel):
 
     class Config:
         populate_by_name = True
-        by_alias = True  # Force serialization with field names (snake_case), not aliases
+        by_alias = False  # Serialize with field names (snake_case), not database aliases (UPPERCASE)
         json_schema_extra = {
             "example": {
                 "codigo": "33036139",
