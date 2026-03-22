@@ -18,6 +18,69 @@ router = APIRouter()
 
 
 # =============================================================================
+# HELPER FUNCTIONS
+# =============================================================================
+
+def map_row_to_v2(row: sqlite3.Row) -> dict:
+    """
+    Convierte una fila de la base de datos (columnas UPPERCASE) al formato V2 (snake_case).
+
+    Mapea columnas de la base de datos con nombres UPPERCASE (CÓDIGO, MARCA, etc.)
+    a nombres de campos V2 en snake_case (codigo, marca, etc.).
+
+    Args:
+        row: Fila de SQLite (sqlite3.Row)
+
+    Returns:
+        dict: Diccionario con campos V2
+    """
+    return {
+        "codigo": row["CÓDIGO"],
+        "codigo_web": row.get("[CÓDIGO WEB]"),
+        "marca": row.get("MARCA"),
+        "referencia": row.get("REFERENCIA"),
+        "ean13": row.get("[EAN 13]"),
+        "descripcion": row.get("DESCRIPCION"),
+        "descripcion_corta": row.get("descripcion_corta"),
+        "pvp": row.get("PVP_26_01_26"),
+        "pvp_by_date": row.get("PVP_26_01_26"),
+        "up_log": row.get("[U.P.LOG]"),
+        "u_caja": row.get("[U.CAJA]"),
+        "dto": row.get("[DTO.]"),
+        "clase_etim": row.get("[CLASE ETIM]"),
+        "peso_bruto_kg": row.get("[Peso bruto KG]"),
+        "peso_bruto_gr": row.get("[Peso bruto GR]"),
+        "peso_neto_kg": row.get("[Peso neto KG]"),
+        "peso_neto_gr": row.get("[Peso neto GR]"),
+        "longitud_m": row.get("[Longitud M]"),
+        "longitud_mm": row.get("[Longitud MM]"),
+        "ancho_m": row.get("[Ancho M]"),
+        "ancho_mm": row.get("[Ancho MM]"),
+        "alto_m": row.get("[Alto M]"),
+        "altura_mm": row.get("[Altura MM]"),
+        "volumen_dm3": row.get("[Volumen DM3]"),
+        "cm3": row.get("CM3"),
+        "serie_familia_1": row.get("Serie_familia_1"),
+        "familia_web": row.get("Familia_WEB"),
+        "familia_catalogo": row.get("Familia_Catalogo"),
+        "familia_catalogo_ptl": row.get("Familia_Catalogo_PTL"),
+        "imagen": row.get("imagen"),
+        "url_ficha_tec": row.get("Url_ficha_tec"),
+        "descontinuado": bool(row.get("descontinuado", 0)),
+        "img_url": row.get("img_url"),
+        "raee_a": row.get("RAEE_A"),
+        "raee_l": row.get("RAEE_L"),
+        "raee_t": row.get("RAEE_T"),
+        "bc3_descripcion_corta": row.get("bc3_descripcion_corta"),
+        "bc3_descripcion_larga": row.get("bc3_descripcion_larga"),
+        "bc3_product_type": row.get("bc3_product_type"),
+        "bc3_descripcion_completa": row.get("bc3_descripcion_completa"),
+        "bc3_processed_at": row.get("bc3_processed_at"),
+        "url_imagen": row.get("img_url")  # V2.0: url_imagen = img_url (alias)
+    }
+
+
+# =============================================================================
 # ENDPOINTS DE LECTURA (PÚBLICOS)
 # =============================================================================
 
@@ -123,28 +186,7 @@ async def get_productos_por_marca(
             (marca, limit, skip)
         )
         rows = cursor.fetchall()
-        return [dict(row) for row in rows]
-
-
-@router.get("/familia/{familia}", response_model=List[ProductoV1])
-async def get_productos_por_familia(
-    familia: str,
-    skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=500)
-):
-    """
-    Obtener todos los productos V1 de una familia.
-
-    API versión 1 (nombres antiguos - backward compatible).
-    Usa campos con mayúsculas: CÓDIGO, DESCRIPCION, PVP_26_01_26.
-    """
-    with get_db_connection() as conn:
-        cursor = conn.execute(
-            "SELECT * FROM productos WHERE [Familia_WEB] = ? ORDER BY [CÓDIGO] LIMIT ? OFFSET ?",
-            (familia, limit, skip)
-        )
-        rows = cursor.fetchall()
-        return [dict(row) for row in rows]
+        return [map_row_to_v2(row) for row in rows]
 
 
 # =============================================================================
@@ -209,7 +251,7 @@ async def get_productos_v2(
         cursor = conn.execute(query, params)
         rows = cursor.fetchall()
 
-        return [dict(row) for row in rows]
+        return [map_row_to_v2(row) for row in rows]
 
 
 @router.get("/v2/{codigo}", response_model=ProductoV2)
@@ -232,7 +274,7 @@ async def get_producto_v2(codigo: str):
         if not row:
             raise HTTPException(status_code=404, detail=f"Producto {codigo} no encontrado")
 
-        return dict(row)
+        return map_row_to_v2(row)
 
 
 @router.get("/v2/marca/{marca}", response_model=List[ProductoV2])
@@ -253,7 +295,7 @@ async def get_productos_por_marca_v2(
             (marca, limit, skip)
         )
         rows = cursor.fetchall()
-        return [dict(row) for row in rows]
+        return [map_row_to_v2(row) for row in rows]
 
 
 @router.get("/v2/familia/{familia}", response_model=List[ProductoV2])
