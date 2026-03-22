@@ -26,28 +26,23 @@ class ProductoBaseV2(BaseModel):
         ...,
         description="Código del producto",
         min_length=1,
-        max_length=50,
-        alias="CÓDIGO"
+        max_length=50
     )
     codigo_web: Optional[str] = Field(
         None,
-        description="Código web",
-        alias="CODIGO_WEB"
+        description="Código web"
     )
     marca: Optional[str] = Field(
         None,
-        description="Marca del producto",
-        alias="MARCA"
+        description="Marca del producto"
     )
     referencia: Optional[str] = Field(
         None,
-        description="Referencia",
-        alias="REFERENCIA"
+        description="Referencia"
     )
     ean13: Optional[float] = Field(
         None,
-        description="Código EAN 13",
-        alias="EAN13"
+        description="Código EAN 13"
     )
 
     # ============================================
@@ -55,13 +50,11 @@ class ProductoBaseV2(BaseModel):
     # ============================================
     descripcion: Optional[str] = Field(
         None,
-        description="Descripción del producto",
-        alias="DESCRIPCION"
+        description="Descripción del producto"
     )
     descripcion_corta: Optional[str] = Field(
         None,
-        description="Descripción corta",
-        alias="DESCRIPCION_CORTA"
+        description="Descripción corta"
     )
 
     # ============================================
@@ -70,8 +63,7 @@ class ProductoBaseV2(BaseModel):
     pvp: Optional[float] = Field(
         None,
         description="Precio de venta público actual (static field)",
-        ge=0,
-        alias="PVP"
+        ge=0
     )
     pvp_by_date: Optional[float] = Field(
         None,
@@ -84,14 +76,12 @@ class ProductoBaseV2(BaseModel):
     # ============================================
     up_log: Optional[float] = Field(
         None,
-        description="Unidades por log",
-        alias="UP_LOG"
+        description="Unidades por log"
     )
     u_caja: Optional[int] = Field(
         None,
         description="Unidades por caja",
-        ge=0,
-        alias="U_CAJA"
+        ge=0
     )
 
     # ============================================
@@ -99,13 +89,11 @@ class ProductoBaseV2(BaseModel):
     # ============================================
     dto: Optional[str] = Field(
         None,
-        description="DTO",
-        alias="DTO"
+        description="DTO"
     )
     clase_etim: Optional[str] = Field(
         None,
-        description="Clase ETIM",
-        alias="CLASE_ETIM"
+        description="Clase ETIM"
     )
 
     # ============================================
@@ -113,23 +101,19 @@ class ProductoBaseV2(BaseModel):
     # ============================================
     peso_bruto_kg: Optional[float] = Field(
         None,
-        description="Peso bruto en KG",
-        alias="PESO_BRUTO_KG"
+        description="Peso bruto en KG"
     )
     peso_bruto_gr: Optional[float] = Field(
         None,
-        description="Peso bruto en gramos",
-        alias="PESO_BRUTO_GR"
+        description="Peso bruto en gramos"
     )
     peso_neto_kg: Optional[float] = Field(
         None,
-        description="Peso neto en KG",
-        alias="PESO_NETO_KG"
+        description="Peso neto en KG"
     )
     peso_neto_gr: Optional[float] = Field(
         None,
-        description="Peso neto en gramos",
-        alias="PESO_NETO_GR"
+        description="Peso neto en gramos"
     )
 
     # ============================================
@@ -137,33 +121,27 @@ class ProductoBaseV2(BaseModel):
     # ============================================
     longitud_m: Optional[float] = Field(
         None,
-        description="Longitud en metros",
-        alias="LONGITUD_M"
+        description="Longitud en metros"
     )
     longitud_mm: Optional[float] = Field(
         None,
-        description="Longitud en milímetros",
-        alias="LONGITUD_MM"
+        description="Longitud en milímetros"
     )
     ancho_m: Optional[float] = Field(
         None,
-        description="Ancho en metros",
-        alias="ANCHO_M"
+        description="Ancho en metros"
     )
     ancho_mm: Optional[float] = Field(
         None,
-        description="Ancho en milímetros",
-        alias="ANCHO_MM"
+        description="Ancho en milímetros"
     )
     alto_m: Optional[float] = Field(
         None,
-        description="Alto en metros",
-        alias="ALTO_M"
+        description="Alto en metros"
     )
     altura_mm: Optional[float] = Field(
         None,
-        description="Altura en milímetros",
-        alias="ALTURA_MM"
+        description="Altura en milímetros"
     )
 
     # ============================================
@@ -171,13 +149,11 @@ class ProductoBaseV2(BaseModel):
     # ============================================
     volumen_dm3: Optional[float] = Field(
         None,
-        description="Volumen en dm³",
-        alias="VOLUMEN_DM3"
+        description="Volumen en dm³"
     )
     cm3: Optional[float] = Field(
         None,
-        description="Volumen en cm³",
-        alias="CM3"
+        description="Volumen en cm³"
     )
 
     # ============================================
@@ -185,23 +161,19 @@ class ProductoBaseV2(BaseModel):
     # ============================================
     Serie_familia_1: Optional[str] = Field(
         None,
-        description="Serie familia 1",
-        alias="SERIE_FAMILIA_1"
+        description="Serie familia 1"
     )
     familia_web: Optional[str] = Field(
         None,
-        description="Familia web",
-        alias="FAMILIA_WEB"
+        description="Familia web"
     )
     familia_catalogo: Optional[str] = Field(
         None,
-        description="Familia catálogo",
-        alias="FAMILIA_CATALOGO"
+        description="Familia catálogo"
     )
     familia_catalogo_ptl: Optional[str] = Field(
         None,
-        description="Familia catálogo PTL",
-        alias="FAMILIA_CATALOGO_PTL"
+        description="Familia catálogo PTL"
     )
 
     # ============================================
@@ -209,18 +181,15 @@ class ProductoBaseV2(BaseModel):
     # ============================================
     imagen: Optional[str] = Field(
         None,
-        description="Nombre de imagen",
-        alias="IMAGEN"
+        description="Nombre de imagen"
     )
     img_url: Optional[str] = Field(
         None,
-        description="URL de imagen optimizada",
-        alias="IMG_URL"
+        description="URL de imagen optimizada"
     )
     url_imagen: Optional[str] = Field(
         None,
-        description="URL de imagen directa",
-        alias="URL_IMAGEN"
+        description="URL de imagen directa"
     )
 
     # ============================================
@@ -228,8 +197,7 @@ class ProductoBaseV2(BaseModel):
     # ============================================
     url_ficha_tec: Optional[str] = Field(
         None,
-        description="URL de ficha técnica",
-        alias="URL_FICHA_TEC"
+        description="URL de ficha técnica"
     )
 
     # ============================================
@@ -237,8 +205,7 @@ class ProductoBaseV2(BaseModel):
     # ============================================
     descontinuado: Optional[bool] = Field(
         None,
-        description="Producto discontinuado",
-        alias="DESCONTINUADO"
+        description="Producto discontinuado"
     )
 
     # ============================================
@@ -246,18 +213,15 @@ class ProductoBaseV2(BaseModel):
     # ============================================
     raee_a: Optional[float] = Field(
         None,
-        description="RAEE Aparatos (€)",
-        alias="RAEE_A"
+        description="RAEE Aparatos (€)"
     )
     raee_l: Optional[float] = Field(
         None,
-        description="RAEE Lámparas (€)",
-        alias="RAEE_L"
+        description="RAEE Lámparas (€)"
     )
     raee_t: Optional[float] = Field(
         None,
-        description="RAEE Total (€)",
-        alias="RAEE_T"
+        description="RAEE Total (€)"
     )
 
     class Config:
