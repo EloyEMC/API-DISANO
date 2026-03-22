@@ -196,6 +196,11 @@ async def get_productos_por_marca(
 # ENDPOINTS DE LECTURA V2 (NUEVOS - snake_case)
 # =============================================================================
 
+@router.get("/test-v2")
+async def test_v2():
+    """Test endpoint to verify V2 routes are working"""
+    return {"status": "ok", "version": "V2", "message": "V2 routes registered"}
+
 @router.get("/v2", response_model=List[ProductoV2])
 async def get_productos_v2(
     skip: int = Query(0, ge=0, description="Número de registros a saltar"),
