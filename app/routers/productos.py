@@ -301,7 +301,7 @@ async def get_productos_por_familia_v2(
             (familia, limit, skip)
         )
         rows = cursor.fetchall()
-        return [dict(row) for row in rows]
+        return [map_row_to_v2(row) for row in rows]
 
 
 @router.get("/v2/{codigo}", response_model=ProductoV2)
