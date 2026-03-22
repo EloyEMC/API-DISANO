@@ -201,7 +201,7 @@ async def test_v2():
     """Test endpoint to verify V2 routes are working"""
     return {"status": "ok", "version": "V2", "message": "V2 routes registered"}
 
-@router.get("/v2", response_model=List[ProductoV2])
+@router.get("/v2/list", response_model=List[ProductoV2])
 async def get_productos_v2(
     skip: int = Query(0, ge=0, description="Número de registros a saltar"),
     limit: int = Query(100, ge=1, le=500, description="Número máximo de registros"),
