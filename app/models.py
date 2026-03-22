@@ -355,6 +355,11 @@ class BC3DescripcionV2(BaseModel):
     )
 
 
+# Backward compatibility aliases
+FamiliaStats = FamiliaStatsV2
+BC3Descripcion = BC3DescripcionV2
+
+
 # ============================================
 # BACKWARD COMPATIBILITY MODELS (V1)
 # ============================================
