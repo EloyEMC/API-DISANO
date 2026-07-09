@@ -1,0 +1,34 @@
+{
+  "model_profiles": {
+    "sdd-spec": {
+      "model": "zai/glm-5-turbo"
+    },
+    "sdd-design": {
+      "model": "zai/glm-5.1"
+    },
+    "sdd-tasks": {
+      "model": "zai/glm-4.7"
+    },
+    "sdd-apply": {
+      "model": "zai/glm-5-turbo"
+    },
+    "sdd-verify": {
+      "model": "zai/glm-4.7"
+    },
+    "sdd-archive": {
+      "model": "zai/glm-4.7"
+    },
+    "sdd-init": {
+      "model": "zai/glm-4.5-air"
+    },
+    "sdd-onboard": {
+      "model": "zai/glm-4.7"
+    },
+    "sdd-explore": {
+      "model": "zai/glm-4.5-air"
+    },
+    "sdd-proposal": {
+      "model": "zai/glm-5-turbo"
+    }
+  }
+}
