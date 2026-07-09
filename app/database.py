@@ -6,34 +6,9 @@ import sqlite3
 from pathlib import Path
 from contextlib import contextmanager
 from typing import Generator
-import os
 
-# Ruta default a la base de datos de producción
-DEFAULT_DB_PATH = Path(__file__).parent.parent / "database" / "tarifa_disano.db"
-
-
-def get_db_path() -> Path:
-    """
-    Get database path from DATABASE_URL env or default to production.
-
-    Priority:
-    1. DATABASE_URL environment variable (testing/production override)
-    2. Default production database (tarifa_disano.db)
-
-    Returns:
-        Path: Ruta a la base de datos SQLite
-    """
-    db_url = os.environ.get("DATABASE_URL", None)
-    if db_url:
-        # Extraer path de sqlite:///
-        if db_url.startswith("sqlite:///"):
-            return Path(db_url[10:])  # Remover "sqlite:///"
-        return Path(db_url)
-    return DEFAULT_DB_PATH
-
-
-# Database path calculada (configurable via DATABASE_URL)
-DB_PATH = get_db_path()
+# Ruta a la base de datos
+DB_PATH = Path(__file__).parent.parent / "database" / "tarifa_disano.db"
 
 
 @contextmanager
@@ -59,6 +34,6 @@ def get_db_connection() -> Generator[sqlite3.Connection, None, None]:
         conn.close()
 
 
-def get_db_path_for_display() -> str:
-    """Retorna la ruta a la base de datos para logging/display."""
-    return str(DB_PATH)
+def get_db_path() -> Path:
+    """Retorna la ruta a la base de datos"""
+    return DB_PATH

@@ -9,14 +9,10 @@ import sqlite3
 
 from app.database import get_db_connection
 from app.models import (
-    ProductoV1,
-    ProductoV2,
-    ProductoCreateV2,
-    ProductoUpdateV2,
-    ProductoPrecioUpdateV2,
-    AdminResponseV2,
+    ProductoV1, ProductoV2, ProductoListV2,
+    ProductoCreateV2, ProductoUpdateV2, ProductoPrecioUpdateV2, AdminResponseV2
 )
-from app.security.api_key import verify_admin_api_key
+from app.security import verify_admin_api_key
 
 router = APIRouter()
 
@@ -24,7 +20,6 @@ router = APIRouter()
 # =============================================================================
 # HELPER FUNCTIONS
 # =============================================================================
-
 
 def map_row_to_v2(row: sqlite3.Row) -> dict:
     """
@@ -84,7 +79,7 @@ def map_row_to_v2(row: sqlite3.Row) -> dict:
         "bc3_product_type": row_dict.get("bc3_product_type"),
         "bc3_descripcion_completa": row_dict.get("bc3_descripcion_completa"),
         "bc3_processed_at": row_dict.get("bc3_processed_at"),
-        "url_imagen": row_dict.get("img_url"),  # V2.0: url_imagen = img_url (alias)
+        "url_imagen": row_dict.get("img_url")  # V2.0: url_imagen = img_url (alias)
     }
 
 
@@ -92,18 +87,15 @@ def map_row_to_v2(row: sqlite3.Row) -> dict:
 # ENDPOINTS DE LECTURA (PÚBLICOS)
 # =============================================================================
 
-
 @router.get("/", response_model=List[ProductoV1])
 async def get_productos(
     skip: int = Query(0, ge=0, description="Número de registros a saltar"),
     limit: int = Query(100, ge=1, le=500, description="Número máximo de registros"),
     marca: Optional[str] = Query(None, description="Filtrar por marca"),
-    familia: Optional[str] = Query(
-        None, alias="familia_web", description="Filtrar por familia"
-    ),
+    familia: Optional[str] = Query(None, alias="familia_web", description="Filtrar por familia"),
     buscar: Optional[str] = Query(None, description="Buscar en descripción"),
     con_bc3: bool = Query(False, description="Solo productos con BC3"),
-    con_imagen: bool = Query(False, description="Solo productos con imagen"),
+    con_imagen: bool = Query(False, description="Solo productos con imagen")
 ):
     """
     Obtener lista de productos V1 con filtros opcionales.
@@ -167,20 +159,23 @@ async def get_producto(codigo: str):
     - **codigo**: Código del producto (ej: "33036139")
     """
     with get_db_connection() as conn:
-        cursor = conn.execute("SELECT * FROM productos WHERE [CÓDIGO] = ?", (codigo,))
+        cursor = conn.execute(
+            "SELECT * FROM productos WHERE [CÓDIGO] = ?",
+            (codigo,)
+        )
         row = cursor.fetchone()
 
         if not row:
-            raise HTTPException(
-                status_code=404, detail=f"Producto {codigo} no encontrado"
-            )
+            raise HTTPException(status_code=404, detail=f"Producto {codigo} no encontrado")
 
         return dict(row)
 
 
 @router.get("/marca/{marca}", response_model=List[ProductoV1])
 async def get_productos_por_marca(
-    marca: str, skip: int = Query(0, ge=0), limit: int = Query(100, ge=1, le=500)
+    marca: str,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=500)
 ):
     """
     Obtener todos los productos V1 de una marca.
@@ -191,7 +186,7 @@ async def get_productos_por_marca(
     with get_db_connection() as conn:
         cursor = conn.execute(
             "SELECT * FROM productos WHERE MARCA = ? ORDER BY [CÓDIGO] LIMIT ? OFFSET ?",
-            (marca, limit, skip),
+            (marca, limit, skip)
         )
         rows = cursor.fetchall()
         return [map_row_to_v2(row) for row in rows]
@@ -201,24 +196,20 @@ async def get_productos_por_marca(
 # ENDPOINTS DE LECTURA V2 (NUEVOS - snake_case)
 # =============================================================================
 
-
 @router.get("/test-v2")
 async def test_v2():
     """Test endpoint to verify V2 routes are working"""
     return {"status": "ok", "version": "V2", "message": "V2 routes registered"}
-
 
 @router.get("/v2/list", response_model=List[ProductoV2])
 async def get_productos_v2(
     skip: int = Query(0, ge=0, description="Número de registros a saltar"),
     limit: int = Query(100, ge=1, le=500, description="Número máximo de registros"),
     marca: Optional[str] = Query(None, description="Filtrar por marca"),
-    familia: Optional[str] = Query(
-        None, alias="familia_web", description="Filtrar por familia"
-    ),
+    familia: Optional[str] = Query(None, alias="familia_web", description="Filtrar por familia"),
     buscar: Optional[str] = Query(None, description="Buscar en descripción"),
     con_bc3: bool = Query(False, description="Solo productos con BC3"),
-    con_imagen: bool = Query(False, description="Solo productos con imagen"),
+    con_imagen: bool = Query(False, description="Solo productos con imagen")
 ):
     """
     Obtener lista de productos V2 con filtros opcionales.
@@ -273,7 +264,9 @@ async def get_productos_v2(
 
 @router.get("/v2/marca/{marca}", response_model=List[ProductoV2])
 async def get_productos_por_marca_v2(
-    marca: str, skip: int = Query(0, ge=0), limit: int = Query(100, ge=1, le=500)
+    marca: str,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=500)
 ):
     """
     Obtener todos los productos V2 de una marca.
@@ -284,7 +277,7 @@ async def get_productos_por_marca_v2(
     with get_db_connection() as conn:
         cursor = conn.execute(
             "SELECT * FROM productos WHERE MARCA = ? ORDER BY [CÓDIGO] LIMIT ? OFFSET ?",
-            (marca, limit, skip),
+            (marca, limit, skip)
         )
         rows = cursor.fetchall()
         return [map_row_to_v2(row) for row in rows]
@@ -292,7 +285,9 @@ async def get_productos_por_marca_v2(
 
 @router.get("/v2/familia/{familia}", response_model=List[ProductoV2])
 async def get_productos_por_familia_v2(
-    familia: str, skip: int = Query(0, ge=0), limit: int = Query(100, ge=1, le=500)
+    familia: str,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=500)
 ):
     """
     Obtener todos los productos V2 de una familia.
@@ -303,7 +298,7 @@ async def get_productos_por_familia_v2(
     with get_db_connection() as conn:
         cursor = conn.execute(
             "SELECT * FROM productos WHERE [Familia_WEB] = ? ORDER BY [CÓDIGO] LIMIT ? OFFSET ?",
-            (familia, limit, skip),
+            (familia, limit, skip)
         )
         rows = cursor.fetchall()
         return [map_row_to_v2(row) for row in rows]
@@ -320,13 +315,14 @@ async def get_producto_v2(codigo: str):
     - **codigo**: Código del producto (ej: "33036139")
     """
     with get_db_connection() as conn:
-        cursor = conn.execute("SELECT * FROM productos WHERE [CÓDIGO] = ?", (codigo,))
+        cursor = conn.execute(
+            "SELECT * FROM productos WHERE [CÓDIGO] = ?",
+            (codigo,)
+        )
         row = cursor.fetchone()
 
         if not row:
-            raise HTTPException(
-                status_code=404, detail=f"Producto {codigo} no encontrado"
-            )
+            raise HTTPException(status_code=404, detail=f"Producto {codigo} no encontrado")
 
         return map_row_to_v2(row)
 
@@ -335,36 +331,38 @@ async def get_producto_v2(codigo: str):
 # ENDPOINTS DE ESCRITURA (SOLO ADMIN)
 # =============================================================================
 
-
 @router.post("/", response_model=AdminResponseV2, status_code=status.HTTP_201_CREATED)
-async def create_producto(producto: ProductoCreateV2, request: Request):
+async def create_producto(
+    producto: ProductoCreateV2,
+    request: Request
+):
     """
     Crear un nuevo producto (SOLO ADMIN).
 
     Requiere header X-Admin-API-Key con la admin API key.
     """
     # Verificar admin API key
-    if not await verify_admin_api_key(request):
+    if not verify_admin_api_key(request):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Admin access required. Use X-Admin-API-Key header.",
+            detail="Admin access required. Use X-Admin-API-Key header."
         )
 
     try:
         with get_db_connection() as conn:
             # Verificar que el código no existe
             cursor = conn.execute(
-                "SELECT COUNT(*) FROM productos WHERE [CÓDIGO] = ?", (producto.codigo,)
+                "SELECT COUNT(*) FROM productos WHERE [CÓDIGO] = ?",
+                (producto.codigo,)
             )
             if cursor.fetchone()[0] > 0:
                 raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT,
-                    detail=f"Producto con código {producto.codigo} ya existe",
+                    detail=f"Producto con código {producto.codigo} ya existe"
                 )
 
             # Insertar producto
-            cursor.execute(
-                """
+            cursor.execute("""
                 INSERT INTO productos (
                     [CÓDIGO], MARCA, REFERENCIA, DESCRIPCION,
                     [PVP_26_01_26], imagen, img_url, url_ficha_tec,
@@ -372,70 +370,73 @@ async def create_producto(producto: ProductoCreateV2, request: Request):
                     bc3_descripcion_corta, bc3_descripcion_larga, bc3_product_type,
                     bc3_descripcion_completa, url_imagen
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-                (
-                    producto.codigo,
-                    producto.marca,
-                    producto.referencia,
-                    producto.descripcion,
-                    producto.pvp,
-                    producto.imagen,
-                    producto.img_url,
-                    producto.url_ficha_tec,
-                    int(producto.descontinuado),
-                    producto.familia_web,
-                    producto.descripcion_corta,
-                    producto.bc3_descripcion_corta,
-                    producto.bc3_descripcion_larga,
-                    producto.bc3_product_type,
-                    producto.bc3_descripcion_completa,
-                    producto.url_imagen,
-                ),
-            )
+            """, (
+                producto.codigo,
+                producto.marca,
+                producto.referencia,
+                producto.descripcion,
+                producto.pvp,
+                producto.imagen,
+                producto.img_url,
+                producto.url_ficha_tec,
+                int(producto.descontinuado),
+                producto.familia_web,
+                producto.descripcion_corta,
+                producto.bc3_descripcion_corta,
+                producto.bc3_descripcion_larga,
+                producto.bc3_product_type,
+                producto.bc3_descripcion_completa,
+                producto.url_imagen
+            ))
             conn.commit()
 
             return AdminResponseV2(
                 success=True,
                 message=f"Producto {producto.codigo} creado exitosamente",
-                data={"codigo": producto.codigo},
+                data={"codigo": producto.codigo}
             )
 
     except sqlite3.IntegrityError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Error de integridad: {str(e)}",
+            detail=f"Error de integridad: {str(e)}"
         )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error al crear producto: {str(e)}",
+            detail=f"Error al crear producto: {str(e)}"
         )
 
 
 @router.put("/{codigo}", response_model=AdminResponseV2)
-async def update_producto(codigo: str, producto: ProductoUpdateV2, request: Request):
+async def update_producto(
+    codigo: str,
+    producto: ProductoUpdateV2,
+    request: Request
+):
     """
     Actualizar un producto existente (SOLO ADMIN).
 
     Requiere header X-Admin-API-Key con la admin API key.
     """
     # Verificar admin API key
-    if not await verify_admin_api_key(request):
+    if not verify_admin_api_key(request):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Admin access required. Use X-Admin-API-Key header.",
+            detail="Admin access required. Use X-Admin-API-Key header."
         )
 
     try:
         with get_db_connection() as conn:
             # Verificar que el producto existe
             cursor = conn.execute(
-                "SELECT COUNT(*) FROM productos WHERE [CÓDIGO] = ?", (codigo,)
+                "SELECT COUNT(*) FROM productos WHERE [CÓDIGO] = ?",
+                (codigo,)
             )
             if cursor.fetchone()[0] == 0:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Producto {codigo} no encontrado",
+                    detail=f"Producto {codigo} no encontrado"
                 )
 
             # Construir query dinámico solo con campos proporcionados
@@ -505,34 +506,34 @@ async def update_producto(codigo: str, producto: ProductoUpdateV2, request: Requ
             if not update_fields:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="No se proporcionaron campos para actualizar",
+                    detail="No se proporcionaron campos para actualizar"
                 )
 
             # Añadir código al WHERE
             params.append(codigo)
 
-            query = (
-                f"UPDATE productos SET {', '.join(update_fields)} WHERE [CÓDIGO] = ?"
-            )
+            query = f"UPDATE productos SET {', '.join(update_fields)} WHERE [CÓDIGO] = ?"
             cursor.execute(query, params)
             conn.commit()
 
             return AdminResponseV2(
                 success=True,
                 message=f"Producto {codigo} actualizado exitosamente",
-                data={"codigo": codigo, "campos_actualizados": len(update_fields)},
+                data={"codigo": codigo, "campos_actualizados": len(update_fields)}
             )
 
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error al actualizar producto: {str(e)}",
+            detail=f"Error al actualizar producto: {str(e)}"
         )
 
 
 @router.patch("/{codigo}/precio", response_model=AdminResponseV2)
 async def update_precio(
-    codigo: str, precio_update: ProductoPrecioUpdateV2, request: Request
+    codigo: str,
+    precio_update: ProductoPrecioUpdateV2,
+    request: Request
 ):
     """
     Actualizar solo el precio de un producto (SOLO ADMIN).
@@ -540,46 +541,50 @@ async def update_precio(
     Requiere header X-Admin-API-Key con la admin API key.
     """
     # Verificar admin API key
-    if not await verify_admin_api_key(request):
+    if not verify_admin_api_key(request):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Admin access required. Use X-Admin-API-Key header.",
+            detail="Admin access required. Use X-Admin-API-Key header."
         )
 
     try:
         with get_db_connection() as conn:
             # Verificar que el producto existe
             cursor = conn.execute(
-                "SELECT COUNT(*) FROM productos WHERE [CÓDIGO] = ?", (codigo,)
+                "SELECT COUNT(*) FROM productos WHERE [CÓDIGO] = ?",
+                (codigo,)
             )
             if cursor.fetchone()[0] == 0:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Producto {codigo} no encontrado",
+                    detail=f"Producto {codigo} no encontrado"
                 )
 
             # Actualizar precio
             cursor.execute(
                 "UPDATE productos SET [PVP_26_01_26] = ? WHERE [CÓDIGO] = ?",
-                (precio_update.pvp, codigo),
+                (precio_update.pvp, codigo)
             )
             conn.commit()
 
             return AdminResponseV2(
                 success=True,
                 message=f"Precio de producto {codigo} actualizado a {precio_update.pvp}",
-                data={"codigo": codigo, "nuevo_pvp": precio_update.pvp},
+                data={"codigo": codigo, "nuevo_pvp": precio_update.pvp}
             )
 
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error al actualizar precio: {str(e)}",
+            detail=f"Error al actualizar precio: {str(e)}"
         )
 
 
 @router.delete("/{codigo}", response_model=AdminResponseV2)
-async def delete_producto(codigo: str, request: Request):
+async def delete_producto(
+    codigo: str,
+    request: Request
+):
     """
     Eliminar un producto (SOLO ADMIN).
 
@@ -588,36 +593,40 @@ async def delete_producto(codigo: str, request: Request):
     ⚠️ PRECAUCIÓN: Esta operación no se puede deshacer.
     """
     # Verificar admin API key
-    if not await verify_admin_api_key(request):
+    if not verify_admin_api_key(request):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Admin access required. Use X-Admin-API-Key header.",
+            detail="Admin access required. Use X-Admin-API-Key header."
         )
 
     try:
         with get_db_connection() as conn:
             # Verificar que el producto existe
             cursor = conn.execute(
-                "SELECT COUNT(*) FROM productos WHERE [CÓDIGO] = ?", (codigo,)
+                "SELECT COUNT(*) FROM productos WHERE [CÓDIGO] = ?",
+                (codigo,)
             )
             if cursor.fetchone()[0] == 0:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Producto {codigo} no encontrado",
+                    detail=f"Producto {codigo} no encontrado"
                 )
 
             # Eliminar producto
-            cursor.execute("DELETE FROM productos WHERE [CÓDIGO] = ?", (codigo,))
+            cursor.execute(
+                "DELETE FROM productos WHERE [CÓDIGO] = ?",
+                (codigo,)
+            )
             conn.commit()
 
             return AdminResponseV2(
                 success=True,
                 message=f"Producto {codigo} eliminado permanentemente",
-                data={"codigo": codigo},
+                data={"codigo": codigo}
             )
 
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error al eliminar producto: {str(e)}",
+            detail=f"Error al eliminar producto: {str(e)}"
         )

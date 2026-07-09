@@ -24,8 +24,8 @@ nano .env  # Editar API_KEYS
 uvicorn app.main:app --reload
 ```
 
-📍 **URL local:** <http://localhost:8000>
-📍 **API docs:** <http://localhost:8000/docs>
+📍 **URL local:** http://localhost:8000
+📍 **API docs:** http://localhost:8000/docs
 
 ---
 
@@ -46,10 +46,9 @@ uvicorn app.main:app --reload
 
 ## 🌐 PRODUCCIÓN
 
-**URL:** <https://api.eloymartinezcuesta.com>
+**URL:** https://api.eloymartinezcuesta.com
 
 **Ejemplo de uso:**
-
 ```bash
 curl -H "X-API-Key: tu-api-key" \
      https://api.eloymartinezcuesta.com/api/productos/?limit=5
@@ -78,13 +77,11 @@ curl -H "X-API-Key: tu-api-key" \
 ## 🔄 API Version 2.0 - Field Standardization
 
 ### Overview
-
 The API has been updated to Version 2.0 with standardized field names following REST API best practices.
 
 ### Key Changes
 
 #### Field Name Changes
-
 Old field names have been standardized to snake_case:
 
 | Old Name (V1) | New Name (V2) | Type |
@@ -97,14 +94,12 @@ Old field names have been standardized to snake_case:
 | `Url_ficha_tec` | `url_ficha_tec` | String |
 
 #### Important: Both PVP Fields Maintained
-
 - `pvp`: New static field containing current price
 - `PVP_26_01_26`: Historical field with date (kept for audit/history)
 
 ### Versioned Endpoints
 
 #### V1 Endpoints (Backward Compatible)
-
 **Available until**: 30 days from deprecation announcement
 
 ```python
@@ -113,7 +108,6 @@ GET /api/productos/{codigo}
 ```
 
 #### V2 Endpoints (New Standard)
-
 **Available**: Now (recommended)
 
 ```python
@@ -124,7 +118,6 @@ GET /api/productos/v2/{codigo}
 ### Migration Guide
 
 For detailed migration instructions, see:
-
 - **Migration Guide**: `docs/MIGRATION_GUIDE_V1_V2.md`
 - **Field Mapping**: `docs/API_MIGRATION_MAPPING.json`
 
@@ -177,10 +170,9 @@ for product in response:
 ### Support
 
 If you have questions about migrating to V2:
-
-- 📧 Email: <support@api.eloymartinezcuesta.com>
+- 📧 Email: support@api.eloymartinezcuesta.com
 - 📚 Documentation: See `docs/MIGRATION_GUIDE_V1_V2.md`
-- 🌐 Status: Check API status at <https://api.eloymartinezcuesta.com/status>
+- 🌐 Status: Check API status at https://api.eloymartinezcuesta.com/status
 
 ---
 
@@ -197,7 +189,6 @@ If you have questions about migrating to V2:
 **Campos:** 38 por producto
 
 **Campos importantes:**
-
 - `CÓDIGO` - Código único del producto
 - `DESCRIPCION` - Descripción completa
 - `PVP_26_01_26` - Precio de venta
@@ -211,18 +202,15 @@ If you have questions about migrating to V2:
 ## 🔒 SEGURIDAD
 
 ### Autenticación
-
 - **Header:** `X-API-Key`
 - **Dos niveles:** Normal (consultas) / Admin (CRUD)
 
 ### Rate Limiting
-
 - **Por cliente:** 30 requests/min
 - **Global:** 1000 requests/min
 - **Burst:** 10 requests
 
 ### Protección anti-scraping
-
 - Detección de patrones
 - Filtrado de User-Agent
 - Bloqueo automático
@@ -254,7 +242,6 @@ API_DISANO/
 ## 🛠️ DESARROLLO
 
 ### Modificar código
-
 ```bash
 # Ver guía completa
 cat app/GUIA_DESARROLLO.md
@@ -266,7 +253,6 @@ uvicorn app.main:app --reload
 ```
 
 ### Añadir endpoint
-
 ```python
 # app/routers/mis_endpoints.py
 from fastapi import APIRouter
@@ -280,7 +266,6 @@ async def mi_endpoint(api_key: str = Depends(get_api_key)):
 ```
 
 ### Testing
-
 ```bash
 # Sin auth (401)
 curl http://localhost:8000/api/productos/
@@ -298,19 +283,17 @@ curl -H "X-API-Key: tu-key" \
 ## 🚀 DESPLIEGUE
 
 ### Local
-
 ```bash
 uvicorn app.main:app --reload
 ```
 
 ### Producción (Hetzner VPS)
-
 ```bash
 # Ver guía completa
 cat ACCESO_VPS.md
 
 # Resumen rápido
-ssh root@YOUR_VPS_IP  # Ver credenciales en VPS
+ssh root@46.62.227.64
 cd /var/www/API-DISANO
 git pull
 systemctl restart api-disano
@@ -323,14 +306,12 @@ systemctl restart api-disano
 ## 📝 REGLAS DE CONTRIBUTIÓN
 
 ### ✅ HACER
-
 1. Usar `app/config.py` para configuración
 2. Validar con Pydantic (`app/models.py`)
 3. Usar `app/security/` para seguridad
 4. Commitear cambios: `git commit -m "feat: descripción"`
 
 ### ❌ NO HACER
-
 1. NO hardcodear configuración
 2. NO usar `app/security.py` (legacy)
 3. NO repetir lógica de validación
@@ -341,14 +322,12 @@ systemctl restart api-disano
 ## 🧪 TESTING
 
 ### pytest (pendiente)
-
 ```bash
 pytest tests/
 pytest --cov=app tests/
 ```
 
 ### curl
-
 ```bash
 # Health
 curl http://localhost:8000/health

@@ -20,22 +20,3 @@ loguru==0.7.2
 
 # Para parsear listas desde .env
 python-multipart==0.0.6
-
-# ============================================
-# DATABASE DEPENDENCIES
-# ============================================
-# PostgreSQL (producción)
-psycopg2-binary==2.9.9
-asyncpg==0.29.0
-    
-# ============================================
-# RATE LIMITING WITH REDIS
-# ============================================
-# Redis para shared state entre workers
-redis==5.0.1
-    
-# ============================================
-# EMAIL (2FA OTP)
-# ============================================
-# Flask-Mail para envío de OTP
-flask-mail==0.9.1

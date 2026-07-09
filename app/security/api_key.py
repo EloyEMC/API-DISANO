@@ -18,7 +18,7 @@ Funciones:
     verify_api_key: Dependency que valida X-API-Key header
 """
 
-from fastapi import Header, HTTPException, status
+from fastapi import Header, HTTPException, status, Request
 from typing import Optional
 from app.config import get_settings
 from app.security.logging_config import logger, log_security_event
@@ -30,8 +30,8 @@ async def verify_api_key(
     x_api_key: Optional[str] = Header(
         None,
         alias=settings.api_key_header,
-        description=f"API Key para autenticación. Header: {settings.api_key_header}",
-    ),
+        description=f"API Key para autenticación. Header: {settings.api_key_header}"
+    )
 ) -> str:
     """
     Dependency que verifica la API Key en el header.
@@ -58,7 +58,9 @@ async def verify_api_key(
     if not x_api_key:
         logger.warning("Intento de acceso sin API key")
         log_security_event(
-            event_type="auth_failed", details="No API key provided", api_key="none"
+            event_type="auth_failed",
+            details="No API key provided",
+            api_key="none"
         )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -74,7 +76,7 @@ async def verify_api_key(
         log_security_event(
             event_type="auth_failed",
             details=f"Invalid API key: {key_preview}",
-            api_key=key_preview,
+            api_key=key_preview
         )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -92,26 +94,14 @@ async def verify_api_key(
 async def verify_admin_api_key(request) -> bool:
     """Verify if request has a valid admin API key."""
     from app.config import get_settings
-    import os
+    settings = get_settings()
 
-    # Get admin API key from X-API-Key header (consistent with other endpoints)
-    admin_api_key = request.headers.get("X-API-Key")
+    if settings.environment == "development":
+        return True
+
+    admin_api_key = request.headers.get("X-Admin-API-Key")
     if not admin_api_key:
         return False
 
-    # Read admin_api_keys directly from environment (pydantic-settings not loading correctly)
-    admin_api_keys_env = os.environ.get("ADMIN_API_KEYS", "")
-    if admin_api_keys_env:
-        admin_keys = [
-            key.strip() for key in admin_api_keys_env.split(",") if key.strip()
-        ]
-        return admin_api_key in admin_keys
-
-    # Fallback to settings if env not set
-    settings = get_settings()
-    admin_keys = (
-        settings.admin_api_keys
-        if isinstance(settings.admin_api_keys, list)
-        else [settings.admin_api_keys]
-    )
-    return admin_api_key in admin_keys
+    valid_admin_keys = settings.api_keys_list
+    return admin_api_key in valid_admin_keys

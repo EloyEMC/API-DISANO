@@ -2,8 +2,7 @@
 Security Module for API DISANO
 Simple API Key authentication and rate limiting
 """
-
-from fastapi import Request, status
+from fastapi import Request, HTTPException, status
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 import os
@@ -17,7 +16,6 @@ from typing import Dict
 # Rate limiting storage (in production, use Redis)
 rate_limit_store: Dict[str, list] = defaultdict(list)
 
-
 def get_api_keys():
     """Get API keys from environment"""
     keys = os.getenv("API_KEYS", "")
@@ -25,11 +23,9 @@ def get_api_keys():
         return keys.split(",")
     return []
 
-
 def get_environment():
     """Get environment from settings"""
     return os.getenv("ENVIRONMENT", "development")
-
 
 def get_rate_limit():
     """Get rate limit from settings"""
@@ -80,9 +76,7 @@ class APIKeyMiddleware(BaseHTTPMiddleware):
         if not api_key and not admin_api_key:
             return JSONResponse(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                content={
-                    "detail": "API Key is required. Use X-API-Key or X-Admin-API-Key header."
-                },
+                content={"detail": "API Key is required. Use X-API-Key or X-Admin-API-Key header."}
             )
 
         # Validate regular API key if provided
@@ -100,7 +94,7 @@ class APIKeyMiddleware(BaseHTTPMiddleware):
         # If we get here, neither key was valid
         return JSONResponse(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            content={"detail": "Invalid API Key"},
+            content={"detail": "Invalid API Key"}
         )
 
 
@@ -126,8 +120,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
         # Filter out old requests
         rate_limit_store[client_id] = [
-            req_time
-            for req_time in rate_limit_store[client_id]
+            req_time for req_time in rate_limit_store[client_id]
             if req_time > minute_ago
         ]
 
@@ -139,14 +132,14 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 content={
                     "detail": f"Rate limit exceeded. Maximum {rate_limit} requests per minute.",
                     "limit": rate_limit,
-                    "window": "1 minute",
+                    "window": "1 minute"
                 },
                 headers={
                     "Retry-After": "60",
-                    "X-RateLimit-Limit": str(rate_limit),
+                    "X-RateLimit-Limit": str(RATE_LIMIT),
                     "X-RateLimit-Remaining": "0",
-                    "X-RateLimit-Reset": str(int(current_time + 60)),
-                },
+                    "X-RateLimit-Reset": str(int(current_time + 60))
+                }
             )
 
         # Add current request
@@ -178,7 +171,7 @@ class UserAgentMiddleware(BaseHTTPMiddleware):
         "headless",
         "phantom",
         "selenium",
-        "scrapy",
+        "scrapy"
     ]
 
     async def dispatch(self, request: Request, call_next):
@@ -189,9 +182,7 @@ class UserAgentMiddleware(BaseHTTPMiddleware):
             if blocked in user_agent:
                 return JSONResponse(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    content={
-                        "detail": "Access denied. Suspicious User-Agent detected."
-                    },
+                    content={"detail": "Access denied. Suspicious User-Agent detected."}
                 )
 
         return await call_next(request)
@@ -217,8 +208,6 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
         # HSTS (only in production with HTTPS)
         if get_environment() == "production":
-            response.headers["Strict-Transport-Security"] = (
-                "max-age=31536000; includeSubDomains"
-            )
+            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
 
         return response

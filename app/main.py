@@ -10,13 +10,9 @@ from app.middleware import (
     APIKeyMiddleware,
     RateLimitMiddleware,
     UserAgentMiddleware,
-    SecurityHeadersMiddleware,
+    SecurityHeadersMiddleware
 )
-from app.security.logging_config import setup_logging
 import os
-
-# Setup logging
-setup_logging()
 
 # Load environment
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
@@ -29,7 +25,7 @@ app = FastAPI(
     version="1.0.0",
     docs_url="/docs" if ENVIRONMENT == "development" else None,
     redoc_url="/redoc" if ENVIRONMENT == "development" else None,
-    openapi_url="/openapi.json" if ENVIRONMENT == "development" else None,
+    openapi_url="/openapi.json" if ENVIRONMENT == "development" else None
 )
 
 # Configure CORS based on environment
@@ -64,7 +60,6 @@ app.include_router(productos.router, prefix="/api/productos", tags=["productos"]
 app.include_router(familias.router, prefix="/api/familias", tags=["familias"])
 app.include_router(bc3.router, prefix="/api/bc3", tags=["bc3"])
 
-
 # Endpoint raíz
 @app.get("/")
 async def root():
@@ -72,7 +67,7 @@ async def root():
     endpoints = {
         "productos": "/api/productos",
         "familias": "/api/familias",
-        "bc3": "/api/bc3",
+        "bc3": "/api/bc3"
     }
 
     # Only show docs in development
@@ -84,9 +79,8 @@ async def root():
         "version": "1.0.0",
         "environment": ENVIRONMENT,
         "descripcion": "API REST para consultar productos y tarifas de Disano",
-        "endpoints": endpoints,
+        "endpoints": endpoints
     }
-
 
 # Health check
 @app.get("/health")
@@ -94,8 +88,6 @@ async def health_check():
     """Health check endpoint"""
     return {"status": "ok", "service": "api-disano"}
 
-
 if __name__ == "__main__":
     import uvicorn
-
     uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)

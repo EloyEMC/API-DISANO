@@ -13,7 +13,10 @@ class Settings(BaseSettings):
     """Configuración de la aplicación cargada desde variables de entorno"""
 
     model_config = SettingsConfigDict(
-        env_file=".env", env_file_encoding="utf-8", case_sensitive=False, extra="ignore"
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+        extra="ignore"
     )
 
     # API Configuration
@@ -26,16 +29,10 @@ class Settings(BaseSettings):
     # Environment
     environment: str = "development"
 
-    # Security - SECRET KEY (OBLIGATORIO en producción)
-    secret_key: str = Field(default="")
-
-    # Security - API Keys (OBLIGATORIO en producción)
-    # accept string or list, normalize to list
+    # Security - API Keys (accept string or list, normalize to list)
     api_keys: Union[str, List[str]] = Field(default_factory=list)
     api_key_header: str = "X-API-Key"
-    admin_api_keys: Union[str, List[str]] = (
-        ""  # Empty string, parsed by field_validator
-    )
+    admin_api_keys: List[str] = []
 
     # Security - Rate Limiting
     rate_limit_enabled: bool = True
@@ -55,7 +52,7 @@ class Settings(BaseSettings):
         "spider",
         "headless",
         "phantom",
-        "selenium",
+        "selenium"
     ]
 
     # Security - CORS (accept string or list, normalize to list)
@@ -105,21 +102,6 @@ class Settings(BaseSettings):
             return [origin.strip() for origin in v.split(",") if origin.strip()]
         return v if isinstance(v, list) else ["*"]
 
-    @field_validator("admin_api_keys", mode="after")
-    @classmethod
-    def parse_admin_api_keys(cls, v: Union[str, List[str]], info) -> List[str]:
-        """Parse admin_api_keys from string or list"""
-        # Debug: check environment
-        import os
-
-        if "ADMIN_API_KEYS" in os.environ:
-            env_value = os.environ["ADMIN_API_KEYS"]
-            return [key.strip() for key in env_value.split(",") if key.strip()]
-
-        if isinstance(v, str):
-            return [key.strip() for key in v.split(",") if key.strip()]
-        return v if isinstance(v, list) else []
-
     @property
     def api_keys_list(self) -> List[str]:
         """Return api_keys as a list for compatibility"""
@@ -138,42 +120,11 @@ class Settings(BaseSettings):
         """Verifica si estamos en producción"""
         return self.environment.lower() == "production"
 
-    def validate_required(self) -> None:
-        """Validar variables obligatorias según BC3-Suite patterns.
-
-        Raises:
-            ValueError: Si faltan variables obligatorias en producción
-
-        Example:
-            settings = get_settings()
-            settings.validate_required()  # Lanza ValueError si faltan variables
-        """
-        if self.is_production():
-            # Validar SECRET_KEY en producción
-            if not self.secret_key or self.secret_key == "":
-                raise ValueError(
-                    "SECRET_KEY es obligatorio en producción. "
-                    "Genera una clave segura con: python -c 'import secrets; print(secrets.token_hex(32))' "
-                    "y añádela a tu archivo .env."
-                )
-
-            # Validar API_KEYS en producción
-            if not self.api_keys_list:
-                raise ValueError(
-                    "API_KEYS es obligatorio en producción. "
-                    "Añade al menos una API key válida en tu archivo .env."
-                )
-
 
 @lru_cache()
 def get_settings() -> Settings:
     """
     Retorna instancia caché de Settings.
     Usa lru_cache para solo cargar una vez.
-
-    Raises:
-        ValueError: Si faltan variables obligatorias en producción
     """
-    settings = Settings()
-    settings.validate_required()  # Validar variables obligatorias
-    return settings
+    return Settings()
