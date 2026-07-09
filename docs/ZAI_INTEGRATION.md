@@ -297,9 +297,9 @@ def mock_zai_response():
 def test_generate_bc3_description(mock_zai_response):
     with patch('app.services.ai_service.ZaiClient.generate') as mock:
         mock.return_value = mock_zai_response
-        
+
         result = ai_service.generate_bc3_description(producto_id="33036139")
-        
+
         assert result["bc3_descripcion_corta"] == "Lámpara LED 12W E27"
         mock.assert_called_once()
 ```

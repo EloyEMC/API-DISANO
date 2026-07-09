@@ -48,7 +48,7 @@ sqlite3 ../database/tarifa_disano.db < 01_add_bc3_descripcion_completa.sql
 
 **Verification SQL**:
 ```sql
-SELECT 
+SELECT
     COUNT(*) as total_rows,
     COUNT(bc3_descripcion_corta) as bc3_corta,
     COUNT(bc3_descripcion_larga) as bc3_larga,
@@ -86,7 +86,7 @@ https://azprodmedia.blob.core.windows.net/mediafiles/IP_safetyled.jpg
 
 **Verification SQL**:
 ```sql
-SELECT 
+SELECT
     COUNT(*) as total_rows,
     COUNT(url_imagen) as url_imagen,
     ROUND(COUNT(url_imagen) * 100.0 / COUNT(*), 1) as percentage
@@ -119,27 +119,27 @@ cp migration/backup/tarifa_disano_backup_YYYYMMDD_HHMMSS.db database/tarifa_disa
 PRAGMA table_info(productos);
 
 -- Verify bc3_descripcion_completa
-SELECT 
+SELECT
     CÓDIGO,
     bc3_descripcion_corta,
     bc3_descripcion_larga,
     substr(bc3_descripcion_completa, 1, 100) as bc3_completa_preview
-FROM productos 
-WHERE bc3_descripcion_completa IS NOT NULL 
+FROM productos
+WHERE bc3_descripcion_completa IS NOT NULL
 LIMIT 5;
 
 -- Verify url_imagen
-SELECT 
+SELECT
     CÓDIGO,
     imagen,
     url_imagen,
     img_url
-FROM productos 
-WHERE url_imagen IS NOT NULL 
+FROM productos
+WHERE url_imagen IS NOT NULL
 LIMIT 5;
 
 -- Coverage summary
-SELECT 
+SELECT
     COUNT(*) as total,
     COUNT(bc3_descripcion_completa) as bc3_completa,
     COUNT(url_imagen) as url_imagen

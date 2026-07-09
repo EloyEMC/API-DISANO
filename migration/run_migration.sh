@@ -51,17 +51,17 @@ print_error() {
 # Create backup
 create_backup() {
     print_header "Creating Database Backup"
-    
+
     if [ ! -f "$DB_PATH" ]; then
         print_error "Database not found: $DB_PATH"
         exit 1
     fi
-    
+
     mkdir -p "$BACKUP_DIR"
-    
+
     print_success "Creating backup: $BACKUP_FILE"
     cp "$DB_PATH" "$BACKUP_FILE"
-    
+
     local backup_size=$(du -h "$BACKUP_FILE" | cut -f1)
     print_success "Backup created successfully (${backup_size})"
 }
@@ -69,12 +69,12 @@ create_backup() {
 # Verify backup
 verify_backup() {
     print_header "Verifying Backup"
-    
+
     if [ ! -f "$BACKUP_FILE" ]; then
         print_error "Backup file not found: $BACKUP_FILE"
         exit 1
     fi
-    
+
     # Check SQLite integrity
     if sqlite3 "$BACKUP_FILE" "PRAGMA integrity_check;" > /dev/null 2>&1; then
         print_success "Backup integrity check passed"
@@ -87,14 +87,14 @@ verify_backup() {
 # Task 1: Add bc3_descripcion_completa
 run_task1() {
     print_header "Task 1: Add bc3_descripcion_completa"
-    
+
     local sql_file="${MIGRATION_DIR}/01_add_bc3_descripcion_completa.sql"
-    
+
     if [ ! -f "$sql_file" ]; then
         print_error "SQL file not found: $sql_file"
         exit 1
     fi
-    
+
     # Execute SQL
     print_success "Executing SQL script..."
     if sqlite3 "$DB_PATH" < "$sql_file"; then
@@ -108,13 +108,13 @@ run_task1() {
 # Verify Task 1
 verify_task1() {
     print_header "Verifying Task 1"
-    
-    local result=$(sqlite3 "$DB_PATH" "SELECT 
+
+    local result=$(sqlite3 "$DB_PATH" "SELECT
         COUNT(*) as total,
         COUNT(bc3_descripcion_completa) as completa,
         ROUND(COUNT(bc3_descripcion_completa) * 100.0 / COUNT(*), 1) as percentage
     FROM productos;")
-    
+
     echo "$result"
     print_success "Task 1 verification completed"
 }
@@ -122,14 +122,14 @@ verify_task1() {
 # Task 2: Import url_imagen
 run_task2() {
     print_header "Task 2: Import url_imagen from Excel"
-    
+
     local python_file="${MIGRATION_DIR}/02_import_url_imagen.py"
-    
+
     if [ ! -f "$python_file" ]; then
         print_error "Python script not found: $python_file"
         exit 1
     fi
-    
+
     # Execute Python script
     if "$PYTHON_VENV" "$python_file"; then
         print_success "Task 2 completed successfully"
@@ -142,13 +142,13 @@ run_task2() {
 # Verify Task 2
 verify_task2() {
     print_header "Verifying Task 2"
-    
-    local result=$(sqlite3 "$DB_PATH" "SELECT 
+
+    local result=$(sqlite3 "$DB_PATH" "SELECT
         COUNT(*) as total,
         COUNT(url_imagen) as url_imagen,
         ROUND(COUNT(url_imagen) * 100.0 / COUNT(*), 1) as percentage
     FROM productos;")
-    
+
     echo "$result"
     print_success "Task 2 verification completed"
 }
@@ -156,16 +156,16 @@ verify_task2() {
 # Final verification
 final_verification() {
     print_header "Final Verification"
-    
-    local result=$(sqlite3 "$DB_PATH" "SELECT 
+
+    local result=$(sqlite3 "$DB_PATH" "SELECT
         'Total rows: ' || COUNT(*) as info FROM productos
     UNION ALL
-    SELECT 
+    SELECT
         'bc3_descripcion_completa: ' || COUNT(bc3_descripcion_completa) FROM productos
     UNION ALL
-    SELECT 
+    SELECT
         'url_imagen: ' || COUNT(url_imagen) FROM productos;")
-    
+
     echo "$result"
     print_success "All tasks verified successfully"
 }
@@ -173,20 +173,20 @@ final_verification() {
 # Rollback function
 rollback() {
     print_header "Rolling Back Changes"
-    
+
     if [ ! -f "$BACKUP_FILE" ]; then
         print_error "Backup not found, cannot rollback"
         exit 1
     fi
-    
+
     print_warning "Restoring database from backup: $BACKUP_FILE"
-    
+
     # Stop any database connections (if any)
     # ... (add if needed)
-    
+
     # Restore from backup
     cp "$BACKUP_FILE" "$DB_PATH"
-    
+
     print_success "Rollback completed successfully"
 }
 
@@ -196,34 +196,34 @@ main() {
     echo "Database: $DB_PATH"
     echo "Backup: $BACKUP_FILE"
     echo ""
-    
+
     # Check for rollback flag
     if [ "${1:-}" = "--rollback" ]; then
         rollback
         exit 0
     fi
-    
+
     # Step 1: Create backup
     create_backup
     verify_backup
-    
+
     echo ""
-    
+
     # Step 2: Run Task 1
     run_task1
     verify_task1
-    
+
     echo ""
-    
+
     # Step 3: Run Task 2
     run_task2
     verify_task2
-    
+
     echo ""
-    
+
     # Step 4: Final verification
     final_verification
-    
+
     echo ""
     print_header "Migration Completed Successfully!"
     echo "Backup file: $BACKUP_FILE"

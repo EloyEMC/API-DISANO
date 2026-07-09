@@ -90,7 +90,7 @@ def test_database_production_db_not_modified():
 
     # El backup fue creado el 8 de julio 2025
     # La última modificación de producción fue 22 de marzo
-        assert backup_mtime > prod_mtime, "Backup debe ser más reciente que producción"
+    assert backup_mtime > prod_mtime, "Backup debe ser más reciente que producción"
 
 
 if __name__ == "__main__":

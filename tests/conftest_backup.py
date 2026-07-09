@@ -1,5 +1,5 @@
 """
-Conftest.py - Fixtures pytest para API-DISANO
+Conftest.py - Fixtures pytest para API-DISANO.
 ================================================
 
 Fixtures compartidos para tests siguiendo patrones BC3-Suite:

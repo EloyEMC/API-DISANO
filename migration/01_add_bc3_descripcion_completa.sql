@@ -16,17 +16,17 @@ ALTER TABLE productos ADD COLUMN bc3_descripcion_completa TEXT;
 -- Step 2: Populate with concatenated data
 -- Formula: bc3_descripcion_corta + '-----' + bc3_descripcion_larga
 -- Handle NULL: If bc3_descripcion_corta is NULL, result is NULL
-UPDATE productos 
+UPDATE productos
 SET bc3_descripcion_completa = bc3_descripcion_corta || '-----' || bc3_descripcion_larga
 WHERE bc3_descripcion_corta IS NOT NULL;
 
 -- Step 3: Create index for faster queries (optional)
-CREATE INDEX IF NOT EXISTS idx_productos_bc3_descripcion_completa 
+CREATE INDEX IF NOT EXISTS idx_productos_bc3_descripcion_completa
 ON productos(bc3_descripcion_completa);
 
 -- Verification query
 -- Run this to verify the migration:
--- SELECT 
+-- SELECT
 --     COUNT(*) as total_rows,
 --     COUNT(bc3_descripcion_corta) as bc3_corta_count,
 --     COUNT(bc3_descripcion_larga) as bc3_larga_count,

@@ -83,14 +83,14 @@ ALTER TABLE productos ADD COLUMN bc3_descripcion_completa TEXT;
 
 **Populate data**:
 ```sql
-UPDATE productos 
+UPDATE productos
 SET bc3_descripcion_completa = bc3_descripcion_corta || '-----' || bc3_descripcion_larga
 WHERE bc3_descripcion_corta IS NOT NULL;
 ```
 
 **Create index** (optional):
 ```sql
-CREATE INDEX IF NOT EXISTS idx_productos_bc3_descripcion_completa 
+CREATE INDEX IF NOT EXISTS idx_productos_bc3_descripcion_completa
 ON productos(bc3_descripcion_completa);
 ```
 
@@ -104,7 +104,7 @@ ON productos(bc3_descripcion_completa);
 
 ### Verification SQL
 ```sql
-SELECT 
+SELECT
     COUNT(*) as total_rows,
     COUNT(bc3_descripcion_corta) as bc3_corta,
     COUNT(bc3_descripcion_larga) as bc3_larga,
@@ -156,7 +156,7 @@ EXCEL_COLUMN_HEADER = 'Url_imagen'
 
 ### Verification SQL
 ```sql
-SELECT 
+SELECT
     COUNT(*) as total_rows,
     COUNT(url_imagen) as url_imagen,
     ROUND(COUNT(url_imagen) * 100.0 / COUNT(*), 1) as percentage
@@ -199,36 +199,36 @@ cp migration/backup/tarifa_disano_backup_YYYYMMDD_HHMMSS.db database/tarifa_disa
 PRAGMA table_info(productos);
 
 -- 2. Verify bc3_descripcion_completa
-SELECT 
+SELECT
     CÓDIGO,
     substr(bc3_descripcion_corta, 1, 50) as corta_preview,
     substr(bc3_descripcion_completa, 1, 100) as completa_preview
-FROM productos 
-WHERE bc3_descripcion_completa IS NOT NULL 
+FROM productos
+WHERE bc3_descripcion_completa IS NOT NULL
 LIMIT 3;
 
 -- 3. Verify url_imagen
-SELECT 
+SELECT
     CÓDIGO,
     imagen,
     substr(url_imagen, 1, 70) as url_imagen_preview,
     substr(img_url, 1, 70) as img_url_preview
-FROM productos 
-WHERE url_imagen IS NOT NULL 
+FROM productos
+WHERE url_imagen IS NOT NULL
 LIMIT 3;
 
 -- 4. Coverage summary
-SELECT 
+SELECT
     'Total rows' as metric,
     COUNT(*) as value
 FROM productos
 UNION ALL
-SELECT 
+SELECT
     'bc3_descripcion_completa',
     COUNT(bc3_descripcion_completa)
 FROM productos
 UNION ALL
-SELECT 
+SELECT
     'url_imagen',
     COUNT(url_imagen)
 FROM productos;

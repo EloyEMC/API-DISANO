@@ -191,9 +191,7 @@ class OTPService:
             print(f"Removed {removed} expired OTPs")
         """
         now = datetime.now()
-        expired_emails = [
-            email for email, data in self.otp_store.items() if now > data["expiry"]
-        ]
+        expired_emails = [email for email, data in self.otp_store.items() if now > data["expiry"]]
 
         for email in expired_emails:
             del self.otp_store[email]

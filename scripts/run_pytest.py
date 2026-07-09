@@ -43,7 +43,7 @@ pytest_args = (
 print(f"🚀 Ejecutando: pytest {' '.join(pytest_args)}")
 print("=" * 60)
 result = subprocess.run(
-    [".venv/bin/python3", "-m", "pytest"] + pytest_args,
+    ["python3", "-m", "pytest"] + pytest_args,
     cwd=os.getcwd(),
     capture_output=False,
 )
