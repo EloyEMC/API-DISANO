@@ -1,0 +1,7 @@
+phase: spec
+status: active
+change: fase2-testing-suite-tdd-real
+title: Fase 2 - Testing Suite con TDD Real
+project: api-disano-main
+artifact_store: openspec
+created_at: "2026-07-08T20:45:00Z"

@@ -84,10 +84,10 @@ limiter = Limiter(
     key_func=get_api_key_identifier,
     default_limits=[
         f"{settings.rate_limit_per_client}/minute",  # 30 peticiones/minuto
-        f"{settings.rate_limit_burst}/10seconds"     # 10 peticiones/10segundos
+        f"{settings.rate_limit_burst}/10seconds",  # 10 peticiones/10segundos
     ],
     storage_uri="memory://",  # En producción usar: "redis://localhost:6379"
-    enabled=settings.rate_limit_enabled
+    enabled=settings.rate_limit_enabled,
 )
 
 
@@ -116,13 +116,12 @@ async def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded):
     """
     identifier = get_api_key_identifier(request)
     logger.warning(
-        f"Rate limit excedido por {identifier}. "
-        f"Límite: {settings.rate_limit_per_client}/minute"
+        f"Rate limit excedido por {identifier}. " f"Límite: {settings.rate_limit_per_client}/minute"
     )
     log_security_event(
         event_type="rate_limit",
         details=f"Exceeded {settings.rate_limit_per_client}/minute",
-        api_key=identifier.split(":")[-1] if "api_key:" in identifier else "none"
+        api_key=identifier.split(":")[-1] if "api_key:" in identifier else "none",
     )
 
     return {
@@ -132,6 +131,6 @@ async def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded):
                 f"Has excedido el límite de peticiones. "
                 f"Máximo {settings.rate_limit_per_client} peticiones cada 60 segundos."
             ),
-            "retry_after": getattr(exc, 'retry_after', 60)
+            "retry_after": getattr(exc, "retry_after", 60),
         }
     }

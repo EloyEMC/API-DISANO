@@ -1,0 +1,19 @@
+{
+  "skills": [
+    {
+      "name": "pytest",
+      "path": "/Users/eloymartinezcuesta/.config/opencode/skills/pytest/SKILL.md",
+      "trigger": "testing, pytest, tests, test coverage, fixtures, mocking"
+    },
+    {
+      "name": "cognitive-doc-design",
+      "path": "/Users/eloymartinezcuesta/.config/opencode/skills/cognitive-doc-design/SKILL.md",
+      "trigger": "documentation, README, guides, RFCs, architecture docs"
+    },
+    {
+      "name": "branch-pr",
+      "path": "/Users/eloymartinezcuesta/.config/opencode/skills/branch-pr/SKILL.md",
+      "trigger": "pull requests, PR, GitHub PR"
+    }
+  ]
+}

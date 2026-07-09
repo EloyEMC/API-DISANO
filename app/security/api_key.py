@@ -30,7 +30,7 @@ async def verify_api_key(
     x_api_key: Optional[str] = Header(
         None,
         alias=settings.api_key_header,
-        description=f"API Key para autenticación. Header: {settings.api_key_header}"
+        description=f"API Key para autenticación. Header: {settings.api_key_header}",
     )
 ) -> str:
     """
@@ -57,11 +57,7 @@ async def verify_api_key(
     # Verificar si se proporcionó API key
     if not x_api_key:
         logger.warning("Intento de acceso sin API key")
-        log_security_event(
-            event_type="auth_failed",
-            details="No API key provided",
-            api_key="none"
-        )
+        log_security_event(event_type="auth_failed", details="No API key provided", api_key="none")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="API Key requerida. Proporciona el header X-API-Key",
@@ -74,9 +70,7 @@ async def verify_api_key(
         key_preview = f"{x_api_key[:8]}..." if len(x_api_key) > 8 else x_api_key
         logger.warning(f"Intento de acceso con API key inválida: {key_preview}")
         log_security_event(
-            event_type="auth_failed",
-            details=f"Invalid API key: {key_preview}",
-            api_key=key_preview
+            event_type="auth_failed", details=f"Invalid API key: {key_preview}", api_key=key_preview
         )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -94,6 +88,7 @@ async def verify_api_key(
 async def verify_admin_api_key(request) -> bool:
     """Verify if request has a valid admin API key."""
     from app.config import get_settings
+
     settings = get_settings()
 
     if settings.environment == "development":

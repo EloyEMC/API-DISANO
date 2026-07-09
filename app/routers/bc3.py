@@ -17,14 +17,16 @@ router = APIRouter()
 async def get_bc3_stats():
     """Obtener estadísticas de descripciones BC3"""
     with get_db_connection() as conn:
-        cursor = conn.execute("""
+        cursor = conn.execute(
+            """
             SELECT
                 COUNT(*) as total,
                 SUM(CASE WHEN bc3_descripcion_corta IS NOT NULL THEN 1 ELSE 0 END) as con_descripcion_corta,
                 SUM(CASE WHEN bc3_descripcion_larga IS NOT NULL THEN 1 ELSE 0 END) as con_descripcion_larga,
                 SUM(CASE WHEN bc3_product_type IS NOT NULL THEN 1 ELSE 0 END) as con_tipo_producto
             FROM productos
-        """)
+        """
+        )
         row = cursor.fetchone()
         return dict(row)
 
@@ -38,15 +40,10 @@ async def get_productos_por_tipo_bc3(tipo: str):
     """
     with get_db_connection() as conn:
         cursor = conn.execute(
-            "SELECT * FROM productos WHERE bc3_product_type = ? ORDER BY [CÓDIGO]",
-            (tipo,)
+            "SELECT * FROM productos WHERE bc3_product_type = ? ORDER BY [CÓDIGO]", (tipo,)
         )
         rows = cursor.fetchall()
-        return {
-            "tipo": tipo,
-            "total": len(rows),
-            "productos": [dict(row) for row in rows]
-        }
+        return {"tipo": tipo, "total": len(rows), "productos": [dict(row) for row in rows]}
 
 
 @router.get("/columnas")
@@ -57,10 +54,7 @@ async def get_columnas():
             "SELECT * FROM productos WHERE bc3_product_type = 'columna' ORDER BY [CÓDIGO]"
         )
         rows = cursor.fetchall()
-        return {
-            "total": len(rows),
-            "productos": [dict(row) for row in rows]
-        }
+        return {"total": len(rows), "productos": [dict(row) for row in rows]}
 
 
 @router.get("/articulaciones")
@@ -71,10 +65,7 @@ async def get_articulaciones():
             "SELECT * FROM productos WHERE bc3_product_type = 'articulacion' ORDER BY [CÓDIGO]"
         )
         rows = cursor.fetchall()
-        return {
-            "total": len(rows),
-            "productos": [dict(row) for row in rows]
-        }
+        return {"total": len(rows), "productos": [dict(row) for row in rows]}
 
 
 @router.get("/{codigo}", response_model=BC3Descripcion)
@@ -89,7 +80,7 @@ async def get_bc3_descripcion(codigo: str):
                 bc3_product_type as product_type
             FROM productos
             WHERE [CÓDIGO] = ?""",
-            (codigo,)
+            (codigo,),
         )
         row = cursor.fetchone()
 
