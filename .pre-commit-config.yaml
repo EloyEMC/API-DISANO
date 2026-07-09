@@ -46,7 +46,7 @@ repos:
         args:
           [
             "--convention=google",
-            "--add-ignore=D100,D104,D105,D107,D205,D400,D200,D202,D212",
+            "--add-ignore=D100,D104,D105,D107,D205,D400,D200,D202,D212,D415",
           ]
         files: ^(app/|tests/)
 
