@@ -1,8 +1,8 @@
 {
   "executionMode": "interactive",
-  "artifactStore": "engram",
+  "artifactStore": "openspec",
   "chainedPrStrategy": "auto-forecast",
   "reviewBudgetLines": 400,
-  "engramAvailable": true,
+  "engramAvailable": false,
   "prompted": false
 }

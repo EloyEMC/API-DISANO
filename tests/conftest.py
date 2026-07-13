@@ -13,6 +13,18 @@ from fastapi.testclient import TestClient
 from unittest.mock import AsyncMock, Mock
 import sqlite3
 import os
+import sys
+
+# FIX: Asegurar que importamos el proyecto API-DISANO correcto
+# y no otro proyecto 'app' que pueda estar en sys.path
+PROJECT_ROOT = Path(__file__).parent.parent.resolve()
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+# Import explícito del proyecto actual
+import app.config as config_module
+
+# Force import for coverage measurement
 
 
 # STEP 1: Limpiar variables de entorno problemáticas
@@ -23,7 +35,7 @@ for var in ["SECRET_KEY", "API_KEYS", "ADMIN_API_KEYS", "ENVIRONMENT"]:
 os.environ["ENVIRONMENT"] = "testing"
 os.environ["SECRET_KEY"] = "test-secret-key-32-chars-safe-testing"
 os.environ["API_KEYS"] = "test-api-key-1,test-api-key-2"
-os.environ["ADMIN_API_KEYS"] = "test-admin-key-1"
+os.environ["ADMIN_API_KEYS"] = '["test-admin-key-1"]'
 
 # STEP 3: Parchear get_settings ANTES de importar app.main
 _original_get_settings = None
@@ -35,17 +47,50 @@ def _patch_get_settings():
 
     return Settings(
         environment="testing",
-        secret_key="test-secret-key-32-chars-safe-testing",
         api_keys="test-api-key-1,test-api-key-2",
         admin_api_keys=["test-admin-key-1"],
+        database_path="testing/testing.db",
     )
 
 
 # Importar app.config y parchear
-import app.config
 
-_original_get_settings = app.config.get_settings
-app.config.get_settings = _patch_get_settings
+_original_get_settings = config_module.get_settings
+config_module.get_settings = _patch_get_settings
+
+
+# STEP 4: Parchear get_database_path para usar testing/testing.db
+def _patch_get_database_path():
+    """Parchear get_database_path para retornar testing/testing.db"""
+    from pathlib import Path
+
+    return Path(__file__).parent.parent / "testing" / "testing.db"
+
+
+# Importar y parchear connection.py
+import app.infrastructure.database.connection as connection_module
+
+_original_get_database_path = connection_module.get_database_path
+connection_module.get_database_path = _patch_get_database_path
+
+# Recrear engine con la base de datos correcta
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
+
+test_db_path = _patch_get_database_path()
+connection_module.engine = create_engine(
+    f"sqlite:///{test_db_path}",
+    connect_args={"check_same_thread": False},
+    poolclass=StaticPool,
+    echo=False,
+)
+connection_module.SessionFactory = sessionmaker(
+    bind=connection_module.engine, expire_on_commit=False
+)
+connection_module.SessionLocal = sessionmaker(
+    bind=connection_module.engine, expire_on_commit=False
+)
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -78,6 +123,41 @@ def db_session(test_db_path: Path) -> Generator[sqlite3.Connection, None, None]:
     connection.row_factory = sqlite3.Row
     yield connection
     connection.close()
+
+
+@pytest.fixture
+def sqlalchemy_session(
+    test_db_path: Path,
+) -> Generator["Session", None, None]:
+    """
+    SQLAlchemy ORM Session para tests de repository.
+
+    Usa la misma base de datos de testing/testing.db que db_session.
+
+    Args:
+        test_db_path: Path a la base de datos de testing
+
+    Yields:
+        Session: SQLAlchemy ORM session
+    """
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import sessionmaker
+    from app.infrastructure.models.producto_clean import (
+        ProductoModelClean as ProductoModel,
+    )
+
+    # Crear engine usando la misma base de datos
+    engine = create_engine(f"sqlite:///{test_db_path}")
+    ProductoModel.metadata.create_all(engine)
+
+    # Crear sesión
+    SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
+    session = SessionLocal()
+
+    yield session
+
+    session.close()
+    engine.dispose()
 
 
 @pytest.fixture
@@ -190,3 +270,17 @@ def mock_rate_limit_store() -> dict:
     from collections import defaultdict
 
     return defaultdict(list)
+
+
+# =============================================================================
+# PYTEST CONFIGURE - COVERAGE FIX
+# =============================================================================
+
+
+def pytest_configure(config):
+    """Forzar import explícito para pytest-cov detection."""
+    # Importar módulos que deben medir coverage (hexagonal architecture)
+    from app.interfaces.http import productos as productos_http
+
+    # Forzar carga de módulos antes de tests
+    productos_http.router  # Acceder a router para garantizar carga

@@ -5,14 +5,19 @@ FastAPI con SQLite - CON SEGURIDAD
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import productos, familias, bc3
+from app.interfaces.http import (
+    productos as productos_http,
+    familias as familias_http,
+    bc3 as bc3_http,
+)
 from app.middleware import (
     APIKeyMiddleware,
     RateLimitMiddleware,
     UserAgentMiddleware,
-    SecurityHeadersMiddleware
+    SecurityHeadersMiddleware,
 )
 import os
+from app.interfaces.http.error_handlers import register_exception_handlers
 
 # Load environment
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
@@ -25,7 +30,7 @@ app = FastAPI(
     version="1.0.0",
     docs_url="/docs" if ENVIRONMENT == "development" else None,
     redoc_url="/redoc" if ENVIRONMENT == "development" else None,
-    openapi_url="/openapi.json" if ENVIRONMENT == "development" else None
+    openapi_url="/openapi.json" if ENVIRONMENT == "development" else None,
 )
 
 # Configure CORS based on environment
@@ -55,10 +60,14 @@ if ENVIRONMENT == "production":
     app.add_middleware(RateLimitMiddleware)
     app.add_middleware(UserAgentMiddleware)
 
-# Incluir routers
-app.include_router(productos.router, prefix="/api/productos", tags=["productos"])
-app.include_router(familias.router, prefix="/api/familias", tags=["familias"])
-app.include_router(bc3.router, prefix="/api/bc3", tags=["bc3"])
+# Incluir routers (hexagonal architecture)
+app.include_router(productos_http.router, prefix="/api", tags=["productos"])
+app.include_router(familias_http.router, prefix="/api", tags=["familias"])
+app.include_router(bc3_http.router, prefix="/api", tags=["bc3"])
+
+# Registrar manejadores de excepciones V2
+register_exception_handlers(app)
+
 
 # Endpoint raíz
 @app.get("/")
@@ -67,7 +76,7 @@ async def root():
     endpoints = {
         "productos": "/api/productos",
         "familias": "/api/familias",
-        "bc3": "/api/bc3"
+        "bc3": "/api/bc3",
     }
 
     # Only show docs in development
@@ -79,8 +88,9 @@ async def root():
         "version": "1.0.0",
         "environment": ENVIRONMENT,
         "descripcion": "API REST para consultar productos y tarifas de Disano",
-        "endpoints": endpoints
+        "endpoints": endpoints,
     }
+
 
 # Health check
 @app.get("/health")
@@ -88,6 +98,8 @@ async def health_check():
     """Health check endpoint"""
     return {"status": "ok", "service": "api-disano"}
 
+
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
