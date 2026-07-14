@@ -1,9 +1,9 @@
 """
 Factories para tests de API-DISANO
 =========================================
-
+    
 Factories pytest para crear datos de prueba siguiendo BC3-Suite patterns.
-."""
+""""
 
 import random
 from datetime import datetime, timedelta
@@ -168,7 +168,7 @@ class RequestFactory:
 
     @staticmethod
     def create_producto_get_request(codigo: str | None = None, **kwargs) -> dict:
-        ."""
+        """
         Request GET para producto.
 
         Args:

@@ -10,7 +10,8 @@ Fixtures compartidos para tests siguiendo patrones BC3-Suite:
 - Logging silenciado para tests
 
 BC3-Suite Reference: /Users/eloymartinezcuesta/Documents/BC3-Suite/tests/conftest.py
-."""
+"""
+
 
 import pytest
 from pathlib import Path
@@ -37,7 +38,8 @@ def test_db_path() -> Path:
         Path: Ruta a testing/testing.db
 
     ⚠️ IMPORTANTE: Nunca usa database/tarifa_disano.db desde tests!
-    ."""
+    """
+
     return Path(__file__).parent.parent / "testing" / "testing.db"
 
 
@@ -73,7 +75,8 @@ def db_session(test_db_path: Path) -> Generator[sqlite3.Connection, None, None]:
 
 @pytest.fixture
 def client() -> TestClient:
-    ."""
+    """
+
     Test client FastAPI.
 
     Returns:
@@ -93,7 +96,8 @@ def client() -> TestClient:
 
 @pytest.fixture
 def auth_headers() -> dict:
-    ."""
+    """
+
     Headers con API key válida para testing.
 
     Returns:
@@ -144,7 +148,8 @@ def no_auth_headers() -> dict:
 
 @pytest.fixture
 def mock_bc3_suite_client() -> AsyncMock:
-    ."""
+    """
+
     Mock del cliente BC3 Suite para tests.
 
     NEVER llama a la API real de BC3 Suite desde tests.
@@ -165,7 +170,8 @@ def mock_bc3_suite_client() -> AsyncMock:
 
 @pytest.fixture
 def sample_producto_dict() -> dict:
-    ."""
+    """
+
     Diccionario de producto de ejemplo para tests.
 
     Returns:
@@ -220,7 +226,8 @@ def mock_disano_api_client() -> Mock:
 
 @pytest.fixture
 def sample_producto_row() -> Mock:
-    ."""
+    """
+
     Mock de fila SQLite de producto para tests.
 
     Returns:
