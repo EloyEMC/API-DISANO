@@ -204,7 +204,7 @@ def mock_bc3_suite_client() -> AsyncMock:
 
 @pytest.fixture
 def sample_producto_dict() -> dict:
-"""Diccionario de producto de ejemplo para tests."""
+    """Diccionario de producto de ejemplo para tests."""
     return {
         "codigo": "33036139",
         "marca": "Disano",
@@ -226,7 +226,7 @@ def mock_disano_api_client() -> Mock:
 
 @pytest.fixture
 def sample_producto_row() -> Mock:
-"""Mock de fila SQLite de producto para tests."""
+    """Mock de fila SQLite de producto para tests."""
     row = Mock()
     row.keys.return_value = [
         "CÓDIGO",
@@ -276,7 +276,7 @@ def mock_rate_limit_store() -> dict:
 
 
 def pytest_configure(config):
-"""Forzar import explícito para pytest-cov detection."""
+    """Forzar import explícito para pytest-cov detection."""
     # Importar módulos que deben medir coverage (hexagonal architecture)
     from app.interfaces.http import productos as productos_http
 
