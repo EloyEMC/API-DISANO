@@ -197,7 +197,7 @@ def no_auth_headers() -> dict:
 
 @pytest.fixture
 def mock_bc3_suite_client() -> AsyncMock:
-    ."""Mock del cliente BC3 Suite para tests."""
+    """Mock del cliente BC3 Suite para tests."""
     mock_client = AsyncMock()
     return mock_client
 
