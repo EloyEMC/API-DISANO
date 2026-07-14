@@ -1,13 +1,13 @@
 """FastAPI exception handlers for API-DISANO V2 endpoints
-
+    
 Provides centralized error handling with standardized error responses
 and proper HTTP status codes for different error types.
 """
-
-import logging
-from typing import Any, Dict
+    
 from fastapi import Request, status
 from fastapi.exceptions import RequestValidationError, HTTPException
+from typing import Any, Optional
+import logging
 from fastapi.responses import JSONResponse
 
 from app.interfaces.http.exceptions import (
@@ -162,9 +162,7 @@ async def validation_exception_handler(
         },
     }
 
-    return JSONResponse(
-        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, content=error_response
-    )
+    return JSONResponse(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, content=error_response)
 
 
 async def generic_exception_handler(request: Request, exc: Exception) -> JSONResponse:
@@ -271,9 +269,9 @@ def create_error_response(
     message: str,
     error_code: str,
     status_code: int,
-    details: Optional[Dict[str, Any]] = None,
-    debug_info: Optional[Dict[str, Any]] = None,
-) -> Dict[str, Any]:
+    details: Optional[dict[str, Any]] = None,
+    debug_info: Optional[dict[str, Any]] = None,
+) -> dict[str, Any]:
     """
     Create a standardized error response dictionary
 
@@ -307,7 +305,7 @@ def log_error(
     logger_instance: logging.Logger,
     error: Exception,
     request: Request,
-    additional_context: Optional[Dict[str, Any]] = None,
+    additional_context: Optional[dict[str, Any]] = None,
 ) -> None:
     """
     Log an error with standardized format
