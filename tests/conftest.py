@@ -100,7 +100,7 @@ def test_db_path() -> Path:
         Path: Ruta a testing/testing.db
 
     ⚠️ IMPORTANTE: Nunca usa database/tarifa_disano.db desde tests!
-    ."""
+"""
     return Path(__file__).parent.parent / "testing" / "testing.db"
 
 
@@ -116,7 +116,7 @@ def db_session(test_db_path: Path) -> Generator[sqlite3.Connection, None, None]:
 
     Yields:
         sqlite3.Connection: Sesión de base de datos
-    ."""
+"""
     connection = sqlite3.connect(test_db_path)
     connection.row_factory = sqlite3.Row
     yield connection
@@ -137,7 +137,7 @@ def sqlalchemy_session(
 
     Yields:
         Session: SQLAlchemy ORM session
-    ."""
+"""
     from sqlalchemy import create_engine
     from sqlalchemy.orm import sessionmaker
     from app.infrastructure.models.producto_clean import (
@@ -165,7 +165,7 @@ def client() -> TestClient:
 
     Returns:
         TestClient: Cliente HTTP para testing
-    ."""
+"""
     from app.main import app
 
     return TestClient(app)
@@ -204,7 +204,7 @@ def mock_bc3_suite_client() -> AsyncMock:
 
 @pytest.fixture
 def sample_producto_dict() -> dict:
-    ."""Diccionario de producto de ejemplo para tests."""
+"""Diccionario de producto de ejemplo para tests."""
     return {
         "codigo": "33036139",
         "marca": "Disano",
@@ -226,7 +226,7 @@ def mock_disano_api_client() -> Mock:
 
 @pytest.fixture
 def sample_producto_row() -> Mock:
-    ."""Mock de fila SQLite de producto para tests."""
+"""Mock de fila SQLite de producto para tests."""
     row = Mock()
     row.keys.return_value = [
         "CÓDIGO",
@@ -276,7 +276,7 @@ def mock_rate_limit_store() -> dict:
 
 
 def pytest_configure(config):
-    ."""Forzar import explícito para pytest-cov detection."""
+"""Forzar import explícito para pytest-cov detection."""
     # Importar módulos que deben medir coverage (hexagonal architecture)
     from app.interfaces.http import productos as productos_http
 
