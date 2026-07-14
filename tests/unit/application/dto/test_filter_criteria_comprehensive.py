@@ -6,7 +6,7 @@ from app.application.dto.pagination import FilterCriteria
 
 
 def test_filter_criteria_all_optional() -> None:
-    ."""Test all filter fields are optional."""
+    """Test all filter fields are optional."""
     criteria = FilterCriteria()
 
     assert criteria.marca is None
@@ -19,7 +19,7 @@ def test_filter_criteria_all_optional() -> None:
 
 
 def test_filter_criteria_exact_match_filters() -> None:
-    ."""Test exact match filters work."""
+    """Test exact match filters work."""
     criteria = FilterCriteria(marca="Disano", familia="Iluminación", bc3_product_type="columna")
 
     assert criteria.marca == "Disano"
@@ -69,7 +69,7 @@ def test_filter_criteria_price_range_valid() -> None:
 
 
 def test_filter_criteria_price_range_equal_bounds() -> None:
-    ."""Test price range with equal bounds works."""
+    """Test price range with equal bounds works."""
     criteria = FilterCriteria(pvp_min=50, pvp_max=50)
 
     assert criteria.pvp_min == 50
@@ -77,7 +77,7 @@ def test_filter_criteria_price_range_equal_bounds() -> None:
 
 
 def test_filter_criteria_price_range_zero() -> None:
-    ."""Test price range starting at zero works."""
+    """Test price range starting at zero works."""
     criteria = FilterCriteria(pvp_min=0, pvp_max=50)
 
     assert criteria.pvp_min == 0
@@ -85,7 +85,7 @@ def test_filter_criteria_price_range_zero() -> None:
 
 
 def test_filter_criteria_text_search() -> None:
-    ."""Test text search field works."""
+    """Test text search field works."""
     criteria = FilterCriteria(buscar="LED")
 
     assert criteria.buscar == "LED"
@@ -99,14 +99,14 @@ def test_filter_criteria_boolean_filter_true() -> None:
 
 
 def test_filter_criteria_boolean_filter_false() -> None:
-    ."""Test boolean filter works with False."""
+    """Test boolean filter works with False."""
     criteria = FilterCriteria(bc3_has_descripcion_corta=False)
 
     assert criteria.bc3_has_descripcion_corta is False
 
 
 def test_filter_criteria_single_filter() -> None:
-    ."""Test single filter applied."""
+    """Test single filter applied."""
     criteria = FilterCriteria(marca="Disano")
 
     assert criteria.marca == "Disano"
@@ -158,7 +158,7 @@ def test_filter_criteria_large_price_values() -> None:
 
 
 def test_filter_criteria_decimal_price_values() -> None:
-    ."""Test decimal price values work."""
+    """Test decimal price values work."""
     criteria = FilterCriteria(pvp_min=9.99, pvp_max=199.95)
 
     assert criteria.pvp_min == 9.99
@@ -166,7 +166,7 @@ def test_filter_criteria_decimal_price_values() -> None:
 
 
 def test_filter_criteria_text_search_various_strings() -> None:
-    ."""Test various text search strings."""
+    """Test various text search strings."""
     search_terms = ["LED", "Iluminación", "Panel", "Downlight", "Bajo consumo"]
 
     for term in search_terms:
@@ -315,7 +315,7 @@ def test_filter_price_range_boundary_conditions() -> None:
 
 
 def test_filter_criteria_comprehensive_filters() -> None:
-    ."""Test comprehensive filter with all fields."""
+    """Test comprehensive filter with all fields."""
     criteria = FilterCriteria(
         marca="Disano",
         familia="Iluminación",

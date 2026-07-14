@@ -229,7 +229,7 @@ def register_exception_handlers(app) -> None:
 
     Args:
         app: FastAPI application instance
-    ."""
+    """
     # Register custom API exception handler
     app.add_exception_handler(APIException, api_exception_handler)
 

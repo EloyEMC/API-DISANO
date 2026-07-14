@@ -15,7 +15,7 @@ class TestConfigValidation:
     """Tests para validación de configuración."""
 
     def test_secret_key_required_in_production(self):
-        ."""Verificar que SECRET_KEY es obligatorio en producción."""
+        """Verificar que SECRET_KEY es obligatorio en producción."""
         settings = Settings(
             environment="production",
             secret_key="",  # Vacío
@@ -55,7 +55,7 @@ class TestConfigValidation:
         assert settings1 is settings2
 
     def test_parse_api_keys_string(self):
-        ."""Verificar parseo de API_KEYS como string."""
+        """Verificar parseo de API_KEYS como string."""
         settings = Settings(environment="development", api_keys="key1,key2,key3")
 
         assert settings.api_keys_list == ["key1", "key2", "key3"]
@@ -81,7 +81,7 @@ class TestOTPService:
     """Tests para el servicio OTP."""
 
     def test_otp_generates_valid_code(self):
-        ."""Verificar que OTP generado es válido (6 dígitos)."""
+        """Verificar que OTP generado es válido (6 dígitos)."""
         otp_service = OTPService()
         email = "test@example.com"
 
@@ -106,7 +106,7 @@ class TestOTPService:
         assert otp_service.otp_length == 6
 
     def test_otp_status_returns_metadata(self):
-        ."""Verificar que get_otp_status retorna metadatos correctos."""
+        """Verificar que get_otp_status retorna metadatos correctos."""
         otp_service = OTPService()
         email = "test@example.com"
 
@@ -157,25 +157,25 @@ class TestRateLimiting:
     """Tests para rate limiting."""
 
     def test_rate_limit_per_client_limit(self):
-        ."""Verificar límite por cliente (30/min)."""
+        """Verificar límite por cliente (30/min)."""
         middleware = RedisRateLimitMiddleware(app=None)
 
         assert middleware.rate_limit_per_client == 30
 
     def test_rate_limit_global_limit(self):
-        ."""Verificar límite global (1000/min)."""
+        """Verificar límite global (1000/min)."""
         middleware = RedisRateLimitMiddleware(app=None)
 
         assert middleware.rate_limit_global == 1000
 
     def test_rate_limit_burst_limit(self):
-        ."""Verificar límite burst (10 requests)."""
+        """Verificar límite burst (10 requests)."""
         middleware = RedisRateLimitMiddleware(app=None)
 
         assert middleware.rate_limit_burst == 10
 
     def test_exempt_paths_configured(self):
-        ."""Verificar que paths exemptos están configurados."""
+        """Verificar que paths exemptos están configurados."""
         middleware = RedisRateLimitMiddleware(app=None)
 
         assert "/" in middleware.EXEMPT_PATHS
@@ -186,13 +186,13 @@ class TestSecurityHeadersMiddleware:
     """Tests para middleware de security headers."""
 
     def test_security_headers_middleware_exists(self):
-        ."""Verificar que el middleware existe."""
+        """Verificar que el middleware existe."""
         from app.middleware import SecurityHeadersMiddleware
 
         assert callable(SecurityHeadersMiddleware)
 
     def test_middleware_adds_headers(self, client):
-        ."""Verificar que middleware añade headers."""
+        """Verificar que middleware añade headers."""
         response = client.get("/health")
 
         # Verificar headers de seguridad
@@ -232,13 +232,13 @@ class TestRateLimitingMiddlewareRedis:
     """Tests para middleware Redis rate limiting."""
 
     def test_redis_middleware_exists(self):
-        ."""Verificar que el middleware Redis existe."""
+        """Verificar que el middleware Redis existe."""
         from app.middleware_redis import RedisRateLimitMiddleware
 
         assert callable(RedisRateLimitMiddleware)
 
     def test_in_memory_fallback_exists(self):
-        ."""Verificar que existe fallback in-memory."""
+        """Verificar que existe fallback in-memory."""
         from app.middleware_redis import RedisRateLimitMiddleware
 
         middleware = RedisRateLimitMiddleware(app=None)

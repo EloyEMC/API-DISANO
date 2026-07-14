@@ -13,7 +13,7 @@ class TestProductoFactory:
     """Tests de ProductoFactory."""
 
     def test_producto_base_creates_valid_structure(self):
-        ."""Crear producto base con estructura válida."""
+        """Crear producto base con estructura válida."""
         producto = ProductoFactory.base()
 
         assert "codigo" in producto
@@ -51,7 +51,7 @@ class TestOTPFactory:
     """Tests de OTPFactory."""
 
     def test_otp_valid_creates_complete_structure(self):
-        ."""Crear OTP válido con estructura completa."""
+        """Crear OTP válido con estructura completa."""
         otp_data = OTPFactory.valid()
 
         assert "code" in otp_data
@@ -86,7 +86,7 @@ class TestUserFactory:
     """Tests de UserFactory."""
 
     def test_admin_user_creates_correct_role(self):
-        ."""Crear usuario admin."""
+        """Crear usuario admin."""
         user = UserFactory.admin()
 
         assert user["role"] == "admin"

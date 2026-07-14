@@ -24,7 +24,7 @@ class PaginationCacheWrapper:
 
     Cache key structure: pagination:{entity_type}:{hash(fingerprint)}
     where fingerprint includes all pagination parameters.
-    ."""
+    """
 
     def __init__(self):
         """Initialize pagination cache wrapper."""
@@ -96,7 +96,7 @@ class PaginationCacheWrapper:
 
         Returns:
             Cached pagination result or None if not found
-        ."""
+        """
         cache_key = self._generate_cache_key(entity_type, page, per_page, sort, filters)
         return self.cache_manager.get(cache_key)
 
@@ -211,7 +211,7 @@ class PaginationCacheWrapper:
 
         Returns:
             Cached or computed pagination result
-        ."""
+        """
         # Try to get from cache first
         cached_result = self.get(entity_type, page, per_page, sort, filters)
         if cached_result is not None:
@@ -282,7 +282,7 @@ class PaginationCacheWrapper:
 
         Returns:
             True if successful
-        ."""
+        """
         # Invalidate all pagination cache types
         success = True
         for entity_type in self._cache_type_mapping.keys():

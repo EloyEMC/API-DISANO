@@ -25,7 +25,7 @@ class TestPaginationCacheWrapper:
     """Test pagination cache wrapper functionality."""
 
     def test_pagination_cache_wrapper_initialization(self):
-        ."""Test that pagination cache wrapper initializes correctly."""
+        """Test that pagination cache wrapper initializes correctly."""
         cache_wrapper = PaginationCacheWrapper()
 
         assert cache_wrapper.cache_manager is not None
@@ -42,7 +42,7 @@ class TestPaginationCacheWrapper:
         assert isinstance(cache1, PaginationCacheWrapper)
 
     def test_generate_cache_key_consistency(self):
-        ."""Test that cache keys are generated consistently."""
+        """Test that cache keys are generated consistently."""
         cache_wrapper = PaginationCacheWrapper()
 
         # Same parameters should produce same key
@@ -218,14 +218,14 @@ class TestCacheInvalidationStrategy:
     """Test cache invalidation strategy functionality."""
 
     def test_invalidation_strategy_initialization(self):
-        ."""Test that invalidation strategy initializes correctly."""
+        """Test that invalidation strategy initializes correctly."""
         strategy = CacheInvalidationStrategy()
 
         assert strategy.pagination_cache is not None
         assert strategy.cache_manager is not None
 
     def test_get_cache_invalidation_strategy_singleton(self):
-        ."""Test that get_cache_invalidation_strategy returns singleton instance."""
+        """Test that get_cache_invalidation_strategy returns singleton instance."""
         strategy1 = get_cache_invalidation_strategy()
         strategy2 = get_cache_invalidation_strategy()
 
@@ -233,7 +233,7 @@ class TestCacheInvalidationStrategy:
         assert isinstance(strategy1, CacheInvalidationStrategy)
 
     def test_invalidate_on_product_change(self):
-        ."""Test cache invalidation on product change."""
+        """Test cache invalidation on product change."""
         strategy = CacheInvalidationStrategy()
 
         # Set up cache with product data
@@ -317,13 +317,13 @@ class TestCacheWarmingStrategy:
     """Test cache warming strategy functionality."""
 
     def test_warming_strategy_initialization(self):
-        ."""Test that warming strategy initializes correctly."""
+        """Test that warming strategy initializes correctly."""
         warming_strategy = CacheWarmingStrategy()
 
         assert warming_strategy.pagination_cache is not None
 
     def test_get_cache_warming_strategy_singleton(self):
-        ."""Test that get_cache_warming_strategy returns singleton instance."""
+        """Test that get_cache_warming_strategy returns singleton instance."""
         strategy1 = get_cache_warming_strategy()
         strategy2 = get_cache_warming_strategy()
 
@@ -331,7 +331,7 @@ class TestCacheWarmingStrategy:
         assert isinstance(strategy1, CacheWarmingStrategy)
 
     def test_warm_popular_product_pages(self):
-        ."""Test warming popular product pages."""
+        """Test warming popular product pages."""
         warming_strategy = CacheWarmingStrategy()
 
         result = warming_strategy.warm_popular_product_pages()
@@ -420,7 +420,7 @@ class TestCacheManagerIntegration:
     """Test CacheManager integration with pagination cache."""
 
     def test_cache_manager_basic_operations(self):
-        ."""Test basic cache manager operations."""
+        """Test basic cache manager operations."""
         cache_manager = CacheManager()
 
         # Test set and get

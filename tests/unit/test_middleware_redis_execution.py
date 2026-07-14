@@ -13,7 +13,7 @@ class TestRedisMiddlewareModule:
     """Tests que importan middleware_redis.py (TDD)."""
 
     def test_middleware_redis_module_exists(self):
-        ."""GREEN: Verificar que middleware_redis.py existe."""
+        """GREEN: Verificar que middleware_redis.py existe."""
         # Arrange & Act
         from pathlib import Path
 
@@ -67,7 +67,7 @@ class TestRedisMiddlewareStructure:
     """Tests que verifican estructura de middleware_redis.py (TDD)."""
 
     def test_middleware_redis_has_rate_limit_check_method(self):
-        ."""GREEN: Verificar que tiene _check_rate_limits."""
+        """GREEN: Verificar que tiene _check_rate_limits."""
         # Arrange
         content = Path("app/middleware_redis.py").read_text()
 

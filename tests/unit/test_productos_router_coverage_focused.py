@@ -42,7 +42,7 @@ def app_with_router():
 # TEST 1: map_row_to_v2 utility function (lines 30-80)
 # ============================================================================
 def test_map_row_to_v2_basic_mapping(db_connection):
-    ."""Test map_row_to_v2 handles basic row correctly."""
+    """Test map_row_to_v2 handles basic row correctly."""
 
     row = db_connection.execute("SELECT * FROM productos LIMIT 1").fetchone()
     result = map_row_to_v2(row)

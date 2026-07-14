@@ -200,7 +200,7 @@ class CacheManager:
 
         Returns:
             True if deleted, False if key didn't exist
-        ."""
+        """
         try:
             deleted = False
 
@@ -233,7 +233,7 @@ class CacheManager:
 
         Returns:
             True if invalidated, False if key didn't exist
-        ."""
+        """
         return self.delete(key)
 
     def invalidate_pattern(self, pattern: str) -> int:
@@ -285,7 +285,7 @@ class CacheManager:
 
         Returns:
             True if successful
-        ."""
+        """
         try:
             # Try Redis first if available
             if self.redis_client:
@@ -313,7 +313,7 @@ class CacheManager:
 
         Returns:
             Number of entries warmed
-        ."""
+        """
         warmed = 0
 
         try:
@@ -344,7 +344,7 @@ class CacheManager:
 
         Returns:
             Cached or computed value
-        ."""
+        """
         # Try to get from cache first
         cached_value = self.get(key)
         if cached_value is not None:
@@ -439,7 +439,7 @@ _global_cache_manager: Optional[CacheManager] = None
 
 
 def get_cache_manager() -> CacheManager:
-    ."""
+    """
     Get global cache manager instance.
 
     Returns:

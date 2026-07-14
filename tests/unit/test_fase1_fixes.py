@@ -14,7 +14,7 @@ class TestRateLimitBugFixed:
     """Tests para verificar que el bug RATE_LIMIT ha sido corregido."""
 
     def test_rate_limit_variable_correctly_named(self):
-        ."""Verificar que se usa 'rate_limit' no 'RATE_LIMIT'."""
+        """Verificar que se usa 'rate_limit' no 'RATE_LIMIT'."""
         # Leer el archivo middleware.py
         middleware_path = Path(__file__).parent.parent.parent / "app" / "middleware.py"
         content = middleware_path.read_text()
@@ -43,7 +43,7 @@ class TestLegacyImportsMigrated:
     """Tests para verificar que los imports legacy han sido migrados."""
 
     def test_no_legacy_imports_in_routers(self):
-        ."""Verificar que no hay imports legacy de app.security."""
+        """Verificar que no hay imports legacy de app.security."""
         productos_path = (
             Path(__file__).parent.parent.parent / "app" / "routers" / "productos.py"
         )
@@ -69,7 +69,7 @@ class TestSecurityHeadersAdded:
     """Tests para verificar que los security headers han sido añadidos."""
 
     def test_content_security_policy_header_exists(self):
-        ."""Verificar que CSP header existe."""
+        """Verificar que CSP header existe."""
         middleware_path = Path(__file__).parent.parent.parent / "app" / "middleware.py"
         content = middleware_path.read_text()
 
@@ -95,7 +95,7 @@ class TestRequiredEnvVarsValidation:
     """Tests para verificar que las variables obligatorias se validan."""
 
     def test_secret_key_required_in_production(self):
-        ."""Verificar que SECRET_KEY es obligatorio en producción."""
+        """Verificar que SECRET_KEY es obligatorio en producción."""
         from app.config import Settings
 
         # Test con SECRET_KEY vacío

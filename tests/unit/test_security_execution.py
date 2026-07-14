@@ -86,7 +86,7 @@ class TestSecurityLoggingConfig:
     def test_setup_logging_configures_info_level(self):
         """
         RED: setup_logging() configura logging en INFO level.
-        ."""
+        """
         # Arrange & Act
         from app.security.logging_config import setup_logging
 
@@ -135,7 +135,7 @@ class TestSecurityRateLimiter:
     def test_rate_limit_per_client_defaults_to_30(self):
         """
         RED: Rate limit per client tiene default de 30.
-        ."""
+        """
         # Arrange & Act
         from app.security.rate_limiter import RATE_LIMIT_PER_CLIENT
 
@@ -145,7 +145,7 @@ class TestSecurityRateLimiter:
     def test_rate_limit_global_defaults_to_1000(self):
         """
         GREEN: Rate limit global tiene default de 1000.
-        ."""
+        """
         # Arrange & Act
         from app.security.rate_limiter import RATE_LIMIT_GLOBAL
 
@@ -155,7 +155,7 @@ class TestSecurityRateLimiter:
     def test_rate_limit_burst_defaults_to_10(self):
         """
         GREEN: Rate limit burst tiene default de 10.
-        ."""
+        """
         # Arrange & Act
         from app.security.rate_limiter import RATE_LIMIT_BURST
 

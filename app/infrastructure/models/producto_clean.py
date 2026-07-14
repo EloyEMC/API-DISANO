@@ -78,7 +78,7 @@ class ProductoModelClean(Base):
 
         Returns:
             ProductoModelClean: SQLAlchemy model with clean column names
-        ."""
+        """
         return cls(
             codigo=entity.codigo,
             descripcion=entity.descripcion,

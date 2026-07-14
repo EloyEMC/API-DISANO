@@ -44,7 +44,7 @@ class TestDatabaseIndexes:
                     """
                 CREATE INDEX IF NOT EXISTS idx_producto_codigo
                 ON productos_clean(codigo)
-            ."""
+            """
                 )
             )
             session.commit()
@@ -79,7 +79,7 @@ class TestDatabaseIndexes:
                     """
                 CREATE INDEX IF NOT EXISTS idx_producto_descripcion
                 ON productos_clean(descripcion)
-            ."""
+            """
                 )
             )
             session.commit()
@@ -114,7 +114,7 @@ class TestDatabaseIndexes:
                     """
                 CREATE INDEX IF NOT EXISTS idx_producto_marca
                 ON productos_clean(marca)
-            ."""
+            """
                 )
             )
             session.commit()
@@ -149,7 +149,7 @@ class TestDatabaseIndexes:
                     """
                 CREATE INDEX IF NOT EXISTS idx_producto_familia
                 ON productos_clean(familia)
-            ."""
+            """
                 )
             )
             session.commit()
@@ -235,7 +235,7 @@ class TestDatabaseIndexes:
                     """
                 CREATE INDEX IF NOT EXISTS idx_producto_marca_familia
                 ON productos_clean(marca, familia)
-            ."""
+            """
                 )
             )
             session.commit()

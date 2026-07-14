@@ -13,7 +13,7 @@ class TestSecurityModuleFunctions:
     """Tests que importan security.py con Settings (TDD)."""
 
     def test_security_module_import_successfully(self):
-        ."""
+        """
         AAA: Arrange (import), Act (import), Assert (validation)
         """
         # Arrange & Act - Intentar importar security module
@@ -35,7 +35,7 @@ class TestSecurityModuleFunctions:
         assert callable(security.verify_admin_api_key)
 
     def test_security_module_has_logging_functions(self):
-        ."""GREEN: Verificar que security.py tiene funciones de logging."""
+        """GREEN: Verificar que security.py tiene funciones de logging."""
         # Arrange & Act
         import app.security as security
 
@@ -51,7 +51,7 @@ class TestSecurityModuleImportStructure:
     """Tests que verifican estructura de imports de security.py (TDD)."""
 
     def test_security_imports_logging_config(self):
-        ."""GREEN: Verificar que security.py importa logging_config."""
+        """GREEN: Verificar que security.py importa logging_config."""
         # Arrange
         from pathlib import Path
 
@@ -84,7 +84,7 @@ class TestSecurityModuleFunctionsAvailable:
     """Tests que verifican funciones disponibles en security.py (TDD)."""
 
     def test_security_has_rate_limit_functions(self):
-        ."""GREEN: Verificar funciones de rate limiting."""
+        """GREEN: Verificar funciones de rate limiting."""
         # Arrange
         from pathlib import Path
 

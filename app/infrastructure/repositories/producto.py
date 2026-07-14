@@ -17,7 +17,7 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
     This class implements the ProductoRepositoryInterface contract
     using SQLAlchemy ORM for database operations. It maps between
     domain entities (ProductoEntity) and database models (ProductoModel).
-    ."""
+    """
 
     def __init__(self, session: Session):
         """
@@ -25,7 +25,7 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
 
         Args:
             session: SQLAlchemy session for database operations
-        ."""
+        """
         self.session = session
 
     def get_by_codigo(self, codigo: str) -> ProductoEntity:
@@ -109,7 +109,7 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
 
         Returns:
             List[ProductoEntity]: Products in specified range
-        ."""
+        """
         query = self.session.query(ProductoModel).offset(skip).limit(limit)
         return [model.to_entity() for model in query.all()]
 
@@ -122,7 +122,7 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
 
         Returns:
             ProductoEntity: Saved product with any DB-generated fields
-        ."""
+        """
         # Create model from entity
         model = ProductoModel.from_entity(producto)
 
@@ -141,7 +141,7 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
 
         Returns:
             bool: True if deleted, False if not found
-        ."""
+        """
         model = self.session.query(ProductoModel).filter(ProductoModel.codigo == codigo).first()
 
         if not model:
@@ -158,7 +158,7 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
 
         Returns:
             int: Total number of products in database
-        ."""
+        """
         return self.session.query(ProductoModel).count()
 
     def buscar_productos_paginado(self, dto: dict) -> Tuple[List[ProductoEntity], int]:

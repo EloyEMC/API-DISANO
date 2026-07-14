@@ -8,7 +8,7 @@ from app.monitoring.metrics import MetricsCollector
 
 
 def generate_dashboard() -> dict[str, Any]:
-    ."""
+    """
     Generate comprehensive performance dashboard.
 
     Returns:

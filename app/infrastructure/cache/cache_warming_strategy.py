@@ -18,7 +18,7 @@ class CacheWarmingStrategy:
 
     This class provides methods to pre-populate cache with frequently
     accessed data for improved performance.
-    ."""
+    """
 
     def __init__(self):
         """Initialize cache warming strategy."""
@@ -27,7 +27,7 @@ class CacheWarmingStrategy:
     def warm_popular_product_pages(
         self, per_page_values: Optional[List[int]] = None
     ) -> Dict[str, Any]:
-        ."""
+        """
         Warm cache with popular product pagination queries.
 
         Args:

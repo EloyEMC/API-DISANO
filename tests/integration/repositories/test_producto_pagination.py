@@ -5,7 +5,7 @@ from app.infrastructure.repositories.producto import SQLAlchemyProductoRepositor
 
 
 def test_repository_pagination_basic(sqlalchemy_session: Session) -> None:
-    ."""Test repository pagination with basic pagination."""
+    """Test repository pagination with basic pagination."""
     repo = SQLAlchemyProductoRepository(sqlalchemy_session)
 
     dto: dict = {"page": 1, "per_page": 10, "offset": 0, "sort": None, "filters": {}}

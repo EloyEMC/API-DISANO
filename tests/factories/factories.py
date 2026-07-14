@@ -16,7 +16,7 @@ class ProductoFactory:
 
     @staticmethod
     def base() -> dict:
-        ."""
+        """
         Producto base con campos mínimos.
 
         Returns:
@@ -111,11 +111,11 @@ class ProductoFactory:
 
 @dataclass
 class OTPFactory:
-    ."""Factory para crear datos OTP de prueba."""
+    """Factory para crear datos OTP de prueba."""
 
     @staticmethod
     def valid() -> dict:
-        ."""
+        """
         OTP válido con metadatos completos.
 
         Returns:
@@ -233,7 +233,7 @@ class UserFactory:
 
     @staticmethod
     def admin() -> dict:
-        ."""
+        """
         Usuario admin de prueba.
 
         Returns:

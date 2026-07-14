@@ -27,7 +27,7 @@ def client(app):
 
 @pytest.fixture
 def mock_producto_service(mocker):
-    ."""Mock ProductoService for testing."""
+    """Mock ProductoService for testing."""
     mock_service = mocker.Mock(spec=ProductoService)
     mocker.patch("app.interfaces.http.productos.get_producto_service", return_value=mock_service)
     return mock_service
@@ -37,7 +37,7 @@ class TestV2ProductPaginationEndpoint:
     """Test V2 product list endpoint with pagination."""
 
     def test_pagination_endpoint_requires_parameters(self, client):
-        ."""Test that pagination endpoint works without required parameters."""
+        """Test that pagination endpoint works without required parameters."""
         response = client.get("/api/productos/v2/paginated")
 
         # Should not fail, should use defaults

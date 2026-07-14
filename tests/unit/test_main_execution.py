@@ -14,7 +14,7 @@ class TestMainModuleWithSettings:
     """Tests que importan Settings con main.py (TDD)."""
 
     def test_main_module_import_with_settings(self):
-        ."""
+        """
         AAA: Arrange (import), Act (import), Assert (validation)
         """
         # Arrange & Act - Importar main con Settings
@@ -38,7 +38,7 @@ class TestMainModuleWithSettings:
         assert isinstance(app, FastAPI)
 
     def test_main_module_has_router_attribute(self):
-        ."""GREEN: Verificar que app tiene router."""
+        """GREEN: Verificar que app tiene router."""
         # Arrange & Act
         import app.main as main
 
@@ -70,7 +70,7 @@ class TestMainModuleCORSConfiguration:
     """Tests que verifican configuración CORS en main.py (TDD)."""
 
     def test_main_module_imports_cors(self):
-        ."""GREEN: Verificar que main.py importa CORS middleware."""
+        """GREEN: Verificar que main.py importa CORS middleware."""
         # Arrange
         from pathlib import Path
 

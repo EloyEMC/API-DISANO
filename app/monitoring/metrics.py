@@ -7,7 +7,7 @@ from datetime import datetime
 
 
 class MetricsCollector:
-    ."""
+    """
     Performance metrics collector for monitoring application performance.
 
     Collects, analyzes, and exports performance metrics including response times,
@@ -15,7 +15,7 @@ class MetricsCollector:
     """
 
     def __init__(self) -> None:
-        ."""Initialize the metrics collector."""
+        """Initialize the metrics collector."""
         self._metrics: dict[str, list[dict[str, Any]]] = defaultdict(list)
         self._cache_stats: dict[str, dict[str, int]] = defaultdict(lambda: {"hits": 0, "misses": 0})
 
@@ -55,7 +55,7 @@ class MetricsCollector:
 
         Returns:
             List of metric entries
-        ."""
+        """
         return self._metrics.get(metric_name, [])
 
     def get_aggregated_metrics(
@@ -227,7 +227,7 @@ class MetricsCollector:
 
         Returns:
             Dictionary with all metrics
-        ."""
+        """
         return dict(self._metrics)
 
     def reset(self) -> None:

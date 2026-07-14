@@ -14,7 +14,7 @@ class TestSecurityModule:
     """Tests que verifican estructura de app/security.py (TDD)."""
 
     def test_security_module_exists(self):
-        ."""GREEN: Verificar que security.py existe."""
+        """GREEN: Verificar que security.py existe."""
         # Arrange & Act
         security_path = Path("app/security.py")
 
@@ -50,7 +50,7 @@ class TestSecurityModuleImports:
     """Tests que verifican imports de security.py (TDD)."""
 
     def test_security_imports_os(self):
-        ."""GREEN: Verificar que security.py importa os."""
+        """GREEN: Verificar que security.py importa os."""
         # Arrange
         content = Path("app/security.py").read_text()
 

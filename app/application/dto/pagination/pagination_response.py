@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field
 
 
 class PaginationMetadata(BaseModel):
-    ."""Metadata for pagination responses."""
+    """Metadata for pagination responses."""
 
     total_items: int = Field(..., description="Total items matching query")
     total_pages: int = Field(..., description="Total pages")
@@ -28,7 +28,7 @@ class PaginationMetadata(BaseModel):
 
 
 class PaginatedResponseDTO(BaseModel):
-    ."""Complete response DTO for paginated results."""
+    """Complete response DTO for paginated results."""
 
     items: list = Field(..., description="List of items for current page")
     pagination: PaginationMetadata = Field(..., description="Pagination metadata")

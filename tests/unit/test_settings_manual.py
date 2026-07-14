@@ -13,7 +13,7 @@ class TestSettingsManualCreation:
     """Tests de Settings creados manualmente (sin env vars)."""
 
     def test_settings_manual_basic(self):
-        ."""Crear Settings manual con valores básicos."""
+        """Crear Settings manual con valores básicos."""
         settings = Settings(
             environment="testing",
             secret_key="test-key-32-char-minimum-length",

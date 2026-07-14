@@ -18,7 +18,7 @@ class FamiliaRepositoryInterface(ABC):
 
         Returns:
             List[FamiliaEntity]: All families with BC3 statistics
-        ."""
+        """
         pass
 
     @abstractmethod
@@ -34,7 +34,7 @@ class FamiliaRepositoryInterface(ABC):
 
         Raises:
             Exception: If family not found
-        ."""
+        """
         pass
 
     @abstractmethod
@@ -44,7 +44,7 @@ class FamiliaRepositoryInterface(ABC):
 
         Returns:
             Dict: Aggregate statistics including total families, products, BC3 coverage
-        ."""
+        """
         pass
 
     @abstractmethod

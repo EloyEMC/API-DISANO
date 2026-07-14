@@ -15,7 +15,7 @@ class TestAuthIDORAdminEndpoints:
     """
     Tests de Auth IDOR para endpoints admin.
     Security Critical: Prevención de accesos no autorizados.
-    ."""
+    """
 
     def test_user_cannot_post_producto_without_admin_api_key(self):
         """

@@ -28,7 +28,7 @@ class CacheConfiguration:
 
     Provides tunable parameters for different deployment scenarios
     and workloads.
-    ."""
+    """
 
     # TTL settings (in seconds)
     product_ttl: int = 3600  # 1 hour for products
@@ -111,7 +111,7 @@ class CacheConfigurationManager:
     Manager for cache configuration optimization.
 
     Provides environment-specific configurations and auto-tuning capabilities.
-    ."""
+    """
 
     @staticmethod
     def get_development_config() -> CacheConfiguration:
@@ -119,7 +119,7 @@ class CacheConfigurationManager:
         Get optimized configuration for development.
 
         Development prioritizes fast iteration over cache hit rate.
-        ."""
+        """
         return CacheConfiguration(
             product_ttl=300,  # 5 minutes
             familia_ttl=600,  # 10 minutes
@@ -144,7 +144,7 @@ class CacheConfigurationManager:
         Get optimized configuration for testing.
 
         Testing prioritizes minimal cache overhead and consistent results.
-        ."""
+        """
         return CacheConfiguration(
             product_ttl=60,  # 1 minute
             familia_ttl=120,  # 2 minutes
@@ -169,7 +169,7 @@ class CacheConfigurationManager:
         Get optimized configuration for staging.
 
         Staging balances performance and data freshness.
-        ."""
+        """
         return CacheConfiguration(
             product_ttl=1800,  # 30 minutes
             familia_ttl=3600,  # 1 hour
@@ -194,7 +194,7 @@ class CacheConfigurationManager:
         Get optimized configuration for production.
 
         Production prioritizes high performance and scalability.
-        ."""
+        """
         return CacheConfiguration(
             product_ttl=7200,  # 2 hours
             familia_ttl=14400,  # 4 hours
@@ -223,7 +223,7 @@ class CacheConfigurationManager:
 
         Returns:
             Optimized cache configuration
-        ."""
+        """
         config_map = {
             DeploymentEnvironment.DEVELOPMENT: CacheConfigurationManager.get_development_config(),
             DeploymentEnvironment.TESTING: CacheConfigurationManager.get_testing_config(),
@@ -367,7 +367,7 @@ def get_optimized_cache_config(
 
     Returns:
         Optimized cache configuration
-    ."""
+    """
     return CacheConfigurationManager.get_config(environment)
 
 

@@ -4,10 +4,10 @@ from app.infrastructure.repositories.familia import SQLAlchemyFamiliaRepository
 
 
 class TestFamiliaRepositoryPagination:
-    ."""Comprehensive tests for Familia repository pagination."""
+    """Comprehensive tests for Familia repository pagination."""
 
     def test_familia_repository_pagination_first_page(self, sqlalchemy_session) -> None:
-        ."""Test pagination on first page."""
+        """Test pagination on first page."""
         repo = SQLAlchemyFamiliaRepository(sqlalchemy_session)
 
         dto: dict = {
@@ -285,7 +285,7 @@ class TestFamiliaRepositoryIntegration:
     """Integration tests combining repository methods."""
 
     def test_familia_repository_statistics_consistency(self, sqlalchemy_session) -> None:
-        ."""Test that statistics match pagination totals."""
+        """Test that statistics match pagination totals."""
         repo = SQLAlchemyFamiliaRepository(sqlalchemy_session)
 
         # Get statistics

@@ -236,7 +236,7 @@ class TestMiddlewareRateLimitStore:
     def test_rate_limit_store_is_dict_of_lists(self):
         """
         GREEN: rate_limit_store es un dict de listas.
-        ."""
+        """
         # Arrange & Act
         from app.middleware import rate_limit_store
 

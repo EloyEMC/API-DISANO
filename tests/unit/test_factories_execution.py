@@ -19,7 +19,7 @@ class TestProductoFactoryExecution:
     """Tests que ejecutan Producto Factory BC3-Suite (TDD)."""
 
     def test_producto_factory_base_creates_valid_instance(self):
-        ."""
+        """
         AAA: Arrange (factory), Act (base()), Assert (validation)
         """
         # Arrange - Usar factory
@@ -81,7 +81,7 @@ class TestOTPFactoryExecution:
     """Tests que ejecutan OTP Factory BC3-Suite (TDD)."""
 
     def test_otp_factory_creates_valid_otp(self):
-        ."""GREEN: Crear OTP válido con factory."""
+        """GREEN: Crear OTP válido con factory."""
         # Arrange
         otp_dict = OTPFactory.valid()
 
@@ -108,7 +108,7 @@ class TestUserFactoryExecution:
     """Tests que ejecutan User Factory BC3-Suite (TDD)."""
 
     def test_user_factory_creates_admin(self):
-        ."""GREEN: Crear usuario admin con factory."""
+        """GREEN: Crear usuario admin con factory."""
         # Arrange
         user_dict = UserFactory.admin()
 
@@ -139,7 +139,7 @@ class TestRequestFactoryExecution:
     """Tests que ejecutan Request Factory BC3-Suite (TDD)."""
 
     def test_request_factory_get_producto(self):
-        ."""GREEN: Crear request GET para producto."""
+        """GREEN: Crear request GET para producto."""
         # Arrange
         request_dict = RequestFactory.create_producto_get_request()
 

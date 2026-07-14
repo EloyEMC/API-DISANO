@@ -36,10 +36,10 @@ settings = get_settings()
 
 
 class OTPService:
-    ."""Service for OTP generation, delivery, and verification."""
+    """Service for OTP generation, delivery, and verification."""
 
     def __init__(self):
-        ."""Initialize OTP service with in-memory store."""
+        """Initialize OTP service with in-memory store."""
         self.otp_store: dict[str, dict] = defaultdict(dict)
         self.otp_expiry_minutes = 10
         self.max_attempts = 3

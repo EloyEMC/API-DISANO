@@ -62,7 +62,7 @@ class ScrapingDetector:
     """
 
     def __init__(self):
-        ."""Inicializa el detector con estructuras de datos vacías."""
+        """Inicializa el detector con estructuras de datos vacías."""
         # Historial de peticiones: {identifier: [(timestamp, endpoint), ...]}
         self.request_history: Dict[str, List[tuple]] = defaultdict(list)
 
@@ -81,7 +81,7 @@ class ScrapingDetector:
         self._cleanup_old_entries()
 
     def _get_identifier(self, request: Request) -> str:
-        ."""
+        """
         Genera un identificador único para el cliente.
 
         Prioriza API key sobre IP address para tracking.
@@ -106,7 +106,7 @@ class ScrapingDetector:
 
         Se llama automáticamente en cada análisis para evitar
         consumo excesivo de memoria.
-        ."""
+        """
         cutoff_time = datetime.now() - timedelta(hours=1)
 
         for identifier in list(self.request_history.keys()):
@@ -132,7 +132,7 @@ class ScrapingDetector:
 
         Returns:
             bool: True si el timing es sospechosamente perfecto
-        ."""
+        """
         if len(request_history) < 10:
             return False
 
@@ -167,7 +167,7 @@ class ScrapingDetector:
 
         Returns:
             bool: True si detecta patrón secuencial sospechoso
-        ."""
+        """
         if len(request_history) < 20:
             return False
 
@@ -398,7 +398,7 @@ class ScrapingDetector:
             list[str]: Lista de IPs baneadas
 
         Nota: Incluye tanto bans temporales como permanentes
-        ."""
+        """
         current_time = datetime.now().timestamp()
 
         # Filtrar bans expirados

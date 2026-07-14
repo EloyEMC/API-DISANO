@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field
 
 
 class PaginationRequestDTO(BaseModel):
-    ."""DTO for pagination requests with comprehensive validation."""
+    """DTO for pagination requests with comprehensive validation."""
 
     page: int = Field(1, ge=1, description="Page number (1-based)")
     per_page: int = Field(20, ge=1, le=100, description="Items per page")

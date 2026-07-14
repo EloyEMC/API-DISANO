@@ -67,7 +67,7 @@ def create_strategic_indexes():
 def analyze_index_usage():
     """
     Analyze index usage and provide recommendations
-    ."""
+    """
     session = SessionLocal()
 
     try:

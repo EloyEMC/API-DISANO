@@ -12,7 +12,7 @@ class TestAdminEndpointsRequireAdminKey:
     """Tests para verificar que los endpoints admin requieren admin key."""
 
     def test_create_producto_requires_admin_key(self, client, mock_db_connection):
-        ."""Verificar que POST /api/admin/productos requiere admin key."""
+        """Verificar que POST /api/admin/productos requiere admin key."""
         # Configurar mock
         mock_cursor = mock_db_connection.return_value.cursor.return_value
         mock_cursor.fetchone.return_value = [0]  # Código no existe
@@ -63,7 +63,7 @@ class TestSecurityHeadersInProduction:
     """Tests para verificar que los security headers están presentes."""
 
     def test_security_headers_in_production(self, client):
-        ."""Verificar que todos los security headers están presentes."""
+        """Verificar que todos los security headers están presentes."""
         response = client.get("/health")
 
         # Headers obligatorios según BC3-Suite
@@ -84,7 +84,7 @@ class TestRateLimitingNotBroken:
     """Tests para verificar que rate limiting no tiene el bug NAMEERROR."""
 
     def test_health_check_no_rate_limit_error(self, client):
-        ."""Verificar que health check no lanza NameError."""
+        """Verificar que health check no lanza NameError."""
         response = client.get("/health")
 
         # Debería funcionar sin NameError: name 'RATE_LIMIT' is not defined
@@ -104,7 +104,7 @@ class TestConfigValidationInProduction:
     """Tests para verificar que la configuración se valida correctamente."""
 
     def test_production_requires_secret_key(self):
-        ."""Verificar que en producción se requiere SECRET_KEY."""
+        """Verificar que en producción se requiere SECRET_KEY."""
         from app.config import Settings
 
         with pytest.raises(ValueError) as exc_info:
@@ -138,7 +138,7 @@ class TestNoLegacySecurityImports:
     """Tests para verificar que no hay imports legacy."""
 
     def test_no_legacy_verify_admin_import(self):
-        ."""Verificar que no hay import legacy de verify_admin_api_key."""
+        """Verificar que no hay import legacy de verify_admin_api_key."""
         from app.routers import productos
 
         # Verificar que el módulo no tiene el import legacy
@@ -164,7 +164,7 @@ class TestOTPSecurityIntegration:
     """Tests de integración para seguridad OTP."""
 
     def test_otp_service_exists(self):
-        ."""Verificar que el servicio OTP está disponible."""
+        """Verificar que el servicio OTP está disponible."""
         from app.security.otp_service import otp_service
 
         assert otp_service is not None
@@ -172,7 +172,7 @@ class TestOTPSecurityIntegration:
         assert callable(otp_service.verify_otp)
 
     def test_otp_generates_valid_codes(self):
-        ."""Verificar que el servicio genera OTPs válidos."""
+        """Verificar que el servicio genera OTPs válidos."""
         from app.security.otp_service import otp_service
 
         otp = otp_service.generate_otp("test@example.com")
@@ -195,14 +195,14 @@ class TestLoggingConfiguration:
     """Tests para verificar que el logging está configurado."""
 
     def test_logging_setup_exists(self):
-        ."""Verificar que setup_logging existe."""
+        """Verificar que setup_logging existe."""
         from app.security.logging_config import setup_logging
 
         assert setup_logging is not None
         assert callable(setup_logging)
 
     def test_main_calls_setup_logging(self):
-        ."""Verificar que main.py llama a setup_logging."""
+        """Verificar que main.py llama a setup_logging."""
         from app import main
 
         # Verificar que main.py llama a setup_logging
@@ -220,7 +220,7 @@ class TestEnvironmentFileTemplate:
     """Tests para verificar que existe el template de .env.production."""
 
     def test_env_production_template_exists(self):
-        ."""Verificar que existe el archivo .env.production.example."""
+        """Verificar que existe el archivo .env.production.example."""
         from pathlib import Path
 
         env_template = Path(__file__).parent.parent.parent / ".env.production.example"

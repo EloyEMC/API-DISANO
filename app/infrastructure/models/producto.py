@@ -243,7 +243,7 @@ class ProductoModel(Base):
 
         Returns:
             ProductoModel: SQLAlchemy model with legacy column names
-        ."""
+        """
         return cls(
             CÓDIGO=entity.codigo,
             DESCRIPCION=entity.descripcion,

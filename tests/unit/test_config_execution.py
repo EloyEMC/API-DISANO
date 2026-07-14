@@ -31,7 +31,7 @@ class TestConfigSettingsRequiredFields:
     def test_settings_api_keys_required_validation(self):
         """
         GREEN: Settings debe fallar sin API_KEYS válidos.
-        ."""
+        """
         # Arrange
         from app.config import Settings
 

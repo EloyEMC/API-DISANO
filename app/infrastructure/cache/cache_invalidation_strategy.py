@@ -23,7 +23,7 @@ class CacheInvalidationStrategy:
     - Filter-based invalidation (marca, familia, price ranges)
     - Pattern-based invalidation for complex scenarios
     - Event-driven invalidation hooks
-    ."""
+    """
 
     def __init__(self):
         """Initialize cache invalidation strategy."""
@@ -36,7 +36,7 @@ class CacheInvalidationStrategy:
         marca: Optional[str] = None,
         familia: Optional[str] = None,
     ) -> Dict[str, Any]:
-        ."""
+        """
         Invalidate cache entries when a product changes (create, update, delete).
 
         Args:

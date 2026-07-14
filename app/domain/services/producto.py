@@ -29,7 +29,7 @@ class ProductoService:
     This service contains business rules and validation logic.
     It uses the repository interface for data access, maintaining
     dependency inversion and testability.
-    ."""
+    """
 
     def __init__(self, repository: ProductoRepositoryInterface):
         """
@@ -37,7 +37,7 @@ class ProductoService:
 
         Args:
             repository: Producto repository implementation
-        ."""
+        """
         self.repository = repository
 
     def crear_producto(self, dto: ProductoCreateDTO) -> ProductoEntity:
@@ -144,7 +144,7 @@ class ProductoService:
 
         Raises:
             ProductoNotFoundException: If not found
-        ."""
+        """
         return self.repository.get_by_codigo(codigo)
 
     def eliminar_producto(self, codigo: str) -> bool:
@@ -156,7 +156,7 @@ class ProductoService:
 
         Returns:
             bool: True if deleted, False if not found
-        ."""
+        """
         # 1. Verify exists
         try:
             self.repository.get_by_codigo(codigo)
@@ -176,7 +176,7 @@ class ProductoService:
 
         Returns:
             list[ProductoEntity]: Products in range
-        ."""
+        """
         return self.repository.get_all(skip=skip, limit=limit)
 
     def count_productos(self) -> int:
@@ -185,7 +185,7 @@ class ProductoService:
 
         Returns:
             int: Total number of products
-        ."""
+        """
         return self.repository.count_total()
 
     def buscar_productos_paginado(self, request_dto: PaginationRequestDTO) -> PaginatedResponseDTO:

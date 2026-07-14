@@ -64,7 +64,7 @@ class APIException(Exception):
             status_code: HTTP status code
             details: Additional error details
             context: Request context for debugging
-        ."""
+        """
         self.message = message
         self.error_code = error_code
         self.status_code = status_code

@@ -22,7 +22,7 @@ class SQLAlchemyFamiliaRepository(FamiliaRepositoryInterface):
 
         Args:
             session: SQLAlchemy database session
-        ."""
+        """
         self.session = session
 
     def get_all(self) -> List[FamiliaEntity]:

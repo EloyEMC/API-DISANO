@@ -14,7 +14,7 @@ class TestModelsModuleImport:
     """Tests que importan app/models.py (TDD)."""
 
     def test_models_module_import_successfully(self):
-        ."""
+        """
         AAA: Arrange (import), Act (import), Assert (validation)
         """
         # Arrange & Act - Intentar importar modelos
@@ -68,7 +68,7 @@ class TestModelsV2Structure:
     """Tests que verifican estructura de modelos V2 (TDD)."""
 
     def test_producto_base_v2_has_codigo_field(self):
-        ."""GREEN: Verificar que ProductoBaseV2 tiene codigo."""
+        """GREEN: Verificar que ProductoBaseV2 tiene codigo."""
         # Arrange & Act
 
         # Assert - Verificar anotaciones de tipo
@@ -100,7 +100,7 @@ class TestModelsV2BC3Fields:
     """Tests que verifican campos BC3 en modelos V2 (TDD)."""
 
     def test_producto_v2_has_bc3_descripcion_corta_field(self):
-        ."""GREEN: Verificar que ProductoV2 tiene bc3_descripcion_corta."""
+        """GREEN: Verificar que ProductoV2 tiene bc3_descripcion_corta."""
         # Assert
         assert "bc3_descripcion_corta" in Path("app/models.py").read_text()
 

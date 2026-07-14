@@ -4,10 +4,10 @@ from app.infrastructure.repositories.producto import SQLAlchemyProductoRepositor
 
 
 class TestProductoRepositoryPagination:
-    ."""Comprehensive tests for Producto repository pagination."""
+    """Comprehensive tests for Producto repository pagination."""
 
     def test_repository_pagination_first_page(self, sqlalchemy_session) -> None:
-        ."""Test pagination on first page."""
+        """Test pagination on first page."""
         repo = SQLAlchemyProductoRepository(sqlalchemy_session)
 
         dto: dict = {
@@ -361,7 +361,7 @@ class TestProductoRepositoryIntegration:
     """Integration tests combining repository methods."""
 
     def test_repository_pagination_and_total_consistency(self, sqlalchemy_session) -> None:
-        ."""Test that pagination and total methods are consistent."""
+        """Test that pagination and total methods are consistent."""
         repo = SQLAlchemyProductoRepository(sqlalchemy_session)
 
         # Get total from count_total

@@ -14,7 +14,7 @@ class TestCacheStrategyRed:
     """RED Phase: Failing tests for cache strategy."""
 
     def test_cache_key_generation_consistent(self):
-        ."""Test that cache keys are generated consistently."""
+        """Test that cache keys are generated consistently."""
         from app.infrastructure.cache.cache_manager import CacheManager
 
         manager = CacheManager()
@@ -73,7 +73,7 @@ class TestCacheTTLStrategyRed:
     """RED Phase: Failing tests for TTL strategy."""
 
     def test_default_ttl_returned_for_unknown_type(self):
-        ."""Test that default TTL is returned for unknown data type."""
+        """Test that default TTL is returned for unknown data type."""
         from app.infrastructure.cache.cache_manager import CacheManager
 
         manager = CacheManager()
@@ -120,7 +120,7 @@ class TestCacheInvalidationStrategyRed:
     """RED Phase: Failing tests for cache invalidation."""
 
     def test_invalidate_removes_specific_key(self):
-        ."""Test that invalidation removes a specific cache key."""
+        """Test that invalidation removes a specific cache key."""
         from app.infrastructure.cache.cache_manager import CacheManager
 
         manager = CacheManager()
@@ -186,7 +186,7 @@ class TestCacheWarmingStrategyRed:
     """RED Phase: Failing tests for cache warming."""
 
     def test_cache_warming_populates_frequently_used_keys(self):
-        ."""Test that cache warming populates frequently used keys."""
+        """Test that cache warming populates frequently used keys."""
         from app.infrastructure.cache.cache_manager import CacheManager
 
         manager = CacheManager()
@@ -214,7 +214,7 @@ class TestCacheManagerPerformanceRed:
     """RED Phase: Failing tests for cache performance."""
 
     def test_cache_hit_improves_performance(self):
-        ."""Test that cache hit improves performance."""
+        """Test that cache hit improves performance."""
         from app.infrastructure.cache.cache_manager import CacheManager
 
         cache = CacheManager()
@@ -264,7 +264,7 @@ class TestCacheFallbackRed:
     """RED Phase: Failing tests for cache fallback behavior."""
 
     def test_cache_fallback_when_unavailable(self):
-        ."""Test that cache falls back gracefully when unavailable."""
+        """Test that cache falls back gracefully when unavailable."""
         from app.infrastructure.cache.cache_manager import CacheManager
 
         manager = CacheManager()

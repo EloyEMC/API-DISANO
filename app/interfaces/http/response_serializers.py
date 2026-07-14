@@ -82,7 +82,7 @@ class ResponseSerializer:
 
         Returns:
             List of serialized entities as dictionaries
-        ."""
+        """
         return [cls.serialize_entity(entity, entity_type, exclude_fields) for entity in entities]
 
     @classmethod
@@ -153,7 +153,7 @@ class ResponseSerializer:
 
         Returns:
             JSON string
-        ."""
+        """
 
         def json_serializer(obj):
             """Custom JSON serializer for special types."""
@@ -349,7 +349,7 @@ class ProductoResponseSerializer(ResponseSerializer):
 
         Returns:
             List of serialized productos
-        ."""
+        """
         return [cls.serialize_producto(p, detailed) for p in productos]
 
 
@@ -390,7 +390,7 @@ class FamiliaResponseSerializer(ResponseSerializer):
 
         Returns:
             List of serialized familias
-        ."""
+        """
         return [cls.serialize_familia(f) for f in familias]
 
 

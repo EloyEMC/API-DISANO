@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field, model_validator
 
 
 class FilterCriteria(BaseModel):
-    ."""DTO for advanced filtering with comprehensive filters."""
+    """DTO for advanced filtering with comprehensive filters."""
 
     marca: str | None = Field(None, max_length=50, description="Filter by brand")
     familia: str | None = Field(None, max_length=50, description="Filter by family")

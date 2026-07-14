@@ -4,7 +4,7 @@ from app.application.dto.pagination import PaginatedResponseDTO, PaginationMetad
 
 
 def test_pagination_metadata_from_query_calculation() -> None:
-    ."""Test metadata calculation from query results."""
+    """Test metadata calculation from query results."""
     metadata = PaginationMetadata.from_query(total_items=95, current_page=2, per_page=20)
 
     assert metadata.total_items == 95
@@ -16,7 +16,7 @@ def test_pagination_metadata_from_query_calculation() -> None:
 
 
 def test_pagination_metadata_on_last_page() -> None:
-    ."""Test metadata on last page."""
+    """Test metadata on last page."""
     metadata = PaginationMetadata.from_query(total_items=95, current_page=5, per_page=20)
 
     assert metadata.total_items == 95
@@ -28,7 +28,7 @@ def test_pagination_metadata_on_last_page() -> None:
 
 
 def test_pagination_metadata_on_first_page() -> None:
-    ."""Test metadata on first page."""
+    """Test metadata on first page."""
     metadata = PaginationMetadata.from_query(total_items=95, current_page=1, per_page=20)
 
     assert metadata.total_items == 95
@@ -40,7 +40,7 @@ def test_pagination_metadata_on_first_page() -> None:
 
 
 def test_pagination_metadata_empty_results() -> None:
-    ."""Test metadata with empty results."""
+    """Test metadata with empty results."""
     metadata = PaginationMetadata.from_query(total_items=0, current_page=1, per_page=20)
 
     assert metadata.total_items == 0
@@ -52,7 +52,7 @@ def test_pagination_metadata_empty_results() -> None:
 
 
 def test_pagination_metadata_exact_page_count() -> None:
-    ."""Test metadata when items exactly fill pages."""
+    """Test metadata when items exactly fill pages."""
     metadata = PaginationMetadata.from_query(total_items=100, current_page=2, per_page=20)
 
     assert metadata.total_items == 100
@@ -62,7 +62,7 @@ def test_pagination_metadata_exact_page_count() -> None:
 
 
 def test_pagination_metadata_single_result() -> None:
-    ."""Test metadata with single result."""
+    """Test metadata with single result."""
     metadata = PaginationMetadata.from_query(total_items=1, current_page=1, per_page=20)
 
     assert metadata.total_items == 1
@@ -74,7 +74,7 @@ def test_pagination_metadata_single_result() -> None:
 
 
 def test_pagination_metadata_single_item_per_page() -> None:
-    ."""Test metadata with single item per page."""
+    """Test metadata with single item per page."""
     metadata = PaginationMetadata.from_query(total_items=5, current_page=3, per_page=1)
 
     assert metadata.total_items == 5
@@ -86,7 +86,7 @@ def test_pagination_metadata_single_item_per_page() -> None:
 
 
 def test_pagination_metadata_large_page_numbers() -> None:
-    ."""Test metadata with large page numbers."""
+    """Test metadata with large page numbers."""
     metadata = PaginationMetadata.from_query(total_items=10000, current_page=100, per_page=50)
 
     assert metadata.total_items == 10000
@@ -98,7 +98,7 @@ def test_pagination_metadata_large_page_numbers() -> None:
 
 
 def test_pagination_metadata_model_dump() -> None:
-    ."""Test model_dump works correctly."""
+    """Test model_dump works correctly."""
     metadata = PaginationMetadata.from_query(total_items=50, current_page=2, per_page=10)
 
     dump = metadata.model_dump()
@@ -151,7 +151,7 @@ def test_paginated_response_empty_items() -> None:
 
 
 def test_paginated_response_single_item() -> None:
-    ."""Test response with single item."""
+    """Test response with single item."""
     metadata = PaginationMetadata.from_query(total_items=1, current_page=1, per_page=20)
 
     response = PaginatedResponseDTO(
@@ -253,7 +253,7 @@ def test_pagination_metadata_first_and_last_page_flags() -> None:
 
 
 def test_pagination_metadata_fractional_pages() -> None:
-    ."""Test metadata with fractional page count (rounding up)."""
+    """Test metadata with fractional page count (rounding up)."""
     metadata = PaginationMetadata.from_query(total_items=95, current_page=1, per_page=20)
 
     assert metadata.total_items == 95
@@ -261,7 +261,7 @@ def test_pagination_metadata_fractional_pages() -> None:
 
 
 def test_pagination_metadata_per_page_variations() -> None:
-    ."""Test metadata with different per_page values."""
+    """Test metadata with different per_page values."""
     per_page_values = [1, 10, 20, 50, 100]
 
     for per_page in per_page_values:
@@ -272,7 +272,7 @@ def test_pagination_metadata_per_page_variations() -> None:
 
 
 def test_paginated_response_comprehensive_structure() -> None:
-    ."""Test comprehensive response structure with all fields."""
+    """Test comprehensive response structure with all fields."""
     metadata = PaginationMetadata.from_query(total_items=50, current_page=2, per_page=10)
 
     response = PaginatedResponseDTO(

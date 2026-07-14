@@ -6,7 +6,7 @@ from app.application.dto.pagination import PaginationRequestDTO
 
 
 def test_pagination_request_default_values() -> None:
-    ."""Test default values for pagination request."""
+    """Test default values for pagination request."""
     dto = PaginationRequestDTO(page=1, per_page=20)
 
     assert dto.page == 1
@@ -15,7 +15,7 @@ def test_pagination_request_default_values() -> None:
 
 
 def test_pagination_request_custom_values() -> None:
-    ."""Test custom values for pagination request."""
+    """Test custom values for pagination request."""
     dto = PaginationRequestDTO(page=5, per_page=50, sort="precio:desc")
 
     assert dto.page == 5
@@ -30,25 +30,25 @@ def test_pagination_request_offset_calculation_page_1() -> None:
 
 
 def test_pagination_request_offset_calculation_page_3() -> None:
-    ."""Test offset calculation for middle page."""
+    """Test offset calculation for middle page."""
     dto = PaginationRequestDTO(page=3, per_page=10)
     assert dto.offset == 20  # (3-1) * 10
 
 
 def test_pagination_request_offset_calculation_large_page() -> None:
-    ."""Test offset calculation for large page number."""
+    """Test offset calculation for large page number."""
     dto = PaginationRequestDTO(page=100, per_page=25)
     assert dto.offset == 2475  # (100-1) * 25
 
 
 def test_pagination_request_offset_calculation_per_page_1() -> None:
-    ."""Test offset calculation with per_page=1."""
+    """Test offset calculation with per_page=1."""
     dto = PaginationRequestDTO(page=5, per_page=1)
     assert dto.offset == 4  # (5-1) * 1
 
 
 def test_pagination_request_page_validation_zero() -> None:
-    ."""Test that page < 1 raises ValidationError."""
+    """Test that page < 1 raises ValidationError."""
     with pytest.raises(ValidationError) as exc_info:
         PaginationRequestDTO(page=0, per_page=20)
 
@@ -105,13 +105,13 @@ def test_pagination_request_per_page_boundary_values() -> None:
 
 
 def test_pagination_request_sort_none() -> None:
-    ."""Test that sort can be None."""
+    """Test that sort can be None."""
     dto = PaginationRequestDTO(page=1, per_page=20, sort=None)
     assert dto.sort is None
 
 
 def test_pagination_request_sort_with_field_only() -> None:
-    ."""Test sort with field only (no order specified)."""
+    """Test sort with field only (no order specified)."""
     dto = PaginationRequestDTO(page=1, per_page=20, sort="precio")
     assert dto.sort == "precio"
 
@@ -201,7 +201,7 @@ def test_pagination_request_large_values() -> None:
 
 
 def test_pagination_request_typical_use_case() -> None:
-    ."""Test typical use case for first page."""
+    """Test typical use case for first page."""
     dto = PaginationRequestDTO(page=1, per_page=20)
 
     assert dto.page == 1

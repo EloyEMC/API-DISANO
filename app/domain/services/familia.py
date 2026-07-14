@@ -20,7 +20,7 @@ class FamiliaService:
     This service contains business rules and aggregation logic
     for family statistics. It uses the repository interface for
     data access, maintaining dependency inversion and testability.
-    ."""
+    """
 
     def __init__(self, repository: FamiliaRepositoryInterface):
         """
@@ -28,7 +28,7 @@ class FamiliaService:
 
         Args:
             repository: Familia repository implementation
-        ."""
+        """
         self.repository = repository
 
     def get_all_familias(self) -> List[FamiliaEntity]:
@@ -37,7 +37,7 @@ class FamiliaService:
 
         Returns:
             List[FamiliaEntity]: All families with BC3 statistics
-        ."""
+        """
         return self.repository.get_all()
 
     def get_familia_by_nombre(self, nombre: str) -> FamiliaEntity:
@@ -52,7 +52,7 @@ class FamiliaService:
 
         Raises:
             ValueError: If family not found
-        ."""
+        """
         return self.repository.get_by_nombre(nombre)
 
     def get_statistics(self) -> Dict:
@@ -61,7 +61,7 @@ class FamiliaService:
 
         Returns:
             Dict: Aggregate statistics including total families, products, BC3 coverage
-        ."""
+        """
         return self.repository.get_statistics()
 
     def get_bc3_coverage_leaderboard(self, limit: int = 5) -> List[FamiliaEntity]:
@@ -73,7 +73,7 @@ class FamiliaService:
 
         Returns:
             List[FamiliaEntity]: Families sorted by BC3 coverage
-        ."""
+        """
         familias = self.get_all_familias()
 
         # Sort by BC3 coverage percentage

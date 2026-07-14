@@ -4,7 +4,7 @@ import pytest
 
 
 def test_filter_criteria_all_optional() -> None:
-    ."""Test all filter fields are optional."""
+    """Test all filter fields are optional."""
     from app.application.dto.pagination import FilterCriteria
 
     criteria = FilterCriteria()
@@ -19,7 +19,7 @@ def test_filter_criteria_all_optional() -> None:
 
 
 def test_filter_criteria_exact_match_filters() -> None:
-    ."""Test exact match filters work."""
+    """Test exact match filters work."""
     from app.application.dto.pagination import FilterCriteria
 
     criteria = FilterCriteria(marca="Disano", familia="Iluminación", bc3_product_type="columna")

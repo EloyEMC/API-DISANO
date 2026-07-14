@@ -24,7 +24,7 @@ class PerformanceBenchmark:
 
         Returns:
             (mean_ms, p95_ms, p99_ms, all_times)
-        ."""
+        """
         times = []
 
         for _ in range(num_requests):
