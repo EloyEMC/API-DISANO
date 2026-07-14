@@ -3,7 +3,7 @@ Tests Unitarios - Security Modules Execution (TDD)
 ===================================================
 
 Tests que ejecutan código real para aumentar coverage de security modules.
-"""
+."""
 
 import pytest
 

@@ -3,7 +3,7 @@ Tests Unitarios - App Init Execution (TDD)
 =========================================
 
 Tests que importan y ejecutan código real de app/__init__.py.
-"""
+."""
 
 import pytest
 

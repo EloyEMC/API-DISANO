@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field
 
 
 class PaginationMetadata(BaseModel):
-    """Metadata for pagination responses."""
+    ."""Metadata for pagination responses."""
 
     total_items: int = Field(..., description="Total items matching query")
     total_pages: int = Field(..., description="Total pages")
@@ -14,9 +14,7 @@ class PaginationMetadata(BaseModel):
     has_previous: bool = Field(..., description="Has previous page")
 
     @classmethod
-    def from_query(
-        cls, total_items: int, current_page: int, per_page: int
-    ) -> "PaginationMetadata":
+    def from_query(cls, total_items: int, current_page: int, per_page: int) -> "PaginationMetadata":
         """Create metadata from query results."""
         total_pages = (total_items + per_page - 1) // per_page
         return cls(
@@ -30,7 +28,7 @@ class PaginationMetadata(BaseModel):
 
 
 class PaginatedResponseDTO(BaseModel):
-    """Complete response DTO for paginated results."""
+    ."""Complete response DTO for paginated results."""
 
     items: list = Field(..., description="List of items for current page")
     pagination: PaginationMetadata = Field(..., description="Pagination metadata")

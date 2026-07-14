@@ -8,7 +8,7 @@ from app.monitoring.metrics import MetricsCollector
 
 
 def generate_dashboard() -> dict[str, Any]:
-    """
+    ."""
     Generate comprehensive performance dashboard.
 
     Returns:
@@ -31,9 +31,7 @@ def generate_dashboard() -> dict[str, Any]:
     trends = _generate_trends_section(collector)
 
     # Generate recommendations
-    recommendations = _generate_recommendations(
-        response_times, cache_performance, database_queries
-    )
+    recommendations = _generate_recommendations(response_times, cache_performance, database_queries)
 
     # Combine into dashboard
     dashboard = {
@@ -129,9 +127,7 @@ def _generate_database_queries_section() -> dict[str, Any]:
         "pool_type": pool_stats["pool_type"],
         "pool_size": pool_stats["size"],
         "connections_in_use": pool_stats["checked_in"],
-        "connections_available": max(
-            0, int(pool_stats["size"]) - int(pool_stats["checked_in"])
-        ),
+        "connections_available": max(0, int(pool_stats["size"]) - int(pool_stats["checked_in"])),
         "overflow": pool_stats["overflow"],
         "query_times": {
             "avg_query_time": 0.015,  # Sample value

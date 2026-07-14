@@ -4,7 +4,7 @@ Tests Unitarios - Main Module Structure (TDD + AAA)
 
 Tests que verifican estructura de app/main.py.
 Sin Settings import - solo estructura.
-"""
+."""
 
 import pytest
 from pathlib import Path
@@ -14,7 +14,7 @@ class TestMainModule:
     """Tests que verifican estructura de app/main.py (TDD)."""
 
     def test_main_module_exists(self):
-        """GREEN: Verificar que main.py existe."""
+        ."""GREEN: Verificar que main.py existe."""
         # Arrange & Act
         main_path = Path("app/main.py")
 

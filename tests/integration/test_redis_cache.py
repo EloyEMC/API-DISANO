@@ -4,7 +4,7 @@ Redis cache integration tests following TDD methodology.
 RED Phase: Write failing tests for Redis cache integration.
 GREEN Phase: Implement cache decorators and integration.
 REFACTOR Phase: Optimize cache performance while maintaining functionality.
-"""
+."""
 
 import time
 from unittest.mock import Mock
@@ -15,7 +15,7 @@ class TestRedisCacheIntegrationRed:
     """RED Phase: Failing integration tests for Redis cache."""
 
     def test_redis_connection_configured(self):
-        """Test that Redis connection is properly configured."""
+        ."""Test that Redis connection is properly configured."""
         from app.infrastructure.cache.cache_manager import CacheManager
 
         # Mock Redis client
@@ -29,7 +29,7 @@ class TestRedisCacheIntegrationRed:
         assert cache_manager.redis_client.ping()
 
     def test_cache_manager_implements_redis_interface(self):
-        """Test that cache manager implements Redis-compatible interface."""
+        ."""Test that cache manager implements Redis-compatible interface."""
         from app.infrastructure.cache.cache_manager import CacheManager
 
         cache_manager = CacheManager()
@@ -83,7 +83,7 @@ class TestCacheIntegrationWithServicesRed:
     """RED Phase: Failing integration tests for cache with services."""
 
     def test_producto_service_uses_cache(self):
-        """Test that ProductoService can use cache for expensive operations."""
+        ."""Test that ProductoService can use cache for expensive operations."""
         from app.infrastructure.cache.cache_manager import CacheManager
 
         # Create cache manager
@@ -122,9 +122,7 @@ class TestCacheIntegrationWithServicesRed:
         cache_manager = CacheManager()
 
         # Set cache
-        cache_manager.set(
-            "producto:TEST001", {"codigo": "TEST001", "nombre": "Old Name"}
-        )
+        cache_manager.set("producto:TEST001", {"codigo": "TEST001", "nombre": "Old Name"})
 
         # Invalidate on data change
         cache_manager.invalidate("producto:TEST001")
@@ -139,7 +137,7 @@ class TestCachePerformanceRed:
     """RED Phase: Failing performance tests for cache."""
 
     def test_cache_hit_improves_performance(self):
-        """Test that cache hit significantly improves performance."""
+        ."""Test that cache hit significantly improves performance."""
         import time
         from app.infrastructure.cache.cache_manager import CacheManager
 
@@ -214,7 +212,7 @@ class TestCacheStatisticsRed:
     """RED Phase: Failing tests for cache statistics."""
 
     def test_cache_statistics_track_operations(self):
-        """Test that cache statistics track all operations correctly."""
+        ."""Test that cache statistics track all operations correctly."""
         from app.infrastructure.cache.cache_manager import CacheManager
 
         cache = CacheManager()
@@ -259,7 +257,7 @@ class TestCacheIntegrationWithHTTPRed:
     """RED Phase: Failing integration tests for cache with HTTP layer."""
 
     def test_http_responses_cached(self):
-        """Test that HTTP responses can be cached."""
+        ."""Test that HTTP responses can be cached."""
         from app.infrastructure.cache.cache_manager import CacheManager
 
         cache = CacheManager()

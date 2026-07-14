@@ -1,7 +1,7 @@
 """Database connection management
 
 SQLAlchemy engine and session management for infrastructure layer.
-"""
+."""
 
 from collections.abc import Generator
 from contextlib import contextmanager
@@ -20,7 +20,7 @@ def get_database_path() -> Path:
 
     Returns:
         Path: Path to the SQLite database file
-    """
+    ."""
     try:
         settings = get_settings()
         db_path = Path(settings.database_path)
@@ -99,7 +99,7 @@ def get_pool_config(environment: str = "development") -> dict[str, int | str]:
 
     Returns:
         Dictionary with pool configuration settings
-    """
+    ."""
     configs = {
         "development": {
             "pool_size": 5,
@@ -136,7 +136,7 @@ def get_pool_stats() -> dict[str, int | str]:
 
     Returns:
         Dictionary with pool statistics
-    """
+    ."""
     pool = engine.pool
 
     # StaticPool doesn't have all attributes, so we need to handle it
@@ -166,7 +166,7 @@ def check_pool_exhaustion(stats: dict[str, int | str]) -> bool:
 
     Returns:
         True if pool is exhausted or approaching exhaustion
-    """
+    ."""
     # For StaticPool, exhaustion is not applicable
     if stats.get("pool_type") == "StaticPool":
         return False
@@ -191,7 +191,7 @@ def get_pool_logging_config() -> dict[str, bool | int]:
 
     Returns:
         Dictionary with logging configuration
-    """
+    ."""
     return {
         "enabled": True,
         "log_pool_stats": True,
@@ -207,7 +207,7 @@ def get_pool_optimization_recommendations() -> list[str]:
 
     Returns:
         List of optimization recommendations
-    """
+    ."""
     recommendations = []
     stats = get_pool_stats()
 
@@ -219,9 +219,7 @@ def get_pool_optimization_recommendations() -> list[str]:
             "StaticPool is optimal for SQLite development. "
             "For production with PostgreSQL/MySQL, use QueuePool."
         )
-        recommendations.append(
-            "Consider increasing pool_size for production: 10-20 connections."
-        )
+        recommendations.append("Consider increasing pool_size for production: 10-20 connections.")
         recommendations.append("Set max_overflow to 5-10 for burst traffic handling.")
         recommendations.append(
             "Configure pool_recycle to 1800 seconds (30 minutes) for production."
@@ -244,15 +242,12 @@ def get_pool_optimization_recommendations() -> list[str]:
 
         if pool_size < 10:
             recommendations.append(
-                "Pool size is relatively small. "
-                "Consider increasing to 10-20 for production."
+                "Pool size is relatively small. " "Consider increasing to 10-20 for production."
             )
 
     # General recommendations
     recommendations.append("Enable pool_pre_ping for connection health checks.")
-    recommendations.append(
-        "Set reasonable pool_timeout (30 seconds) to prevent hanging."
-    )
+    recommendations.append("Set reasonable pool_timeout (30 seconds) to prevent hanging.")
 
     return recommendations
 
@@ -266,15 +261,13 @@ def create_production_engine(database_url: str | None = None) -> Engine:
 
     Returns:
         SQLAlchemy engine with production-optimized pool configuration
-    """
+    ."""
     from app.config import get_settings
 
     # Get database URL or use settings
     if database_url is None:
         settings = get_settings()
-        database_url = getattr(
-            settings, "database_url", f"sqlite:///{get_database_path()}"
-        )
+        database_url = getattr(settings, "database_url", f"sqlite:///{get_database_path()}")
 
     # Ensure we have a valid database URL
     if database_url is None:
@@ -328,7 +321,7 @@ def monitor_pool_health() -> dict[str, bool | list[str]]:
 
     Returns:
         Dictionary with health status and recommendations
-    """
+    ."""
     stats = get_pool_stats()
     recommendations = get_pool_optimization_recommendations()
     exhausted = check_pool_exhaustion(stats)

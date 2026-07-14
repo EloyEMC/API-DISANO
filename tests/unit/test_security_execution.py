@@ -4,14 +4,14 @@ Tests Unitarios - Security Module Execution (TDD + AAA + BC3-Suite)
 
 Tests que importan y ejecutan código real de app/security.py y submódulos.
 BC3-Suite patterns: TDD (RED→GREEN→REFACTOR), AAA pattern.
-"""
+."""
 
 import pytest
 from datetime import datetime
 
 
 class TestSecurityOtpService:
-    """Tests de OTP service en app/security/otp_service.py (TDD + AAA)"""
+    """Tests de OTP service en app/security/otp_service.py (TDD + AAA)."""
 
     def test_otp_generation_creates_6_digit_code(self):
         """
@@ -21,7 +21,7 @@ class TestSecurityOtpService:
         - Arrange: Configurar email para OTP
         - Act: Generar OTP
         - Assert: Código tiene 6 dígitos
-        """
+        ."""
         # Arrange
         email = "user@test.com"
 
@@ -38,7 +38,7 @@ class TestSecurityOtpService:
     def test_otp_expiration_10_minutes(self):
         """
         GREEN: OTP expira en 10 minutos.
-        """
+        ."""
         # Arrange
         email = "user@test.com"
         from app.security.otp_service import generate_otp
@@ -54,7 +54,7 @@ class TestSecurityOtpService:
     def test_otp_max_3_attempts_enforced(self):
         """
         GREEN: OTP tiene máximo 3 intentos de validación.
-        """
+        ."""
         # Arrange
         email = "user@test.com"
         from app.security.otp_service import generate_otp
@@ -68,7 +68,7 @@ class TestSecurityOtpService:
     def test_otp_expires_timestamp_format(self):
         """
         GREEN: OTP expires_at es timestamp válido.
-        """
+        ."""
         # Arrange
         email = "user@test.com"
         from app.security.otp_service import generate_otp
@@ -81,12 +81,12 @@ class TestSecurityOtpService:
 
 
 class TestSecurityLoggingConfig:
-    """Tests de logging config en app/security/logging_config.py (TDD + AAA)"""
+    """Tests de logging config en app/security/logging_config.py (TDD + AAA)."""
 
     def test_setup_logging_configures_info_level(self):
         """
         RED: setup_logging() configura logging en INFO level.
-        """
+        ."""
         # Arrange & Act
         from app.security.logging_config import setup_logging
 
@@ -101,7 +101,7 @@ class TestSecurityLoggingConfig:
     def test_setup_logging_creates_log_file(self):
         """
         GREEN: setup_logging() crea archivo de log.
-        """
+        ."""
         # Arrange & Act
         from app.security.logging_config import setup_logging
         from pathlib import Path
@@ -116,7 +116,7 @@ class TestSecurityLoggingConfig:
     def test_setup_logging_configures_security_log(self):
         """
         GREEN: setup_logging() configura security log.
-        """
+        ."""
         # Arrange & Act
         from app.security.logging_config import setup_logging
         from pathlib import Path
@@ -130,12 +130,12 @@ class TestSecurityLoggingConfig:
 
 
 class TestSecurityRateLimiter:
-    """Tests de rate limiter en app/security/rate_limiter.py (TDD + AAA)"""
+    """Tests de rate limiter en app/security/rate_limiter.py (TDD + AAA)."""
 
     def test_rate_limit_per_client_defaults_to_30(self):
         """
         RED: Rate limit per client tiene default de 30.
-        """
+        ."""
         # Arrange & Act
         from app.security.rate_limiter import RATE_LIMIT_PER_CLIENT
 
@@ -145,7 +145,7 @@ class TestSecurityRateLimiter:
     def test_rate_limit_global_defaults_to_1000(self):
         """
         GREEN: Rate limit global tiene default de 1000.
-        """
+        ."""
         # Arrange & Act
         from app.security.rate_limiter import RATE_LIMIT_GLOBAL
 
@@ -155,7 +155,7 @@ class TestSecurityRateLimiter:
     def test_rate_limit_burst_defaults_to_10(self):
         """
         GREEN: Rate limit burst tiene default de 10.
-        """
+        ."""
         # Arrange & Act
         from app.security.rate_limiter import RATE_LIMIT_BURST
 
@@ -165,7 +165,7 @@ class TestSecurityRateLimiter:
     def test_rate_limit_listings_defaults_to_10(self):
         """
         GREEN: Rate limit listings tiene default de 10.
-        """
+        ."""
         # Arrange & Act
         from app.security.rate_limiter import RATE_LIMIT_LISTINGS
 

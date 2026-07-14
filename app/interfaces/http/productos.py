@@ -1,7 +1,7 @@
 """HTTP interface for Productos using hexagonal architecture
 
 FastAPI router with dependency injection for product endpoints.
-"""
+."""
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import List
@@ -25,7 +25,7 @@ router = APIRouter(prefix="/productos", tags=["productos"])
 
 
 def get_db_session() -> Session:
-    """DI function to get database session"""
+    """DI function to get database session."""
     session = SessionLocal()
     try:
         yield session
@@ -34,7 +34,7 @@ def get_db_session() -> Session:
 
 
 def get_producto_service(session: Session = Depends(get_db_session)) -> ProductoService:
-    """DI function to create ProductoService with repository"""
+    """DI function to create ProductoService with repository."""
     return ProductoService(SQLAlchemyProductoRepository(session))
 
 
@@ -48,18 +48,14 @@ def get_producto_service(session: Session = Depends(get_db_session)) -> Producto
 async def buscar_productos_paginado(
     page: int = Query(1, ge=1, description="Número de página"),
     per_page: int = Query(20, ge=1, le=100, description="Resultados por página"),
-    sort: str = Query(
-        None, description="Criterio de ordenamiento (ej: codigo:asc, pvp:desc)"
-    ),
+    sort: str = Query(None, description="Criterio de ordenamiento (ej: codigo:asc, pvp:desc)"),
     buscar: str = Query(None, description="Término de búsqueda"),
     marca: str = Query(None, description="Filtrar por marca"),
     familia: str = Query(None, description="Filtrar por familia"),
     pvp_min: float = Query(None, ge=0, description="Precio mínimo"),
     pvp_max: float = Query(None, ge=0, description="Precio máximo"),
     bc3_product_type: str = Query(None, description="Tipo de producto BC3"),
-    bc3_has_descripcion_corta: bool = Query(
-        None, description="Filtrar por descripción corta BC3"
-    ),
+    bc3_has_descripcion_corta: bool = Query(None, description="Filtrar por descripción corta BC3"),
     service: ProductoService = Depends(get_producto_service),
 ) -> dict:
     """
@@ -67,7 +63,7 @@ async def buscar_productos_paginado(
 
     Endpoint público con soporte completo de paginación, ordenamiento y filtros.
     Proporciona metadatos de paginación y caché integrado.
-    """
+    ."""
     try:
         # Build pagination request DTO
         pagination_dto = PaginationRequestDTO(
@@ -112,21 +108,15 @@ async def buscar_productos_paginado(
 @router.get("/v2/list")
 async def buscar_productos_list_v2(
     page: int = Query(1, ge=1, description="Número de página"),
-    limit: int = Query(
-        20, ge=1, le=100, description="Resultados por página (alias de per_page)"
-    ),
-    sort: str = Query(
-        None, description="Criterio de ordenamiento (ej: codigo:asc, pvp:desc)"
-    ),
+    limit: int = Query(20, ge=1, le=100, description="Resultados por página (alias de per_page)"),
+    sort: str = Query(None, description="Criterio de ordenamiento (ej: codigo:asc, pvp:desc)"),
     buscar: str = Query(None, description="Término de búsqueda"),
     marca: str = Query(None, description="Filtrar por marca"),
     familia: str = Query(None, description="Filtrar por familia"),
     pvp_min: float = Query(None, ge=0, description="Precio mínimo"),
     pvp_max: float = Query(None, ge=0, description="Precio máximo"),
     bc3_product_type: str = Query(None, description="Tipo de producto BC3"),
-    bc3_has_descripcion_corta: bool = Query(
-        None, description="Filtrar por descripción corta BC3"
-    ),
+    bc3_has_descripcion_corta: bool = Query(None, description="Filtrar por descripción corta BC3"),
     service: ProductoService = Depends(get_producto_service),
 ) -> list:
     """
@@ -134,7 +124,7 @@ async def buscar_productos_list_v2(
 
     Alias de /v2/paginated que devuelve solo items (sin metadata).
     Mapea 'limit' → 'per_page' para compatibilidad.
-    """
+    ."""
     try:
         pagination_dto = PaginationRequestDTO(
             page=page,
@@ -165,9 +155,7 @@ async def buscar_productos_list_v2(
 
         return response_dict.get("items", [])
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error en búsqueda: {str(e)}"
-        ) from None
+        raise HTTPException(status_code=500, detail=f"Error en búsqueda: {str(e)}") from None
 
 
 # ============================================
@@ -184,7 +172,7 @@ async def get_productos(
     Get all products with BC3 statistics
 
     **V1 Backward Compatible** - Returns same format as legacy router
-    """
+    ."""
     try:
         productos = service.get_all_productos()
         return [producto.model_dump() for producto in productos[:limit]]
@@ -201,7 +189,7 @@ async def get_producto(
     Get product by code with BC3 details
 
     **V1 Backward Compatible** - Returns same format as legacy router
-    """
+    ."""
     try:
         producto = service.obtener_producto(codigo)
         return producto.model_dump()

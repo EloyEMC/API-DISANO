@@ -39,7 +39,7 @@ settings = get_settings()
 
 
 def get_api_key_identifier(request: Request) -> str:
-    """
+    ."""
     Genera un identificador único para rate limiting basado en API key.
 
     Si hay API key, usa la key como identificador (rate limiting por cliente).

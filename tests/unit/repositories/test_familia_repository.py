@@ -1,7 +1,7 @@
 """Unit tests for FamiliaRepository
 
 Tests repository interface and implementation using TDD
-"""
+."""
 
 from unittest.mock import Mock
 from app.domain.repositories.familia import FamiliaRepositoryInterface
@@ -9,20 +9,20 @@ from app.domain.entities.familia import FamiliaEntity
 
 
 class TestFamiliaRepositoryInterface:
-    """Tests for FamiliaRepositoryInterface interface"""
+    """Tests for FamiliaRepositoryInterface interface."""
 
     def test_repository_interface_has_required_methods(self):
-        """Test that interface has all required methods"""
+        """Test that interface has all required methods."""
         assert hasattr(FamiliaRepositoryInterface, "get_all")
         assert hasattr(FamiliaRepositoryInterface, "get_by_nombre")
         assert hasattr(FamiliaRepositoryInterface, "get_statistics")
 
 
 class TestMockFamiliaRepository:
-    """Tests using mock repository"""
+    """Tests using mock repository."""
 
     def test_get_all_returns_familias(self):
-        """Test that get_all returns list of FamiliaEntity"""
+        """Test that get_all returns list of FamiliaEntity."""
         mock_repo = Mock(spec=FamiliaRepositoryInterface)
         mock_repo.get_all.return_value = [
             FamiliaEntity(
@@ -41,7 +41,7 @@ class TestMockFamiliaRepository:
         mock_repo.get_all.assert_called_once()
 
     def test_get_by_nombre_returns_familia(self):
-        """Test that get_by_nombre returns specific familia"""
+        """Test that get_by_nombre returns specific familia."""
         mock_repo = Mock(spec=FamiliaRepositoryInterface)
         mock_repo.get_by_nombre.return_value = FamiliaEntity(
             nombre="Emergencia",
@@ -57,7 +57,7 @@ class TestMockFamiliaRepository:
         mock_repo.get_by_nombre.assert_called_once_with("Emergencia")
 
     def test_get_statistics_returns_stats(self):
-        """Test that get_statistics returns aggregate statistics"""
+        """Test that get_statistics returns aggregate statistics."""
         mock_repo = Mock(spec=FamiliaRepositoryInterface)
         mock_repo.get_statistics.return_value = {
             "total_familias": 5,

@@ -1,7 +1,7 @@
 """Domain service for Familia
 
 Business logic layer for family statistics and aggregations.
-"""
+."""
 
 from typing import List, Dict
 from app.application.dto.pagination import (
@@ -20,7 +20,7 @@ class FamiliaService:
     This service contains business rules and aggregation logic
     for family statistics. It uses the repository interface for
     data access, maintaining dependency inversion and testability.
-    """
+    ."""
 
     def __init__(self, repository: FamiliaRepositoryInterface):
         """
@@ -28,7 +28,7 @@ class FamiliaService:
 
         Args:
             repository: Familia repository implementation
-        """
+        ."""
         self.repository = repository
 
     def get_all_familias(self) -> List[FamiliaEntity]:
@@ -37,7 +37,7 @@ class FamiliaService:
 
         Returns:
             List[FamiliaEntity]: All families with BC3 statistics
-        """
+        ."""
         return self.repository.get_all()
 
     def get_familia_by_nombre(self, nombre: str) -> FamiliaEntity:
@@ -52,7 +52,7 @@ class FamiliaService:
 
         Raises:
             ValueError: If family not found
-        """
+        ."""
         return self.repository.get_by_nombre(nombre)
 
     def get_statistics(self) -> Dict:
@@ -61,7 +61,7 @@ class FamiliaService:
 
         Returns:
             Dict: Aggregate statistics including total families, products, BC3 coverage
-        """
+        ."""
         return self.repository.get_statistics()
 
     def get_bc3_coverage_leaderboard(self, limit: int = 5) -> List[FamiliaEntity]:
@@ -73,7 +73,7 @@ class FamiliaService:
 
         Returns:
             List[FamiliaEntity]: Families sorted by BC3 coverage
-        """
+        ."""
         familias = self.get_all_familias()
 
         # Sort by BC3 coverage percentage
@@ -83,9 +83,7 @@ class FamiliaService:
 
         return sorted_familias[:limit]
 
-    def buscar_familias_paginado(
-        self, request_dto: PaginationRequestDTO
-    ) -> PaginatedResponseDTO:
+    def buscar_familias_paginado(self, request_dto: PaginationRequestDTO) -> PaginatedResponseDTO:
         """Search families with pagination, sorting, and filtering.
 
         Args:
@@ -93,7 +91,7 @@ class FamiliaService:
 
         Returns:
             PaginatedResponseDTO: Families with pagination metadata
-        """
+        ."""
         # Convert DTO to dict format for repository
         dto_dict: dict = {
             "page": request_dto.page,
@@ -122,9 +120,7 @@ class FamiliaService:
             items=items,
             pagination=metadata,
             filters_applied={
-                key: value
-                for key, value in dto_dict["filters"].items()
-                if value is not None
+                key: value for key, value in dto_dict["filters"].items() if value is not None
             },
             sorting_applied={
                 "field": request_dto.sort.split(":")[0] if request_dto.sort else None,

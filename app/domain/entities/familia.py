@@ -2,7 +2,7 @@
 
 Represents a product family with BC3 statistics - independent of database
 or HTTP concerns. This is a domain-level aggregation entity.
-"""
+."""
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -34,7 +34,7 @@ class FamiliaEntity(BaseModel):
     @field_validator("total_productos")
     @classmethod
     def validate_counts_consistency(cls, value, info):
-        """Validate that counts don't exceed total"""
+        """Validate that counts don't exceed total."""
         if info.data:
             con_bc3 = info.data.get("con_bc3", 0)
             con_imagen = info.data.get("con_imagen", 0)
@@ -48,19 +48,19 @@ class FamiliaEntity(BaseModel):
         return value
 
     def get_bc3_coverage_percentage(self) -> float:
-        """Calculate BC3 coverage as percentage"""
+        """Calculate BC3 coverage as percentage."""
         if self.total_productos == 0:
             return 0.0
         return (self.con_bc3 / self.total_productos) * 100
 
     def get_imagen_coverage_percentage(self) -> float:
-        """Calculate image coverage as percentage"""
+        """Calculate image coverage as percentage."""
         if self.total_productos == 0:
             return 0.0
         return (self.con_imagen / self.total_productos) * 100
 
     class Config:
-        """Pydantic configuration"""
+        """Pydantic configuration."""
 
         # Immutable entity
         frozen = True

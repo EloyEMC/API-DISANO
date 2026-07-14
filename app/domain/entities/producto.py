@@ -2,7 +2,7 @@
 
 Represents a product in the domain layer - independent of database
 or HTTP concerns. This is the core business object.
-"""
+."""
 
 from pydantic import BaseModel, Field, field_validator
 from typing import Optional
@@ -26,7 +26,7 @@ class ProductoEntity(BaseModel):
         bc3_descripcion_completa: BC3 Suite full description
         created_at: Creation timestamp
         updated_at: Last update timestamp
-    """
+    ."""
 
     # Core identity fields
     codigo: str = Field(..., min_length=1, description="Unique product code")
@@ -38,13 +38,9 @@ class ProductoEntity(BaseModel):
     pvp: Optional[float] = Field(None, ge=0, description="Public sales price")
 
     # BC3 Suite integration fields
-    bc3_descripcion_corta: Optional[str] = Field(
-        None, description="BC3 Suite short description"
-    )
+    bc3_descripcion_corta: Optional[str] = Field(None, description="BC3 Suite short description")
     bc3_product_type: Optional[str] = Field(None, description="BC3 Suite product type")
-    bc3_descripcion_completa: Optional[str] = Field(
-        None, description="BC3 Suite full description"
-    )
+    bc3_descripcion_completa: Optional[str] = Field(None, description="BC3 Suite full description")
 
     # Audit fields
     created_at: Optional[datetime] = Field(None, description="Creation timestamp")
@@ -53,13 +49,13 @@ class ProductoEntity(BaseModel):
     @field_validator("pvp", mode="before")
     @classmethod
     def validate_pvp(cls, value: float | None) -> float | None:
-        """Validate that price is non-negative"""
+        """Validate that price is non-negative."""
         if value is not None and value < 0:
             raise ValueError("Price cannot be negative")
         return value
 
     class Config:
-        """Pydantic configuration"""
+        """Pydantic configuration."""
 
         # Immutable entity - prevents modification after creation
         frozen = True

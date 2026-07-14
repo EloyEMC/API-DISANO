@@ -5,7 +5,7 @@ from app.infrastructure.repositories.familia import SQLAlchemyFamiliaRepository
 
 
 def test_familia_repository_pagination_basic(sqlalchemy_session: Session) -> None:
-    """Test familia repository pagination with basic pagination."""
+    ."""Test familia repository pagination with basic pagination."""
     repo = SQLAlchemyFamiliaRepository(sqlalchemy_session)
 
     dto: dict = {"page": 1, "per_page": 10, "offset": 0, "sort": None, "filters": {}}

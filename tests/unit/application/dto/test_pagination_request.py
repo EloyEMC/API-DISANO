@@ -5,7 +5,7 @@ from pydantic import ValidationError
 
 
 def test_pagination_request_default_values() -> None:
-    """Test default values for pagination request."""
+    ."""Test default values for pagination request."""
     from app.application.dto.pagination import PaginationRequestDTO
 
     dto = PaginationRequestDTO(page=1, per_page=20)
@@ -16,7 +16,7 @@ def test_pagination_request_default_values() -> None:
 
 
 def test_pagination_request_offset_calculation() -> None:
-    """Test offset calculation from page and per_page."""
+    ."""Test offset calculation from page and per_page."""
     from app.application.dto.pagination import PaginationRequestDTO
 
     dto = PaginationRequestDTO(page=3, per_page=10)
@@ -25,7 +25,7 @@ def test_pagination_request_offset_calculation() -> None:
 
 
 def test_pagination_request_page_validation() -> None:
-    """Test that page < 1 raises ValidationError."""
+    ."""Test that page < 1 raises ValidationError."""
     from app.application.dto.pagination import PaginationRequestDTO
 
     with pytest.raises(ValidationError) as exc_info:
@@ -33,8 +33,7 @@ def test_pagination_request_page_validation() -> None:
 
     errors = exc_info.value.errors()
     assert any(
-        "page" in error["loc"] and "greater than or equal to 1" in error["msg"]
-        for error in errors
+        "page" in error["loc"] and "greater than or equal to 1" in error["msg"] for error in errors
     )
 
 

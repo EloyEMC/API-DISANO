@@ -1,7 +1,7 @@
 """
 Sistema de logging estructurado con loguru
 Registra accesos, errores y eventos de seguridad
-"""
+."""
 
 import sys
 from pathlib import Path
@@ -15,7 +15,7 @@ def setup_logging():
     """
     Configura loguru para toda la aplicación.
     Llamar al inicio de main.py
-    """
+    ."""
     # Remover handler default de stderr
     logger.remove()
 
@@ -88,7 +88,7 @@ def log_access_request(
         method: Método HTTP
         client_ip: IP del cliente
         status_code: Código de respuesta HTTP
-    """
+    ."""
     logger.bind(context="access").info(
         f"API_ACCESS | key={api_key} | {method} {endpoint} | "
         f"ip={client_ip} | status={status_code}"
@@ -109,7 +109,7 @@ def log_security_event(
         details: Detalles del evento
         client_ip: IP del cliente
         api_key: API key involucrada (si aplica)
-    """
+    ."""
     logger.bind(context="security").warning(
         f"SECURITY_EVENT | type={event_type} | {details} | "
         f"ip={client_ip} | key={api_key}"

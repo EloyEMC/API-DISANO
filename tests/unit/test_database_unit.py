@@ -3,7 +3,7 @@ Tests Unitarios - Database Coverage (sin Settings import)
 ===========================================================
 
 Tests que aumentan coverage de app/database.py SIN importar Settings.
-"""
+."""
 
 import pytest
 import sqlite3

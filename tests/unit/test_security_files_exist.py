@@ -3,7 +3,7 @@ Tests Unitarios - Security Functions (Cubren código real)
 ======================================================
 
 Tests que cubren funciones de app.security.* SIN importar app.security.
-"""
+."""
 
 import os
 

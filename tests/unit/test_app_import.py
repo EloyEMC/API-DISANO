@@ -4,7 +4,7 @@ Tests Unitarios - App Init Import Execution (TDD)
 
 Tests que importan app/__init__.py y ejecutan código real.
 Esto aumenta coverage sin Settings import.
-"""
+."""
 
 import pytest
 
@@ -13,7 +13,7 @@ class TestAppInitModuleImport:
     """Tests que importan app/__init__.py (TDD)."""
 
     def test_app_module_import_successfully(self):
-        """
+        ."""
         AAA: Arrange (import), Act (import), Assert (validation)
         """
         # Arrange & Act - Importar app/__init__.py
@@ -57,7 +57,7 @@ class TestAppImportsFromInit:
     """Tests que importan desde app/__init__.py (TDD)."""
 
     def test_app_init_has_version_docstring(self):
-        """GREEN: Verificar que __init__.py tiene docstring."""
+        ."""GREEN: Verificar que __init__.py tiene docstring."""
         # Arrange & Act
         import app
 

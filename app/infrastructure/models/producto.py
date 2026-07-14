@@ -2,7 +2,7 @@
 
 ORM model representing the productos table in SQLite.
 Uses quoted names for columns with special characters (spaces, brackets).
-"""
+."""
 
 from sqlalchemy import (
     Column,
@@ -25,7 +25,7 @@ class ProductoModel(Base):
     (spaces and brackets from legacy database schema).
 
     Primary key: '[CÓDIGO]' (column with brackets)
-    """
+    ."""
 
     __tablename__ = "productos_clean"
 
@@ -216,7 +216,7 @@ class ProductoModel(Base):
 
         Returns:
             ProductoEntity: Domain entity with clean naming
-        """
+        ."""
         from app.domain.entities.producto import ProductoEntity
 
         # Map legacy column names to clean entity fields
@@ -228,8 +228,7 @@ class ProductoModel(Base):
             pvp=self.PVP_26_01_26,
             bc3_descripcion_corta=self.bc3_descripcion_corta or self.descripcion_corta,
             bc3_product_type=self.bc3_product_type,
-            bc3_descripcion_completa=self.bc3_descripcion_completa
-            or self.bc3_descripcion_larga,
+            bc3_descripcion_completa=self.bc3_descripcion_completa or self.bc3_descripcion_larga,
             created_at=self.bc3_processed_at,
             updated_at=self.bc3_processed_at,
         )
@@ -244,7 +243,7 @@ class ProductoModel(Base):
 
         Returns:
             ProductoModel: SQLAlchemy model with legacy column names
-        """
+        ."""
         return cls(
             CÓDIGO=entity.codigo,
             DESCRIPCION=entity.descripcion,
@@ -258,5 +257,5 @@ class ProductoModel(Base):
         )
 
     def __repr__(self) -> str:
-        """String representation for debugging"""
+        """String representation for debugging."""
         return f"<ProductoModel(codigo='{self.CÓDIGO}', descripcion='{self.DESCRIPCION[:20]}...')>"

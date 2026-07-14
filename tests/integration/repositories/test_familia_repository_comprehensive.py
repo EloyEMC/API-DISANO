@@ -4,10 +4,10 @@ from app.infrastructure.repositories.familia import SQLAlchemyFamiliaRepository
 
 
 class TestFamiliaRepositoryPagination:
-    """Comprehensive tests for Familia repository pagination."""
+    ."""Comprehensive tests for Familia repository pagination."""
 
     def test_familia_repository_pagination_first_page(self, sqlalchemy_session) -> None:
-        """Test pagination on first page."""
+        ."""Test pagination on first page."""
         repo = SQLAlchemyFamiliaRepository(sqlalchemy_session)
 
         dto: dict = {
@@ -25,9 +25,7 @@ class TestFamiliaRepositoryPagination:
         # Should have families
         assert len(items) > 0
 
-    def test_familia_repository_pagination_middle_page(
-        self, sqlalchemy_session
-    ) -> None:
+    def test_familia_repository_pagination_middle_page(self, sqlalchemy_session) -> None:
         """Test pagination on middle page."""
         repo = SQLAlchemyFamiliaRepository(sqlalchemy_session)
 
@@ -38,9 +36,7 @@ class TestFamiliaRepositoryPagination:
         assert len(items) <= 5
         assert total >= len(items)
 
-    def test_familia_repository_pagination_large_per_page(
-        self, sqlalchemy_session
-    ) -> None:
+    def test_familia_repository_pagination_large_per_page(self, sqlalchemy_session) -> None:
         """Test pagination with large per_page value."""
         repo = SQLAlchemyFamiliaRepository(sqlalchemy_session)
 
@@ -60,9 +56,7 @@ class TestFamiliaRepositoryPagination:
         if total <= 100:
             assert len(items) == total
 
-    def test_familia_repository_pagination_small_per_page(
-        self, sqlalchemy_session
-    ) -> None:
+    def test_familia_repository_pagination_small_per_page(self, sqlalchemy_session) -> None:
         """Test pagination with small per_page value."""
         repo = SQLAlchemyFamiliaRepository(sqlalchemy_session)
 
@@ -73,9 +67,7 @@ class TestFamiliaRepositoryPagination:
         assert len(items) <= 1
         assert total >= len(items)
 
-    def test_familia_repository_pagination_text_search(
-        self, sqlalchemy_session
-    ) -> None:
+    def test_familia_repository_pagination_text_search(self, sqlalchemy_session) -> None:
         """Test text search functionality."""
         repo = SQLAlchemyFamiliaRepository(sqlalchemy_session)
 
@@ -121,9 +113,7 @@ class TestFamiliaRepositoryPagination:
         # Should return same results
         assert total_lower == total_upper
 
-    def test_familia_repository_pagination_various_sort_orders(
-        self, sqlalchemy_session
-    ) -> None:
+    def test_familia_repository_pagination_various_sort_orders(self, sqlalchemy_session) -> None:
         """Test various sort orders."""
         repo = SQLAlchemyFamiliaRepository(sqlalchemy_session)
 
@@ -160,9 +150,7 @@ class TestFamiliaRepositoryPagination:
         assert len(items) == 0
         assert total == 0
 
-    def test_familia_repository_pagination_return_type(
-        self, sqlalchemy_session
-    ) -> None:
+    def test_familia_repository_pagination_return_type(self, sqlalchemy_session) -> None:
         """Test that pagination returns correct types."""
         repo = SQLAlchemyFamiliaRepository(sqlalchemy_session)
 
@@ -189,9 +177,7 @@ class TestFamiliaRepositoryPagination:
             assert hasattr(item, "con_imagen")
             assert hasattr(item, "descontinuados")
 
-    def test_familia_repository_pagination_sorting_consistency(
-        self, sqlalchemy_session
-    ) -> None:
+    def test_familia_repository_pagination_sorting_consistency(self, sqlalchemy_session) -> None:
         """Test that sorting produces consistent results."""
         repo = SQLAlchemyFamiliaRepository(sqlalchemy_session)
 
@@ -233,9 +219,7 @@ class TestFamiliaRepositoryPagination:
         nombres_desc = [item.nombre for item in items_desc]
         assert nombres_desc == sorted(nombres_desc, reverse=True)
 
-    def test_familia_repository_pagination_consistent_results(
-        self, sqlalchemy_session
-    ) -> None:
+    def test_familia_repository_pagination_consistent_results(self, sqlalchemy_session) -> None:
         """Test that same query returns consistent results."""
         repo = SQLAlchemyFamiliaRepository(sqlalchemy_session)
 
@@ -257,9 +241,7 @@ class TestFamiliaRepositoryPagination:
         if len(items1) > 0:
             assert items1[0].nombre == items2[0].nombre
 
-    def test_familia_repository_pagination_vs_traditional_get_all(
-        self, sqlalchemy_session
-    ) -> None:
+    def test_familia_repository_pagination_vs_traditional_get_all(self, sqlalchemy_session) -> None:
         """Test pagination results match traditional get_all."""
         repo = SQLAlchemyFamiliaRepository(sqlalchemy_session)
 
@@ -280,9 +262,7 @@ class TestFamiliaRepositoryPagination:
         assert len(traditional_items) > 0
         assert len(pagination_items) > 0
 
-    def test_familia_repository_pagination_with_text_search(
-        self, sqlalchemy_session
-    ) -> None:
+    def test_familia_repository_pagination_with_text_search(self, sqlalchemy_session) -> None:
         """Test pagination with text search."""
         repo = SQLAlchemyFamiliaRepository(sqlalchemy_session)
 
@@ -304,10 +284,8 @@ class TestFamiliaRepositoryPagination:
 class TestFamiliaRepositoryIntegration:
     """Integration tests combining repository methods."""
 
-    def test_familia_repository_statistics_consistency(
-        self, sqlalchemy_session
-    ) -> None:
-        """Test that statistics match pagination totals."""
+    def test_familia_repository_statistics_consistency(self, sqlalchemy_session) -> None:
+        ."""Test that statistics match pagination totals."""
         repo = SQLAlchemyFamiliaRepository(sqlalchemy_session)
 
         # Get statistics
@@ -329,9 +307,7 @@ class TestFamiliaRepositoryIntegration:
         # Total products should be reasonable
         assert stats["total_productos"] > 0
 
-    def test_familia_repository_bc3_coverage_consistency(
-        self, sqlalchemy_session
-    ) -> None:
+    def test_familia_repository_bc3_coverage_consistency(self, sqlalchemy_session) -> None:
         """Test that BC3 coverage statistics are reasonable."""
         repo = SQLAlchemyFamiliaRepository(sqlalchemy_session)
 
@@ -351,9 +327,7 @@ class TestFamiliaRepositoryIntegration:
         # BC3 coverage should be between 0 and 100
         assert 0 <= stats["bc3_coverage"] <= 100
 
-    def test_familia_repository_pagination_across_all_pages(
-        self, sqlalchemy_session
-    ) -> None:
+    def test_familia_repository_pagination_across_all_pages(self, sqlalchemy_session) -> None:
         """Test pagination across all pages."""
         repo = SQLAlchemyFamiliaRepository(sqlalchemy_session)
 

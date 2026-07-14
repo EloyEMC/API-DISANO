@@ -1,4 +1,4 @@
-"""Validation exceptions module"""
+"""Validation exceptions module."""
 
 from app.domain.exceptions.not_found import (
     ProductoNotFoundException,

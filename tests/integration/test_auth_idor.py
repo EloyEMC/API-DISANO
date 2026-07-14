@@ -6,7 +6,7 @@ Tests que validan prevención de IDOR (Insecure Direct Object Reference).
 BC3-Suite patterns: TDD (RED→GREEN→REFACTOR), AAA pattern.
 
 Security Critical: Usuario NO puede acceder a admin endpoints, Admin SÍ puede.
-"""
+."""
 
 from fastapi.testclient import TestClient
 
@@ -15,7 +15,7 @@ class TestAuthIDORAdminEndpoints:
     """
     Tests de Auth IDOR para endpoints admin.
     Security Critical: Prevención de accesos no autorizados.
-    """
+    ."""
 
     def test_user_cannot_post_producto_without_admin_api_key(self):
         """
@@ -25,7 +25,7 @@ class TestAuthIDORAdminEndpoints:
         - Arrange: Importar app desde main
         - Act: Intentar crear producto sin API key
         - Assert: Debe retornar 401 Unauthorized
-        """
+        ."""
         # Arrange & Act
         from app.main import app
 
@@ -44,7 +44,7 @@ class TestAuthIDORAdminEndpoints:
     def test_user_cannot_put_producto_without_admin_api_key(self):
         """
         RED: Usuario NO puede actualizar producto sin API key de admin.
-        """
+        ."""
         # Arrange & Act
         from app.main import app
 
@@ -59,7 +59,7 @@ class TestAuthIDORAdminEndpoints:
     def test_user_cannot_patch_precio_without_admin_api_key(self):
         """
         RED: Usuario NO puede actualizar precio sin API key de admin.
-        """
+        ."""
         # Arrange & Act
         from app.main import app
 
@@ -74,7 +74,7 @@ class TestAuthIDORAdminEndpoints:
     def test_user_cannot_delete_producto_without_admin_api_key(self):
         """
         RED: Usuario NO puede eliminar producto sin API key de admin.
-        """
+        ."""
         # Arrange & Act
         from app.main import app
 
@@ -88,7 +88,7 @@ class TestAuthIDORAdminEndpoints:
     def test_user_cannot_post_producto_with_invalid_api_key(self):
         """
         RED: Usuario NO puede crear producto con API key inválido.
-        """
+        ."""
         # Arrange & Act
         from app.main import app
 
@@ -108,7 +108,7 @@ class TestAuthIDORAdminEndpoints:
     def test_admin_can_post_producto_with_valid_api_key(self):
         """
         GREEN: Admin SÍ puede crear producto con API key válido.
-        """
+        ."""
         # Arrange & Act
         from app.main import app
 
@@ -128,7 +128,7 @@ class TestAuthIDORAdminEndpoints:
     def test_admin_can_put_producto_with_valid_api_key(self):
         """
         GREEN: Admin SÍ puede actualizar producto con API key válido.
-        """
+        ."""
         # Arrange & Act
         from app.main import app
 
@@ -146,7 +146,7 @@ class TestAuthIDORAdminEndpoints:
     def test_admin_can_patch_precio_with_valid_api_key(self):
         """
         GREEN: Admin SÍ puede actualizar precio con API key válido.
-        """
+        ."""
         # Arrange & Act
         from app.main import app
 
@@ -164,7 +164,7 @@ class TestAuthIDORAdminEndpoints:
     def test_admin_can_delete_producto_with_valid_api_key(self):
         """
         GREEN: Admin SÍ puede eliminar producto con API key válido.
-        """
+        ."""
         # Arrange & Act
         from app.main import app
 
@@ -182,7 +182,7 @@ class TestAuthIDORAdminEndpoints:
 
         Security Critical: Prevenir que usuarios normales tengan
         permisos de admin accidentalmente.
-        """
+        ."""
         # Arrange & Act
         from app.config import Settings
 

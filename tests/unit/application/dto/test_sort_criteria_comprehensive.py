@@ -6,7 +6,7 @@ from app.application.dto.pagination import SortCriteria
 
 
 def test_sort_criteria_default_sort() -> None:
-    """Test default sorting is codigo asc."""
+    ."""Test default sorting is codigo asc."""
     criteria = SortCriteria(field="codigo", order="asc")
 
     assert criteria.field == "codigo"

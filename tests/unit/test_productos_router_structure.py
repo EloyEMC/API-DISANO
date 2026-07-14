@@ -4,7 +4,7 @@ Tests Unitarios - Productos Router Structure (TDD + AAA)
 
 Tests que verifican estructura de app/routers/productos.py.
 Sin Settings import - solo estructura y helper functions.
-"""
+."""
 
 import pytest
 from pathlib import Path
@@ -14,7 +14,7 @@ class TestProductosRouterModule:
     """Tests que importan router productos.py (TDD)."""
 
     def test_productos_router_module_exists(self):
-        """GREEN: Verificar que productos.py existe."""
+        ."""GREEN: Verificar que productos.py existe."""
         # Arrange & Act
         productos_path = Path("app/routers/productos.py")
 
@@ -42,7 +42,7 @@ class TestProductosRouterEndpoints:
     """Tests que verifican endpoints de productos router (TDD)."""
 
     def test_productos_has_get_all_endpoint(self):
-        """GREEN: Verificar endpoint GET / (productos V1)."""
+        ."""GREEN: Verificar endpoint GET / (productos V1)."""
         # Arrange
         content = Path("app/routers/productos.py").read_text()
 
@@ -168,7 +168,7 @@ class TestProductosRouterFunctions:
     """Tests que verifican funciones de productos router (TDD)."""
 
     def test_productos_has_map_row_to_v2_function(self):
-        """GREEN: Verificar que productos.py tiene map_row_to_v2."""
+        ."""GREEN: Verificar que productos.py tiene map_row_to_v2."""
         # Arrange
         content = Path("app/routers/productos.py").read_text()
 
@@ -252,7 +252,7 @@ class TestProductosRouterImports:
     """Tests que verifican imports de productos router (TDD)."""
 
     def test_productos_imports_fastapi(self):
-        """GREEN: Verificar que productos.py importa FastAPI."""
+        ."""GREEN: Verificar que productos.py importa FastAPI."""
         # Arrange
         content = Path("app/routers/productos.py").read_text()
 
@@ -296,7 +296,7 @@ class TestProductosRouterStructure:
     """Tests que verifican estructura de productos router (TDD)."""
 
     def test_productos_has_12_endpoints(self):
-        """GREEN: Verificar que productos.py tiene 12 endpoints."""
+        ."""GREEN: Verificar que productos.py tiene 12 endpoints."""
         # Arrange
         content = Path("app/routers/productos.py").read_text()
 

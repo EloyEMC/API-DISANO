@@ -1,7 +1,7 @@
 """Integration tests for FamiliaRepository
 
 Tests repository implementation with real database
-"""
+."""
 
 import pytest
 from sqlalchemy import create_engine
@@ -13,25 +13,23 @@ from app.domain.entities.familia import FamiliaEntity
 
 
 class TestSQLAlchemyFamiliaRepositoryIntegration:
-    """Tests for SQLAlchemyFamiliaRepository with real database"""
+    """Tests for SQLAlchemyFamiliaRepository with real database."""
 
     @pytest.fixture
     def db_session(self):
-        """Create test database session"""
+        """Create test database session."""
         engine = create_engine(
             "sqlite:///testing/testing.db",
             connect_args={"check_same_thread": False},
             poolclass=StaticPool,
         )
-        TestingSessionLocal = sessionmaker(
-            autocommit=False, autoflush=False, bind=engine
-        )
+        TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
         session = TestingSessionLocal()
         yield session
         session.close()
 
     def test_get_all_returns_familias_with_stats(self, db_session):
-        """Test that get_all returns families with BC3 statistics"""
+        """Test that get_all returns families with BC3 statistics."""
         repo = SQLAlchemyFamiliaRepository(db_session)
         familias = repo.get_all()
 
@@ -49,7 +47,7 @@ class TestSQLAlchemyFamiliaRepositoryIntegration:
         assert familia.descontinuados >= 0
 
     def test_get_by_nombre_returns_correct_familia(self, db_session):
-        """Test that get_by_nombre returns correct family"""
+        """Test that get_by_nombre returns correct family."""
         repo = SQLAlchemyFamiliaRepository(db_session)
 
         # Get all families first to find one
@@ -62,14 +60,14 @@ class TestSQLAlchemyFamiliaRepositoryIntegration:
             assert isinstance(familia, FamiliaEntity)
 
     def test_get_by_nombre_raises_error_for_nonexistent(self, db_session):
-        """Test that get_by_nombre raises error for non-existent family"""
+        """Test that get_by_nombre raises error for non-existent family."""
         repo = SQLAlchemyFamiliaRepository(db_session)
 
         with pytest.raises(ValueError, match="no encontrada"):
             repo.get_by_nombre("XYZNonexistent")
 
     def test_get_statistics_returns_correct_stats(self, db_session):
-        """Test that get_statistics returns aggregate statistics"""
+        """Test that get_statistics returns aggregate statistics."""
         repo = SQLAlchemyFamiliaRepository(db_session)
         stats = repo.get_statistics()
 
@@ -83,7 +81,7 @@ class TestSQLAlchemyFamiliaRepositoryIntegration:
         assert 0 <= stats["bc3_coverage"] <= 100
 
     def test_statistics_data_consistency(self, db_session):
-        """Test that statistics are consistent with individual families"""
+        """Test that statistics are consistent with individual families."""
         repo = SQLAlchemyFamiliaRepository(db_session)
 
         # Get individual families

@@ -4,7 +4,7 @@ Tests Unitarios - Productos Router Real Execution (TDD + AAA)
 
 Tests que ejecutan funciones reales de app/routers/productos.py.
 Mock de sqlite3.Row para aumentar coverage sin Settings import.
-"""
+."""
 
 import pytest
 
@@ -16,7 +16,7 @@ class TestMapRowToV2Function:
     """Tests que ejecutan map_row_to_v2 (TDD)."""
 
     def test_map_row_to_v2_import_successfully(self):
-        """
+        ."""
         AAA: Arrange (import), Act (import), Assert (validation)
         """
         # Arrange & Act - Importar función
@@ -76,7 +76,7 @@ class TestProductosRouterModuleImport:
     """Tests que importan router productos.py (TDD)."""
 
     def test_productos_router_module_importable(self):
-        """GREEN: Verificar que productos.py es importable."""
+        ."""GREEN: Verificar que productos.py es importable."""
         try:
             from app.routers import productos
 
@@ -109,7 +109,7 @@ class TestProductosRouterResponseStructure:
     """Tests que validan estructura de respuestas V1/V2."""
 
     def test_v1_response_structure_exists(self):
-        """GREEN: Verificar que modelo V1 existe."""
+        ."""GREEN: Verificar que modelo V1 existe."""
         try:
             from app.routers.productos import ProductoV1
 

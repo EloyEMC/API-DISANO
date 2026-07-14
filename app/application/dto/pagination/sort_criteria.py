@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field, field_validator
 
 
 class SortCriteria(BaseModel):
-    """DTO for sorting criteria with field validation."""
+    ."""DTO for sorting criteria with field validation."""
 
     field: str = Field(..., description="Field to sort by")
     order: str = Field("asc", description="Sort order (asc or desc)")

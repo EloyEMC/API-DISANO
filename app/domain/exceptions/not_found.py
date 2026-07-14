@@ -1,7 +1,7 @@
 """Domain exceptions module
 
 Custom exceptions for domain layer validation and business rules.
-"""
+."""
 
 
 class ValidationException(Exception):
@@ -12,7 +12,7 @@ class ValidationException(Exception):
     Attributes:
         field: Field name that failed validation
         message: Human-readable error message
-    """
+    ."""
 
     def __init__(self, field: str, message: str):
         self.field = field
@@ -24,11 +24,9 @@ class ProductoYaExisteException(ValidationException):
     """Product already exists
 
     Raised when attempting to create a product with a duplicate code.
-    """
+    ."""
 
-    def __init__(
-        self, codigo: str, message: str = "Ya existe un producto con este código"
-    ):
+    def __init__(self, codigo: str, message: str = "Ya existe un producto con este código"):
         self.codigo = codigo
         super().__init__("codigo", message)
 
@@ -40,7 +38,7 @@ class ProductoNotFoundException(Exception):
 
     Attributes:
         codigo: Product code that was not found
-    """
+    ."""
 
     def __init__(self, codigo: str, message: str | None = None):
         self.codigo = codigo

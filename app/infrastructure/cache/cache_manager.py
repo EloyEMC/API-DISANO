@@ -12,7 +12,7 @@ following hexagonal architecture principles. The cache manager supports:
 - Fallback mechanism when cache unavailable
 
 TDD Approach: GREEN Phase - Implementation to pass failing tests.
-"""
+."""
 
 import time
 import json
@@ -28,7 +28,7 @@ class CacheManager:
     Provides consistent cache key generation, TTL strategy, invalidation,
     warming, and performance tracking. Falls back to in-memory cache when
     Redis is unavailable.
-    """
+    ."""
 
     # TTL Strategy: Time to live in seconds per data type
     TTL_STRATEGY = {
@@ -47,7 +47,7 @@ class CacheManager:
         Args:
             redis_client: Optional Redis client (falls back to in-memory)
             use_memory_cache: Whether to use in-memory cache as fallback
-        """
+        ."""
         self.redis_client = redis_client
         self.use_memory_cache = use_memory_cache
         self.memory_cache: Dict[str, tuple] = {}  # {key: (value, expiry)}
@@ -67,7 +67,7 @@ class CacheManager:
 
         Returns:
             Consistent cache key string
-        """
+        ."""
         # Base key with type and identifier
         key_parts = [cache_type, identifier]
 
@@ -95,7 +95,7 @@ class CacheManager:
 
         Returns:
             Safe cache key string
-        """
+        ."""
         # Replace special characters with underscores
         safe = key_string.replace("/", "_").replace(" ", "_").replace("-", "_")
         return safe
@@ -109,7 +109,7 @@ class CacheManager:
 
         Returns:
             TTL in seconds
-        """
+        ."""
         return self.TTL_STRATEGY.get(cache_type, self.TTL_STRATEGY["default"])
 
     def get(self, key: str) -> Optional[Any]:
@@ -121,7 +121,7 @@ class CacheManager:
 
         Returns:
             Cached value or None if not found/expired
-        """
+        ."""
         self.stats["total_operations"] += 1
 
         try:
@@ -168,14 +168,12 @@ class CacheManager:
 
         Returns:
             True if successful, False otherwise
-        """
+        ."""
         try:
             # Try Redis first if available
             if self.redis_client:
                 try:
-                    self.redis_client.setex(
-                        key, ttl or self.get_ttl("default"), json.dumps(value)
-                    )
+                    self.redis_client.setex(key, ttl or self.get_ttl("default"), json.dumps(value))
                     return True
                 except Exception:
                     # Fall through to memory cache
@@ -202,7 +200,7 @@ class CacheManager:
 
         Returns:
             True if deleted, False if key didn't exist
-        """
+        ."""
         try:
             deleted = False
 
@@ -235,7 +233,7 @@ class CacheManager:
 
         Returns:
             True if invalidated, False if key didn't exist
-        """
+        ."""
         return self.delete(key)
 
     def invalidate_pattern(self, pattern: str) -> int:
@@ -287,7 +285,7 @@ class CacheManager:
 
         Returns:
             True if successful
-        """
+        ."""
         try:
             # Try Redis first if available
             if self.redis_client:
@@ -315,7 +313,7 @@ class CacheManager:
 
         Returns:
             Number of entries warmed
-        """
+        ."""
         warmed = 0
 
         try:
@@ -346,7 +344,7 @@ class CacheManager:
 
         Returns:
             Cached or computed value
-        """
+        ."""
         # Try to get from cache first
         cached_value = self.get(key)
         if cached_value is not None:
@@ -372,7 +370,7 @@ class CacheManager:
 
         Returns:
             Dictionary with cache statistics
-        """
+        ."""
         total_ops = self.stats["total_operations"]
         hit_rate = self.stats["hits"] / total_ops if total_ops > 0 else 0.0
 
@@ -441,7 +439,7 @@ _global_cache_manager: Optional[CacheManager] = None
 
 
 def get_cache_manager() -> CacheManager:
-    """
+    ."""
     Get global cache manager instance.
 
     Returns:

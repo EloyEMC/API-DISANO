@@ -3,7 +3,7 @@ Focused coverage tests for app/routers/productos.py
 
 Target: Increase app/routers/productos.py coverage from 16% → 50%+
 Focus: High-impact functions, code paths, and edge cases
-"""
+."""
 
 import pytest
 from fastapi import FastAPI
@@ -42,7 +42,7 @@ def app_with_router():
 # TEST 1: map_row_to_v2 utility function (lines 30-80)
 # ============================================================================
 def test_map_row_to_v2_basic_mapping(db_connection):
-    """Test map_row_to_v2 handles basic row correctly."""
+    ."""Test map_row_to_v2 handles basic row correctly."""
 
     row = db_connection.execute("SELECT * FROM productos LIMIT 1").fetchone()
     result = map_row_to_v2(row)
@@ -74,9 +74,7 @@ def test_map_row_to_v2_null_handling(db_connection):
 
 def test_map_row_to_v2_numeric_fields(db_connection):
     """Test numeric fields are handled correctly."""
-    row = db_connection.execute(
-        "SELECT CÓDIGO, PVP_26_01_26 FROM productos LIMIT 1"
-    ).fetchone()
+    row = db_connection.execute("SELECT CÓDIGO, PVP_26_01_26 FROM productos LIMIT 1").fetchone()
 
     result = {"codigo": row["CÓDIGO"], "pvp": row["PVP_26_01_26"]}
 

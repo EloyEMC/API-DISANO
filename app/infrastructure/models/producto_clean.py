@@ -2,7 +2,7 @@
 
 Uses productos_clean view with standard column names for
 SQLAlchemy ORM compatibility.
-"""
+."""
 
 from sqlalchemy import Column, DateTime, Float, String
 from sqlalchemy.orm import declarative_base
@@ -16,7 +16,7 @@ class ProductoModelClean(Base):
 
     Uses clean column names (no brackets, no spaces) for
     SQLAlchemy compatibility. Based on view in SQLite database.
-    """
+    ."""
 
     __tablename__ = "productos_clean"
 
@@ -52,7 +52,7 @@ class ProductoModelClean(Base):
 
         Returns:
             ProductoEntity: Domain entity with clean naming
-        """
+        ."""
         from app.domain.entities.producto import ProductoEntity
 
         return ProductoEntity(
@@ -78,7 +78,7 @@ class ProductoModelClean(Base):
 
         Returns:
             ProductoModelClean: SQLAlchemy model with clean column names
-        """
+        ."""
         return cls(
             codigo=entity.codigo,
             descripcion=entity.descripcion,
@@ -92,5 +92,5 @@ class ProductoModelClean(Base):
         )
 
     def __repr__(self) -> str:
-        """String representation for debugging"""
+        """String representation for debugging."""
         return f"<ProductoModelClean(codigo='{self.codigo}', descripcion='{self.descripcion[:20]}...')>"

@@ -1,7 +1,7 @@
 """Pagination DTOs package for advanced features.
 
 This package contains DTOs for pagination, sorting, and filtering functionality.
-"""
+."""
 
 from pydantic import BaseModel
 

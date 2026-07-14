@@ -1,7 +1,7 @@
 """
 Configuración centralizada de la aplicación
 Usa pydantic-settings para validación y type safety
-"""
+."""
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import field_validator, Field
@@ -10,7 +10,7 @@ from functools import lru_cache
 
 
 class Settings(BaseSettings):
-    """Configuración de la aplicación cargada desde variables de entorno"""
+    """Configuración de la aplicación cargada desde variables de entorno."""
 
     model_config = SettingsConfigDict(
         env_file=".env", env_file_encoding="utf-8", case_sensitive=False, extra="ignore"
@@ -86,7 +86,7 @@ class Settings(BaseSettings):
     @field_validator("api_keys", mode="before")
     @classmethod
     def parse_api_keys(cls, v: Union[str, List[str]]) -> List[str]:
-        """Parse api_keys from string or list"""
+        """Parse api_keys from string or list."""
         if isinstance(v, str):
             return [key.strip() for key in v.split(",") if key.strip()]
         return v if isinstance(v, list) else []
@@ -94,27 +94,27 @@ class Settings(BaseSettings):
     @field_validator("cors_origins", mode="before")
     @classmethod
     def parse_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:
-        """Parse cors_origins from string or list"""
+        """Parse cors_origins from string or list."""
         if isinstance(v, str):
             return [origin.strip() for origin in v.split(",") if origin.strip()]
         return v if isinstance(v, list) else ["*"]
 
     @property
     def api_keys_list(self) -> List[str]:
-        """Return api_keys as a list for compatibility"""
+        """Return api_keys as a list for compatibility."""
         if isinstance(self.api_keys, list):
             return self.api_keys
         return [self.api_keys] if self.api_keys else []
 
     @property
     def cors_origins_list(self) -> List[str]:
-        """Return cors_origins as a list for compatibility"""
+        """Return cors_origins as a list for compatibility."""
         if isinstance(self.cors_origins, list):
             return self.cors_origins
         return [self.cors_origins] if self.cors_origins else ["*"]
 
     def is_production(self) -> bool:
-        """Verifica si estamos en producción"""
+        """Verifica si estamos en producción."""
         return self.environment.lower() == "production"
 
 
@@ -123,5 +123,5 @@ def get_settings() -> Settings:
     """
     Retorna instancia caché de Settings.
     Usa lru_cache para solo cargar una vez.
-    """
+    ."""
     return Settings()

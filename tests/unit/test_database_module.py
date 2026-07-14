@@ -3,7 +3,7 @@ Tests Unitarios - Database Module (Cubre código real)
 =================================================
 
 Tests que cubren código real de app/database.py SIN importar app.config.
-"""
+."""
 
 import os
 import sqlite3
@@ -42,9 +42,7 @@ def test_database_test_db_is_readable():
         connection.close()
 
         assert count > 0, "Base de datos testing está vacía"
-        assert count == 8288, (
-            f"Base de datos testing tiene {count} productos, esperaba 8288"
-        )
+        assert count == 8288, f"Base de datos testing tiene {count} productos, esperaba 8288"
 
     except sqlite3.Error as e:
         pytest.fail(f"Error al conectar a base de datos testing: {e}")
@@ -58,9 +56,7 @@ def test_database_test_db_has_correct_structure():
         cursor = connection.cursor()
 
         # Verificar que existe tabla productos
-        cursor.execute(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name='productos'"
-        )
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='productos'")
         tables = cursor.fetchall()
         assert len(tables) == 1, "Base de datos testing debe tener tabla productos"
 

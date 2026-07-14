@@ -5,7 +5,7 @@ GREEN Phase: Make tests pass by implementing endpoints
 REFACTOR Phase: Clean up code
 
 Following strict TDD methodology for all tests.
-"""
+."""
 
 import pytest
 from unittest.mock import Mock, MagicMock
@@ -36,11 +36,11 @@ from app.domain.entities.producto import ProductoEntity
 
 
 class TestV2ProductosEndpointPagination:
-    """Test V2 productos endpoint pagination functionality"""
+    """Test V2 productos endpoint pagination functionality."""
 
     @pytest.fixture
     def mock_producto_service(self):
-        """Mock ProductoService"""
+        """Mock ProductoService."""
         mock_service = Mock(spec=ProductoService)
 
         # Setup default return value for pagination
@@ -85,7 +85,7 @@ class TestV2ProductosEndpointPagination:
 
     @pytest.fixture
     def app(self, mock_producto_service):
-        """Create FastAPI app with mocked service"""
+        """Create FastAPI app with mocked service."""
         app = FastAPI()
 
         # Import productos router
@@ -95,21 +95,21 @@ class TestV2ProductosEndpointPagination:
         def override_get_producto_service():
             return mock_producto_service
 
-        app.dependency_overrides[productos_http.get_producto_service] = (
-            override_get_producto_service
-        )
+        app.dependency_overrides[
+            productos_http.get_producto_service
+        ] = override_get_producto_service
         app.include_router(productos_http.router, prefix="/api/productos")
 
         return app
 
     @pytest.fixture
     def client(self, app):
-        """Create test client"""
+        """Create test client."""
         return TestClient(app)
 
     # RED: Test that endpoint exists and returns correct structure
     def test_v2_paginated_endpoint_exists(self, client):
-        """Test that V2 paginated endpoint is accessible"""
+        """Test that V2 paginated endpoint is accessible."""
         response = client.get("/api/productos/v2/paginated?page=1&per_page=5")
 
         assert response.status_code == 200
@@ -124,7 +124,7 @@ class TestV2ProductosEndpointPagination:
         assert isinstance(data["pagination"], dict), "Pagination should be a dict"
 
     def test_v2_paginated_endpoint_with_pagination(self, client):
-        """Test that pagination works correctly"""
+        """Test that pagination works correctly."""
         response = client.get("/api/productos/v2/paginated?page=2&per_page=3")
 
         assert response.status_code == 200
@@ -140,10 +140,8 @@ class TestV2ProductosEndpointPagination:
         assert "has_previous" in pagination
 
     def test_v2_paginated_endpoint_with_sorting(self, client):
-        """Test that sorting parameter is processed correctly"""
-        response = client.get(
-            "/api/productos/v2/paginated?page=1&per_page=5&sort=codigo:desc"
-        )
+        """Test that sorting parameter is processed correctly."""
+        response = client.get("/api/productos/v2/paginated?page=1&per_page=5&sort=codigo:desc")
 
         assert response.status_code == 200
         data = response.json()
@@ -154,7 +152,7 @@ class TestV2ProductosEndpointPagination:
         assert isinstance(data["items"], list)
 
     def test_v2_paginated_endpoint_with_filters(self, client):
-        """Test that query parameter filters are processed"""
+        """Test that query parameter filters are processed."""
         response = client.get(
             "/api/productos/v2/paginated?page=1&per_page=5&buscar=test&marca=Brand"
         )
@@ -167,7 +165,7 @@ class TestV2ProductosEndpointPagination:
         assert isinstance(data["items"], list)
 
     def test_v2_paginated_endpoint_with_price_range(self, client):
-        """Test that price range filters work correctly"""
+        """Test that price range filters work correctly."""
         response = client.get(
             "/api/productos/v2/paginated?page=1&per_page=5&pvp_min=10&pvp_max=200"
         )
@@ -184,7 +182,7 @@ class TestV2ProductosEndpointPagination:
                 assert 10 <= item["pvp"] <= 200
 
     def test_v2_paginated_endpoint_with_bc3_filters(self, client):
-        """Test that BC3-specific filters work correctly"""
+        """Test that BC3-specific filters work correctly."""
         response = client.get(
             "/api/productos/v2/paginated?page=1&per_page=5&bc3_product_type=luminaria&bc3_has_descripcion_corta=true"
         )
@@ -200,7 +198,7 @@ class TestV2ProductosEndpointPagination:
             assert item.get("bc3_descripcion_corta") is not None
 
     def test_v2_paginated_endpoint_default_parameters(self, client):
-        """Test that default parameters work correctly"""
+        """Test that default parameters work correctly."""
         response = client.get("/api/productos/v2/paginated")
 
         assert response.status_code == 200
@@ -212,7 +210,7 @@ class TestV2ProductosEndpointPagination:
         assert pagination["per_page"] == 20  # Default per_page
 
     def test_v2_paginated_endpoint_max_per_page(self, client):
-        """Test that per_page maximum is enforced"""
+        """Test that per_page maximum is enforced."""
         response = client.get("/api/productos/v2/paginated?page=1&per_page=100")
 
         assert response.status_code == 200
@@ -223,7 +221,7 @@ class TestV2ProductosEndpointPagination:
         assert pagination["per_page"] == 100
 
     def test_v2_paginated_endpoint_empty_results(self, mock_producto_service):
-        """Test handling of empty result sets"""
+        """Test handling of empty result sets."""
         # Setup mock to return empty results
         mock_empty_response = PaginatedResponseDTO(
             items=[],
@@ -236,9 +234,7 @@ class TestV2ProductosEndpointPagination:
             filters_applied={},
             sorting_applied=None,
         )
-        mock_producto_service.buscar_productos_paginado.return_value = (
-            mock_empty_response
-        )
+        mock_producto_service.buscar_productos_paginado.return_value = mock_empty_response
 
         from fastapi.testclient import TestClient
         from app.interfaces.http import productos as productos_http
@@ -248,9 +244,9 @@ class TestV2ProductosEndpointPagination:
         def override_get_producto_service():
             return mock_producto_service
 
-        app.dependency_overrides[productos_http.get_producto_service] = (
-            override_get_producto_service
-        )
+        app.dependency_overrides[
+            productos_http.get_producto_service
+        ] = override_get_producto_service
         app.include_router(productos_http.router, prefix="/api/productos")
         client = TestClient(app)
 
@@ -264,7 +260,7 @@ class TestV2ProductosEndpointPagination:
         assert data["pagination"]["total_items"] == 0
 
     def test_v2_paginated_endpoint_page_out_of_range(self, client):
-        """Test handling of page numbers beyond available data"""
+        """Test handling of page numbers beyond available data."""
         response = client.get("/api/productos/v2/paginated?page=99999&per_page=10")
 
         # Should handle gracefully - either 200 with empty results or 404
@@ -277,11 +273,11 @@ class TestV2ProductosEndpointPagination:
 
 
 class TestV2FamiliasEndpointPagination:
-    """Test V2 familias endpoint pagination functionality"""
+    """Test V2 familias endpoint pagination functionality."""
 
     @pytest.fixture
     def mock_familia_service(self):
-        """Mock FamiliaService"""
+        """Mock FamiliaService."""
         mock_service = MagicMock()
         mock_service.buscar_familias_paginado = Mock()
 
@@ -306,7 +302,7 @@ class TestV2FamiliasEndpointPagination:
 
     @pytest.fixture
     def app(self, mock_familia_service):
-        """Create FastAPI app with mocked service"""
+        """Create FastAPI app with mocked service."""
         app = FastAPI()
 
         from app.interfaces.http import familias as familias_http
@@ -315,20 +311,18 @@ class TestV2FamiliasEndpointPagination:
         def override_get_familia_service():
             return mock_familia_service
 
-        app.dependency_overrides[familias_http.get_familia_service] = (
-            override_get_familia_service
-        )
+        app.dependency_overrides[familias_http.get_familia_service] = override_get_familia_service
         app.include_router(familias_http.router, prefix="/api/familias")
 
         return app
 
     @pytest.fixture
     def client(self, app):
-        """Create test client"""
+        """Create test client."""
         return TestClient(app)
 
     def test_v2_familias_paginated_endpoint_exists(self, client):
-        """Test that V2 familias paginated endpoint is accessible"""
+        """Test that V2 familias paginated endpoint is accessible."""
         response = client.get("/api/familias/v2/paginated?page=1&per_page=5")
 
         # RED: Test endpoint exists
@@ -339,7 +333,7 @@ class TestV2FamiliasEndpointPagination:
         assert "pagination" in data, "Response should have 'pagination' field"
 
     def test_v2_familias_paginated_endpoint_basic_pagination(self, client):
-        """Test basic pagination for familias endpoint"""
+        """Test basic pagination for familias endpoint."""
         response = client.get("/api/familias/v2/paginated?page=1&per_page=3")
 
         # GREEN: Test pagination works
@@ -352,10 +346,8 @@ class TestV2FamiliasEndpointPagination:
         assert len(data["items"]) == 3
 
     def test_v2_familias_paginated_endpoint_with_search(self, client):
-        """Test search parameter for familias endpoint"""
-        response = client.get(
-            "/api/familias/v2/paginated?page=1&per_page=5&buscar=test"
-        )
+        """Test search parameter for familias endpoint."""
+        response = client.get("/api/familias/v2/paginated?page=1&per_page=5&buscar=test")
 
         # GREEN: Test search parameter works
         assert response.status_code == 200
@@ -364,7 +356,7 @@ class TestV2FamiliasEndpointPagination:
         assert "filters_applied" in data
 
     def test_v2_familias_paginated_endpoint_default_sorting(self, client):
-        """Test default sorting for familias"""
+        """Test default sorting for familias."""
         response = client.get("/api/familias/v2/paginated?page=1&per_page=5")
 
         # GREEN: Test default sorting (alphabetical by nombre)
@@ -373,9 +365,7 @@ class TestV2FamiliasEndpointPagination:
 
         # Verify families are sorted alphabetically by nombre
         nombres = [item.get("nombre") for item in data["items"]]
-        assert nombres == sorted(nombres), (
-            f"Families should be sorted alphabetically: {nombres}"
-        )
+        assert nombres == sorted(nombres), f"Families should be sorted alphabetically: {nombres}"
 
 
 # ==============================================================================
@@ -384,11 +374,11 @@ class TestV2FamiliasEndpointPagination:
 
 
 class TestV2BC3Endpoint:
-    """Test V2 BC3 endpoint functionality"""
+    """Test V2 BC3 endpoint functionality."""
 
     @pytest.fixture
     def mock_producto_service(self):
-        """Mock ProductoService for BC3 testing"""
+        """Mock ProductoService for BC3 testing."""
         mock_service = MagicMock()
         mock_service.buscar_productos_paginado = Mock()
         mock_service.get_all_productos = Mock()
@@ -441,7 +431,7 @@ class TestV2BC3Endpoint:
 
     @pytest.fixture
     def app(self, mock_producto_service):
-        """Create FastAPI app with mocked service"""
+        """Create FastAPI app with mocked service."""
         app = FastAPI()
 
         from app.interfaces.http import bc3 as bc3_http
@@ -450,20 +440,18 @@ class TestV2BC3Endpoint:
         def override_get_producto_service():
             return mock_producto_service
 
-        app.dependency_overrides[bc3_http.get_producto_service] = (
-            override_get_producto_service
-        )
+        app.dependency_overrides[bc3_http.get_producto_service] = override_get_producto_service
         app.include_router(bc3_http.router, prefix="/api/bc3")
 
         return app
 
     @pytest.fixture
     def client(self, app):
-        """Create test client"""
+        """Create test client."""
         return TestClient(app)
 
     def test_v2_bc3_paginated_endpoint_exists(self, client):
-        """Test that V2 BC3 paginated endpoint is accessible"""
+        """Test that V2 BC3 paginated endpoint is accessible."""
         response = client.get("/api/bc3/v2/paginated?page=1&per_page=5")
 
         # RED: Test endpoint exists
@@ -474,10 +462,8 @@ class TestV2BC3Endpoint:
         assert "pagination" in data
 
     def test_v2_bc3_paginated_endpoint_with_bc3_filters(self, client):
-        """Test BC3-specific filters work correctly"""
-        response = client.get(
-            "/api/bc3/v2/paginated?page=1&per_page=5&bc3_product_type=columna"
-        )
+        """Test BC3-specific filters work correctly."""
+        response = client.get("/api/bc3/v2/paginated?page=1&per_page=5&bc3_product_type=columna")
 
         # GREEN: Test BC3 filters work
         assert response.status_code == 200
@@ -489,7 +475,7 @@ class TestV2BC3Endpoint:
                 assert item["bc3_product_type"] == "columna"
 
     def test_v2_bc3_paginated_endpoint_descripcion_corta_filter(self, client):
-        """Test BC3 description corta filter"""
+        """Test BC3 description corta filter."""
         response = client.get(
             "/api/bc3/v2/paginated?page=1&per_page=5&bc3_has_descripcion_corta=true"
         )
@@ -504,7 +490,7 @@ class TestV2BC3Endpoint:
                 assert item.get("bc3_descripcion_corta") is not None
 
     def test_v2_bc3_stats_endpoint_exists(self, client):
-        """Test that V2 BC3 stats endpoint is accessible"""
+        """Test that V2 BC3 stats endpoint is accessible."""
         response = client.get("/api/bc3/v2/stats")
 
         # RED: Test endpoint exists
@@ -516,7 +502,7 @@ class TestV2BC3Endpoint:
         assert "tipos" in data
 
     def test_v2_bc3_stats_endpoint_structure(self, client):
-        """Test BC3 stats endpoint has correct structure"""
+        """Test BC3 stats endpoint has correct structure."""
         response = client.get("/api/bc3/v2/stats")
 
         # GREEN: Verify stats structure
@@ -544,13 +530,11 @@ class TestV2BC3Endpoint:
 
 
 class TestQueryParameterParser:
-    """Test query parameter parsing functionality"""
+    """Test query parameter parsing functionality."""
 
     def test_parse_sort_parameter_valid(self):
-        """Test parsing valid sort parameter"""
-        sort_criteria = QueryParameterParser.parse_sort_parameter(
-            "codigo:asc", "productos"
-        )
+        """Test parsing valid sort parameter."""
+        sort_criteria = QueryParameterParser.parse_sort_parameter("codigo:asc", "productos")
 
         # RED: Test parser returns correct structure
         assert sort_criteria is not None
@@ -558,7 +542,7 @@ class TestQueryParameterParser:
         assert sort_criteria.direction == SortDirection.ASC
 
     def test_parse_sort_parameter_invalid_field(self):
-        """Test that invalid sort field raises error"""
+        """Test that invalid sort field raises error."""
         # RED: Test that invalid field raises ValueError
         with pytest.raises(ValueError) as exc_info:
             QueryParameterParser.parse_sort_parameter("invalid_field:asc", "productos")
@@ -566,7 +550,7 @@ class TestQueryParameterParser:
         assert "Invalid sort field" in str(exc_info.value)
 
     def test_parse_sort_parameter_invalid_direction(self):
-        """Test that invalid sort direction raises error"""
+        """Test that invalid sort direction raises error."""
         # RED: Test that invalid direction raises ValueError
         with pytest.raises(ValueError) as exc_info:
             QueryParameterParser.parse_sort_parameter("codigo:invalid", "productos")
@@ -574,7 +558,7 @@ class TestQueryParameterParser:
         assert "Invalid sort direction" in str(exc_info.value)
 
     def test_parse_filters_basic(self):
-        """Test parsing basic filters"""
+        """Test parsing basic filters."""
         filters = QueryParameterParser.parse_filters(
             {"buscar": "test", "marca": "Brand"}, "productos"
         )
@@ -584,7 +568,7 @@ class TestQueryParameterParser:
         assert not filters.has_errors()
 
     def test_parse_filters_with_price_validation(self):
-        """Test price validation in filters"""
+        """Test price validation in filters."""
         filters = QueryParameterParser.parse_filters(
             {"pvp_min": "10.5", "pvp_max": "200.75"}, "productos"
         )
@@ -595,17 +579,15 @@ class TestQueryParameterParser:
         assert not filters.has_errors()
 
     def test_parse_filters_invalid_price(self):
-        """Test that invalid price raises error"""
-        filters = QueryParameterParser.parse_filters(
-            {"pvp_min": "invalid"}, "productos"
-        )
+        """Test that invalid price raises error."""
+        filters = QueryParameterParser.parse_filters({"pvp_min": "invalid"}, "productos")
 
         # RED: Test invalid price creates error
         assert filters.has_errors()
         assert any("price" in str(err).lower() for err in filters.errors)
 
     def test_parse_pagination_parameters_valid(self):
-        """Test parsing valid pagination parameters"""
+        """Test parsing valid pagination parameters."""
         page, per_page = QueryParameterParser.parse_pagination_parameters("3", "25")
 
         # GREEN: Test parameters are validated correctly
@@ -613,7 +595,7 @@ class TestQueryParameterParser:
         assert per_page == 25
 
     def test_parse_pagination_parameters_invalid_page(self):
-        """Test that invalid page raises error"""
+        """Test that invalid page raises error."""
         # RED: Test invalid page raises error
         with pytest.raises(ValueError) as exc_info:
             QueryParameterParser.parse_pagination_parameters("-1", "10")
@@ -621,7 +603,7 @@ class TestQueryParameterParser:
         assert "at least 1" in str(exc_info.value)
 
     def test_parse_pagination_parameters_per_page_too_large(self):
-        """Test that per_page maximum is enforced"""
+        """Test that per_page maximum is enforced."""
         # RED: Test large per_page raises error
         with pytest.raises(ValueError) as exc_info:
             QueryParameterParser.parse_pagination_parameters("1", "999")
@@ -629,7 +611,7 @@ class TestQueryParameterParser:
         assert "cannot exceed 100" in str(exc_info.value)
 
     def test_validate_all_parameters_comprehensive(self):
-        """Test comprehensive parameter validation"""
+        """Test comprehensive parameter validation."""
         params = {
             "page": 2,
             "per_page": 15,
@@ -655,10 +637,10 @@ class TestQueryParameterParser:
 
 
 class TestResponseSerializers:
-    """Test response serialization functionality"""
+    """Test response serialization functionality."""
 
     def test_serialize_producto_entity(self):
-        """Test serializing a producto entity"""
+        """Test serializing a producto entity."""
         entity = ProductoEntity(
             codigo="TEST001",
             descripcion="Test Product",
@@ -679,7 +661,7 @@ class TestResponseSerializers:
         assert "descripcion" in serialized
 
     def test_serialize_producto_list(self):
-        """Test serializing list of productos"""
+        """Test serializing list of productos."""
         entities = [
             ProductoEntity(
                 codigo=f"TEST{i:03d}",
@@ -701,7 +683,7 @@ class TestResponseSerializers:
         assert all("codigo" in item for item in serialized_list)
 
     def test_serialize_paginated_response(self):
-        """Test serializing paginated response"""
+        """Test serializing paginated response."""
         paginated_response = PaginatedResponseDTO(
             items=[
                 ProductoEntity(
@@ -737,7 +719,7 @@ class TestResponseSerializers:
         assert len(serialized["items"]) == 1
 
     def test_familia_serializer_bc3_coverage(self):
-        """Test BC3 coverage percentage calculation"""
+        """Test BC3 coverage percentage calculation."""
         familia_data = {
             "nombre": "TestFamily",
             "total_productos": 100,
@@ -754,7 +736,7 @@ class TestResponseSerializers:
         pass  # Implementation handles this automatically
 
     def test_bc3_stats_serializer(self):
-        """Test BC3 stats serialization with percentages"""
+        """Test BC3 stats serialization with percentages."""
         stats = {
             "total": 1000,
             "con_descripcion_corta": 850,
@@ -772,7 +754,7 @@ class TestResponseSerializers:
             assert isinstance(value, str) and "%" in value
 
     def test_format_currency(self):
-        """Test currency formatting"""
+        """Test currency formatting."""
         # RED: Test currency formatting
         formatted = ResponseSerializer.format_currency(99.99)
 
@@ -780,7 +762,7 @@ class TestResponseSerializers:
         assert "N/A EUR" == ResponseSerializer.format_currency(None)
 
     def test_format_percentage(self):
-        """Test percentage formatting"""
+        """Test percentage formatting."""
         # RED: Test percentage formatting
         formatted = ResponseSerializer.format_percentage(75.5)
 
@@ -794,10 +776,10 @@ class TestResponseSerializers:
 
 
 class TestErrorHandlingIntegration:
-    """Test error handling integration with endpoints"""
+    """Test error handling integration with endpoints."""
 
     def test_404_error_response_format(self):
-        """Test that 404 errors have standardized format"""
+        """Test that 404 errors have standardized format."""
         from app.main import app
         from fastapi.testclient import TestClient
 
@@ -818,7 +800,7 @@ class TestErrorHandlingIntegration:
         assert "method" in error
 
     def test_validation_error_response_format(self):
-        """Test that validation errors have detailed information"""
+        """Test that validation errors have detailed information."""
         from app.main import app
         from fastapi.testclient import TestClient
 
@@ -839,7 +821,7 @@ class TestErrorHandlingIntegration:
             assert isinstance(error["details"]["validation_errors"], list)
 
     def test_internal_server_error_logging(self):
-        """Test that internal errors are logged properly"""
+        """Test that internal errors are logged properly."""
         import logging
         from io import StringIO
 
@@ -882,7 +864,7 @@ class TestErrorHandlingIntegration:
             assert "ERROR" in log_output
 
     def test_exception_handlers_registration(self):
-        """Test that all exception handlers are registered"""
+        """Test that all exception handlers are registered."""
         from app.main import app
 
         # GREEN: Verify handlers are registered
@@ -902,10 +884,10 @@ class TestErrorHandlingIntegration:
 
 
 class TestEndpointSecurity:
-    """Test endpoint security and validation"""
+    """Test endpoint security and validation."""
 
     def test_xss_prevention_in_search_parameter(self):
-        """Test that search parameter handles XSS attempts safely"""
+        """Test that search parameter handles XSS attempts safely."""
         from app.main import app
         from fastapi.testclient import TestClient
 
@@ -925,7 +907,7 @@ class TestEndpointSecurity:
             assert "<script>" not in response_text
 
     def test_sql_injection_prevention(self):
-        """Test that SQL injection attempts are prevented"""
+        """Test that SQL injection attempts are prevented."""
         from app.main import app
         from fastapi.testclient import TestClient
 
@@ -939,7 +921,7 @@ class TestEndpointSecurity:
         assert response.status_code in [200, 400, 422]
 
     def test_parameter_sanitization(self):
-        """Test that parameters are sanitized properly"""
+        """Test that parameters are sanitized properly."""
         from app.main import app
         from fastapi.testclient import TestClient
 
@@ -962,6 +944,4 @@ class TestEndpointSecurity:
 
             if response.status_code == 200:
                 response_text = response.text.lower()
-                assert payload not in response_text, (
-                    f"Payload {payload} leaked in response"
-                )
+                assert payload not in response_text, f"Payload {payload} leaked in response"

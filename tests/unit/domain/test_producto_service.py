@@ -1,7 +1,7 @@
 """Unit tests for ProductoService
 
 Tests business logic and validation rules.
-"""
+."""
 
 from datetime import datetime
 from unittest.mock import Mock
@@ -24,10 +24,10 @@ from app.application.dto.producto import (
 
 
 class TestProductoService:
-    """Tests for ProductoService business logic"""
+    """Tests for ProductoService business logic."""
 
     def test_crear_producto_success(self):
-        """Test creating product successfully"""
+        """Test creating product successfully."""
         # Arrange
         mock_repo = Mock(spec=ProductoRepositoryInterface)
         mock_repo.get_by_codigo.side_effect = ProductoNotFoundException("TEST001")
@@ -57,7 +57,7 @@ class TestProductoService:
         mock_repo.save.assert_called_once()
 
     def test_crear_producto_duplicate_code(self):
-        """Test creating product with duplicate code raises error"""
+        """Test creating product with duplicate code raises error."""
         # Arrange
         mock_repo = Mock(spec=ProductoRepositoryInterface)
         mock_repo.get_by_codigo.return_value = ProductoEntity(
@@ -80,7 +80,7 @@ class TestProductoService:
             service.crear_producto(dto)
 
         def test_crear_producto_validacion_descripcion_corta(self):
-            """Test creating product with short description raises error"""
+            """Test creating product with short description raises error."""
             # Arrange
             mock_repo = Mock(spec=ProductoRepositoryInterface)
             mock_repo.get_by_codigo.side_effect = ProductoNotFoundException("TEST001")
@@ -97,7 +97,7 @@ class TestProductoService:
                 service.crear_producto(dto)
 
         def test_crear_producto_validacion_pvp_negativo(self):
-            """Test creating product with negative price raises error"""
+            """Test creating product with negative price raises error."""
             # Arrange
             mock_repo = Mock(spec=ProductoRepositoryInterface)
             mock_repo.get_by_codigo.side_effect = ProductoNotFoundException("TEST001")
@@ -115,7 +115,7 @@ class TestProductoService:
                 service.crear_producto(dto)
 
     def test_actualizar_producto_success(self):
-        """Test updating existing product"""
+        """Test updating existing product."""
         # Arrange
         existing = ProductoEntity(
             codigo="TEST001",
@@ -152,7 +152,7 @@ class TestProductoService:
         mock_repo.save.assert_called_once()
 
     def test_actualizar_producto_not_found(self):
-        """Test updating non-existent product raises error"""
+        """Test updating non-existent product raises error."""
         # Arrange
         mock_repo = Mock(spec=ProductoRepositoryInterface)
         mock_repo.get_by_codigo.side_effect = ProductoNotFoundException("TEST001")
@@ -165,7 +165,7 @@ class TestProductoService:
             service.actualizar_producto("TEST001", dto)
 
     def test_actualizar_producto_pvp_negativo(self):
-        """Test updating product with negative price raises error"""
+        """Test updating product with negative price raises error."""
         # Arrange
         existing = ProductoEntity(
             codigo="TEST001",
@@ -191,7 +191,7 @@ class TestProductoService:
             service.actualizar_producto("TEST001", dto)
 
     def test_buscar_productos(self):
-        """Test searching products"""
+        """Test searching products."""
         # Arrange
         mock_repo = Mock(spec=ProductoRepositoryInterface)
         mock_results = [
@@ -225,7 +225,7 @@ class TestProductoService:
         mock_repo.buscar_productos.assert_called_once()
 
     def test_obtener_producto(self):
-        """Test getting product by code"""
+        """Test getting product by code."""
         # Arrange
         mock_repo = Mock(spec=ProductoRepositoryInterface)
         mock_repo.get_by_codigo.return_value = ProductoEntity(
@@ -248,7 +248,7 @@ class TestProductoService:
         mock_repo.get_by_codigo.assert_called_once_with("TEST001")
 
     def test_obtener_producto_not_found(self):
-        """Test getting non-existent product raises error"""
+        """Test getting non-existent product raises error."""
         # Arrange
         mock_repo = Mock(spec=ProductoRepositoryInterface)
         mock_repo.get_by_codigo.side_effect = ProductoNotFoundException("TEST001")
@@ -260,7 +260,7 @@ class TestProductoService:
             service.obtener_producto("TEST001")
 
     def test_eliminar_producto(self):
-        """Test deleting product"""
+        """Test deleting product."""
         # Arrange
         mock_repo = Mock(spec=ProductoRepositoryInterface)
         mock_repo.get_by_codigo.return_value = ProductoEntity(
@@ -283,7 +283,7 @@ class TestProductoService:
         mock_repo.delete.assert_called_once_with("TEST001")
 
     def test_eliminar_producto_not_found(self):
-        """Test deleting non-existent product returns False"""
+        """Test deleting non-existent product returns False."""
         # Arrange
         mock_repo = Mock(spec=ProductoRepositoryInterface)
         mock_repo.get_by_codigo.side_effect = ProductoNotFoundException("TEST001")
@@ -297,7 +297,7 @@ class TestProductoService:
         assert result is False
 
     def test_get_all_productos(self):
-        """Test getting all products with pagination"""
+        """Test getting all products with pagination."""
         # Arrange
         mock_repo = Mock(spec=ProductoRepositoryInterface)
         mock_repo.get_all.return_value = [
@@ -337,7 +337,7 @@ class TestProductoService:
         mock_repo.get_all.assert_called_once_with(skip=0, limit=10)
 
     def test_count_productos(self):
-        """Test getting total product count"""
+        """Test getting total product count."""
         # Arrange
         mock_repo = Mock(spec=ProductoRepositoryInterface)
         mock_repo.count_total.return_value = 8288

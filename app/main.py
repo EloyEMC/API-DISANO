@@ -1,7 +1,7 @@
 """
 API REST de Disano - Productos y Tarifas
 FastAPI con SQLite - CON SEGURIDAD
-"""
+."""
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -72,7 +72,7 @@ register_exception_handlers(app)
 # Endpoint raíz
 @app.get("/")
 async def root():
-    """Endpoint raíz - Información de la API"""
+    """Endpoint raíz - Información de la API."""
     endpoints = {
         "productos": "/api/productos",
         "familias": "/api/familias",
@@ -95,7 +95,7 @@ async def root():
 # Health check
 @app.get("/health")
 async def health_check():
-    """Health check endpoint"""
+    """Health check endpoint."""
     return {"status": "ok", "service": "api-disano"}
 
 

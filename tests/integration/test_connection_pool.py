@@ -4,7 +4,7 @@ Connection pool integration tests following TDD methodology.
 RED Phase: Write failing tests for connection pool optimization.
 GREEN Phase: Implement pool configuration and monitoring.
 REFACTOR Phase: Optimize while maintaining functionality.
-"""
+."""
 
 import time
 from unittest.mock import Mock
@@ -15,7 +15,7 @@ class TestConnectionPoolConfigRed:
     """RED Phase: Failing tests for connection pool configuration."""
 
     def test_connection_pool_configured_for_development(self):
-        """Test that connection pool is properly configured for development."""
+        ."""Test that connection pool is properly configured for development."""
         from app.infrastructure.database.connection import engine, get_pool_stats
 
         # Verify pool settings for SQLite (development)
@@ -74,7 +74,7 @@ class TestConnectionPoolMonitoringRed:
     """RED Phase: Failing tests for connection pool monitoring."""
 
     def test_pool_usage_metrics_collected(self):
-        """Test that pool usage metrics are collected."""
+        ."""Test that pool usage metrics are collected."""
         from app.infrastructure.database.connection import get_pool_stats
 
         stats = get_pool_stats()
@@ -103,7 +103,7 @@ class TestConnectionPoolMonitoringRed:
         assert exhaustion_detected is False
 
     def test_pool_performance_logging_enabled(self):
-        """Test that pool performance logging is enabled."""
+        ."""Test that pool performance logging is enabled."""
         from app.infrastructure.database.connection import get_pool_logging_config
 
         logging_config = get_pool_logging_config()
@@ -125,10 +125,10 @@ class TestConnectionPoolMonitoringRed:
 
 
 class TestConnectionPoolPerformanceRed:
-    """RED Phase: Failing tests for connection pool performance."""
+    ."""RED Phase: Failing tests for connection pool performance."""
 
     def test_connection_reuse_improves_performance(self):
-        """Test that connection reuse improves performance."""
+        ."""Test that connection reuse improves performance."""
         from app.infrastructure.database.connection import get_db_session
         import time
 
@@ -148,7 +148,7 @@ class TestConnectionPoolPerformanceRed:
         assert second_time <= first_time
 
     def test_pool_handles_concurrent_connections(self):
-        """Test that pool handles concurrent connections properly."""
+        ."""Test that pool handles concurrent connections properly."""
         from app.infrastructure.database.connection import get_db_session
 
         connections_made = []
@@ -173,7 +173,7 @@ class TestConnectionPoolPerformanceRed:
         assert len(connections_made) == 5
 
     def test_pool_handles_connection_overflow(self):
-        """Test that pool handles overflow scenarios gracefully."""
+        ."""Test that pool handles overflow scenarios gracefully."""
         from app.infrastructure.database.connection import get_db_session
 
         connections = []
@@ -193,10 +193,10 @@ class TestConnectionPoolPerformanceRed:
 
 
 class TestProductionPoolConfigurationRed:
-    """RED Phase: Failing tests for production pool configuration."""
+    ."""RED Phase: Failing tests for production pool configuration."""
 
     def test_production_pool_uses_queuepool(self):
-        """Test that production uses QueuePool instead of StaticPool."""
+        ."""Test that production uses QueuePool instead of StaticPool."""
         from app.infrastructure.database.connection import (
             create_production_engine,
             get_database_path,
@@ -252,7 +252,7 @@ def create_mock_engine():
 
 
 def simulate_database_query(session):
-    """Simulate a database query for testing."""
+    ."""Simulate a database query for testing."""
     # Simulate database operation
     time.sleep(0.01)  # Small delay
     return {"data": "test"}

@@ -2,7 +2,7 @@
 
 Handles conversion of domain entities to API response DTOs,
 JSON serialization, and formatting for consistent API responses.
-"""
+."""
 
 from typing import Any, Dict, List, Optional
 from datetime import datetime
@@ -11,7 +11,7 @@ import json
 
 
 class ResponseSerializer:
-    """Serializer for converting domain entities to API responses"""
+    """Serializer for converting domain entities to API responses."""
 
     # Fields to exclude from different entity types
     EXCLUDED_FIELDS = {
@@ -37,7 +37,7 @@ class ResponseSerializer:
 
         Returns:
             Serialized entity as dictionary
-        """
+        ."""
         if entity is None:
             return {}
 
@@ -82,11 +82,8 @@ class ResponseSerializer:
 
         Returns:
             List of serialized entities as dictionaries
-        """
-        return [
-            cls.serialize_entity(entity, entity_type, exclude_fields)
-            for entity in entities
-        ]
+        ."""
+        return [cls.serialize_entity(entity, entity_type, exclude_fields) for entity in entities]
 
     @classmethod
     def serialize_pagination_metadata(cls, metadata: Any) -> Dict[str, Any]:
@@ -98,7 +95,7 @@ class ResponseSerializer:
 
         Returns:
             Serialized pagination metadata
-        """
+        ."""
         if hasattr(metadata, "model_dump"):
             return metadata.model_dump()
         elif hasattr(metadata, "dict"):
@@ -121,7 +118,7 @@ class ResponseSerializer:
 
         Returns:
             Serialized paginated response
-        """
+        ."""
         # Serialize items
         if hasattr(paginated_response, "items"):
             items = cls.serialize_entities(paginated_response.items, entity_type)
@@ -130,9 +127,7 @@ class ResponseSerializer:
 
         # Serialize pagination metadata
         if hasattr(paginated_response, "pagination"):
-            pagination = cls.serialize_pagination_metadata(
-                paginated_response.pagination
-            )
+            pagination = cls.serialize_pagination_metadata(paginated_response.pagination)
         else:
             pagination = {}
 
@@ -158,10 +153,10 @@ class ResponseSerializer:
 
         Returns:
             JSON string
-        """
+        ."""
 
         def json_serializer(obj):
-            """Custom JSON serializer for special types"""
+            """Custom JSON serializer for special types."""
             if isinstance(obj, datetime):
                 return obj.isoformat()
             elif isinstance(obj, Decimal):
@@ -192,7 +187,7 @@ class ResponseSerializer:
 
         Returns:
             Standardized success response
-        """
+        ."""
         response = {
             "success": True,
             "data": data,
@@ -224,7 +219,7 @@ class ResponseSerializer:
 
         Returns:
             Standardized error response
-        """
+        ."""
         response = {
             "success": False,
             "error": error,
@@ -252,7 +247,7 @@ class ResponseSerializer:
 
         Returns:
             Filtered data
-        """
+        ."""
         if sensitive_fields is None:
             sensitive_fields = []
 
@@ -274,7 +269,7 @@ class ResponseSerializer:
 
         Returns:
             Formatted currency string
-        """
+        ."""
         if value is None:
             return f"N/A {currency}"
 
@@ -291,7 +286,7 @@ class ResponseSerializer:
 
         Returns:
             Formatted percentage string
-        """
+        ."""
         if value is None:
             return "N/A"
 
@@ -299,7 +294,7 @@ class ResponseSerializer:
 
 
 class ProductoResponseSerializer(ResponseSerializer):
-    """Serializer specific to Producto entities"""
+    """Serializer specific to Producto entities."""
 
     PRODUCTO_FIELDS_ORDER = [
         "codigo",
@@ -313,9 +308,7 @@ class ProductoResponseSerializer(ResponseSerializer):
     ]
 
     @classmethod
-    def serialize_producto(
-        cls, producto: Any, detailed: bool = False
-    ) -> Dict[str, Any]:
+    def serialize_producto(cls, producto: Any, detailed: bool = False) -> Dict[str, Any]:
         """
         Serialize a producto entity with field ordering
 
@@ -325,7 +318,7 @@ class ProductoResponseSerializer(ResponseSerializer):
 
         Returns:
             Serialized producto with ordered fields
-        """
+        ."""
         data = cls.serialize_entity(producto, "producto")
 
         if not detailed:
@@ -356,12 +349,12 @@ class ProductoResponseSerializer(ResponseSerializer):
 
         Returns:
             List of serialized productos
-        """
+        ."""
         return [cls.serialize_producto(p, detailed) for p in productos]
 
 
 class FamiliaResponseSerializer(ResponseSerializer):
-    """Serializer specific to Familia entities"""
+    """Serializer specific to Familia entities."""
 
     @classmethod
     def serialize_familia(cls, familia: Any) -> Dict[str, Any]:
@@ -373,7 +366,7 @@ class FamiliaResponseSerializer(ResponseSerializer):
 
         Returns:
             Serialized familia with BC3 statistics
-        """
+        ."""
         data = cls.serialize_entity(familia, "familia")
 
         # Calculate BC3 coverage percentage if not present
@@ -397,12 +390,12 @@ class FamiliaResponseSerializer(ResponseSerializer):
 
         Returns:
             List of serialized familias
-        """
+        ."""
         return [cls.serialize_familia(f) for f in familias]
 
 
 class BC3ResponseSerializer(ResponseSerializer):
-    """Serializer specific to BC3 data"""
+    """Serializer specific to BC3 data."""
 
     @classmethod
     def serialize_bc3_stats(cls, stats: Dict[str, Any]) -> Dict[str, Any]:
@@ -414,7 +407,7 @@ class BC3ResponseSerializer(ResponseSerializer):
 
         Returns:
             Formatted BC3 statistics
-        """
+        ."""
         formatted_stats = stats.copy()
 
         # Format percentages if present
@@ -435,7 +428,7 @@ class BC3ResponseSerializer(ResponseSerializer):
 
         Returns:
             Serialized producto with BC3 focus
-        """
+        ."""
         data = cls.serialize_entity(producto, "producto")
 
         # Focus on BC3 fields

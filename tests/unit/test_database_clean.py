@@ -3,7 +3,7 @@ Tests Unitarios - Database (Sin app.config import)
 ======================================
 
 Tests que cubren app/database.py SIN importar app.config para evitar bloqueo.
-"""
+."""
 
 import pytest
 from pathlib import Path

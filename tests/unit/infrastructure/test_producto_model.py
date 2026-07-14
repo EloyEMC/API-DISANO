@@ -1,7 +1,7 @@
 """Integration tests for ProductoModel
 
 Tests SQLAlchemy model operations with actual database.
-"""
+."""
 
 import pytest
 
@@ -10,25 +10,21 @@ from app.infrastructure.database.connection import get_db_session
 
 
 class TestProductoModelClean:
-    """Tests for ProductoModelClean SQLAlchemy operations"""
+    """Tests for ProductoModelClean SQLAlchemy operations."""
 
     @pytest.fixture(autouse=True)
     def setup_database(self):
-        """Setup database connection for tests"""
+        """Setup database connection for tests."""
         # Using existing testing database
         # productos_clean view already exists
         yield
         # Cleanup handled by session context manager
 
     def test_model_query_existing_product(self):
-        """Test querying existing product from testing.db"""
+        """Test querying existing product from testing.db."""
         with get_db_session() as session:
             # Query for a product that should exist
-            model = (
-                session.query(ProductoModelClean)
-                .filter(ProductoModelClean.marca != "")
-                .first()
-            )
+            model = session.query(ProductoModelClean).filter(ProductoModelClean.marca != "").first()
 
             assert model is not None
             assert hasattr(model, "codigo")
@@ -36,13 +32,9 @@ class TestProductoModelClean:
             assert hasattr(model, "marca")
 
     def test_model_to_entity_conversion(self):
-        """Test converting model to domain entity"""
+        """Test converting model to domain entity."""
         with get_db_session() as session:
-            model = (
-                session.query(ProductoModelClean)
-                .filter(ProductoModelClean.marca != "")
-                .first()
-            )
+            model = session.query(ProductoModelClean).filter(ProductoModelClean.marca != "").first()
 
             if not model:
                 pytest.skip("No products found in database")
@@ -55,7 +47,7 @@ class TestProductoModelClean:
             assert entity.marca == model.marca
 
     def test_model_from_entity_conversion(self):
-        """Test creating model from domain entity"""
+        """Test creating model from domain entity."""
         from app.domain.entities.producto import ProductoEntity
 
         entity = ProductoEntity(
@@ -73,7 +65,7 @@ class TestProductoModelClean:
         assert model.pvp == 99.99
 
     def test_model_repr(self):
-        """Test model string representation"""
+        """Test model string representation."""
         model = ProductoModelClean(
             codigo="TEST001",
             descripcion="A very long description that should be truncated",

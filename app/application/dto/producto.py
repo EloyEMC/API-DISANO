@@ -1,7 +1,7 @@
 """Application DTOs module
 
 Data Transfer Objects for input/output validation in application layer.
-"""
+."""
 
 from pydantic import BaseModel, Field
 from typing import Optional
@@ -10,7 +10,7 @@ from app.domain.entities.producto import ProductoEntity
 
 
 class ProductoSearchDTOV1(BaseModel):
-    """DTO for V1 search with larger limit for backward compatibility"""
+    """DTO for V1 search with larger limit for backward compatibility."""
 
     buscar: Optional[str] = Field(None, min_length=1, description="Search term")
     limit: int = Field(10, ge=1, le=500, description="Max results")
@@ -24,7 +24,7 @@ class ProductoSearchDTOV1(BaseModel):
 
 
 class ProductoCreateDTO(BaseModel):
-    """DTO for creating a new product"""
+    """DTO for creating a new product."""
 
     codigo: str = Field(..., min_length=1, max_length=50)
     descripcion: str = Field(..., min_length=2)
@@ -36,7 +36,7 @@ class ProductoCreateDTO(BaseModel):
     bc3_descripcion_completa: Optional[str] = Field(None)
 
     def to_entity(self) -> ProductoEntity:
-        """Convert DTO to Domain Entity"""
+        """Convert DTO to Domain Entity."""
         return ProductoEntity(
             codigo=self.codigo,
             descripcion=self.descripcion,
@@ -52,7 +52,7 @@ class ProductoCreateDTO(BaseModel):
 
 
 class ProductoUpdateDTO(BaseModel):
-    """DTO for updating an existing product"""
+    """DTO for updating an existing product."""
 
     descripcion: Optional[str] = Field(None, min_length=2)
     marca: Optional[str] = Field(None, min_length=1)
@@ -64,7 +64,7 @@ class ProductoUpdateDTO(BaseModel):
 
 
 class ProductoSearchDTO(BaseModel):
-    """DTO for searching products with filters"""
+    """DTO for searching products with filters."""
 
     buscar: Optional[str] = Field(None, min_length=1)
     limit: int = Field(10, ge=1, le=100)
@@ -73,7 +73,7 @@ class ProductoSearchDTO(BaseModel):
 
 
 class ProductoPrecioUpdateDTO(BaseModel):
-    """DTO for updating product price only"""
+    """DTO for updating product price only."""
 
     pvp: float = Field(..., ge=0)
 
@@ -84,7 +84,7 @@ class ProductoPrecioUpdateDTO(BaseModel):
 
 
 class ProductoResponseDTO(BaseModel):
-    """DTO for product responses"""
+    """DTO for product responses."""
 
     codigo: str
     descripcion: str
@@ -97,7 +97,7 @@ class ProductoResponseDTO(BaseModel):
 
     @classmethod
     def from_entity(cls, entity: ProductoEntity) -> "ProductoResponseDTO":
-        """Create response DTO from Domain Entity"""
+        """Create response DTO from Domain Entity."""
         return cls(
             codigo=entity.codigo,
             descripcion=entity.descripcion,
@@ -111,7 +111,7 @@ class ProductoResponseDTO(BaseModel):
 
 
 class ProductoListResponseDTO(BaseModel):
-    """DTO for list of products response"""
+    """DTO for list of products response."""
 
     productos: list[ProductoResponseDTO]
     total: int
@@ -122,7 +122,7 @@ class ProductoListResponseDTO(BaseModel):
     def from_entities(
         cls, entities: list[ProductoEntity], limit: int, has_filters: bool
     ) -> "ProductoListResponseDTO":
-        """Create list response from Domain Entities"""
+        """Create list response from Domain Entities."""
         return cls(
             productos=[ProductoResponseDTO.from_entity(e) for e in entities],
             total=len(entities),

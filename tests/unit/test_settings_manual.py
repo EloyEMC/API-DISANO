@@ -3,7 +3,7 @@ Tests Unitarios - Settings Manuales (Sin Env Vars)
 ===================================================
 
 Tests que usan Settings manuales para evitar pydantic-settings parse errors.
-"""
+."""
 
 import pytest
 from app.config import Settings
@@ -13,7 +13,7 @@ class TestSettingsManualCreation:
     """Tests de Settings creados manualmente (sin env vars)."""
 
     def test_settings_manual_basic(self):
-        """Crear Settings manual con valores básicos."""
+        ."""Crear Settings manual con valores básicos."""
         settings = Settings(
             environment="testing",
             secret_key="test-key-32-char-minimum-length",

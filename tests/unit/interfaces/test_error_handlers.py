@@ -1,7 +1,7 @@
 """Tests for error handling system following TDD principles
 
 RED Phase: Write failing tests first
-"""
+."""
 
 import pytest
 from fastapi import HTTPException
@@ -35,10 +35,10 @@ from app.interfaces.http.error_handlers import (
 
 
 class TestAPIException:
-    """Test base APIException class"""
+    """Test base APIException class."""
 
     def test_api_exception_creation(self):
-        """Test creating basic API exception"""
+        """Test creating basic API exception."""
         exc = APIException(
             message="Test error", error_code=ErrorCode.INTERNAL_ERROR, status_code=500
         )
@@ -48,7 +48,7 @@ class TestAPIException:
         assert exc.status_code == 500
 
     def test_api_exception_to_dict(self):
-        """Test converting exception to dictionary"""
+        """Test converting exception to dictionary."""
         exc = APIException(
             message="Test error",
             error_code=ErrorCode.BAD_REQUEST,
@@ -68,10 +68,10 @@ class TestAPIException:
 
 
 class TestClientErrors:
-    """Test 4xx client errors"""
+    """Test 4xx client errors."""
 
     def test_bad_request_exception(self):
-        """Test BadRequestException (400)"""
+        """Test BadRequestException (400)."""
         exc = BadRequestException("Invalid request", details={"field": "test"})
 
         assert exc.message == "Invalid request"
@@ -80,7 +80,7 @@ class TestClientErrors:
         assert exc.details == {"field": "test"}
 
     def test_not_found_exception(self):
-        """Test NotFoundException (404)"""
+        """Test NotFoundException (404)."""
         exc = NotFoundException("Resource not found", resource_type="producto")
 
         assert exc.message == "Resource not found"
@@ -89,7 +89,7 @@ class TestClientErrors:
         assert exc.details["resource_type"] == "producto"
 
     def test_validation_exception(self):
-        """Test ValidationException (422)"""
+        """Test ValidationException (422)."""
         validation_errors = {"field": ["error1", "error2"]}
         exc = ValidationException("Validation failed", validation_errors)
 
@@ -100,10 +100,10 @@ class TestClientErrors:
 
 
 class TestDomainErrors:
-    """Test domain-specific exceptions"""
+    """Test domain-specific exceptions."""
 
     def test_pagination_exception_invalid_page(self):
-        """Test PaginationException for invalid page number"""
+        """Test PaginationException for invalid page number."""
         exc = PaginationException(
             message="Invalid page number",
             parameter_name="page",
@@ -118,7 +118,7 @@ class TestDomainErrors:
         assert exc.details["invalid_value"] == "-1"
 
     def test_sort_exception_invalid_field(self):
-        """Test SortException for invalid sort field"""
+        """Test SortException for invalid sort field."""
         exc = SortException(
             message="Invalid sort field",
             invalid_field="invalid_field",
@@ -132,7 +132,7 @@ class TestDomainErrors:
         assert exc.details["valid_fields"] == ["codigo", "descripcion", "pvp"]
 
     def test_product_not_found_exception(self):
-        """Test ProductNotFoundException"""
+        """Test ProductNotFoundException."""
         exc = ProductNotFoundException("TEST001")
 
         assert exc.message == "Producto 'TEST001' no encontrado"
@@ -141,7 +141,7 @@ class TestDomainErrors:
         assert exc.details["codigo"] == "TEST001"
 
     def test_familia_not_found_exception(self):
-        """Test FamiliaNotFoundException"""
+        """Test FamiliaNotFoundException."""
         exc = FamiliaNotFoundException("test_familia")
 
         assert exc.message == "Familia 'test_familia' no encontrada"
@@ -151,10 +151,10 @@ class TestDomainErrors:
 
 
 class TestServerErrorrors:
-    """Test 5xx server errors"""
+    """Test 5xx server errors."""
 
     def test_database_exception(self):
-        """Test DatabaseException"""
+        """Test DatabaseException."""
         exc = DatabaseException(
             message="Database connection failed",
             operation="SELECT",
@@ -170,7 +170,7 @@ class TestServerErrorrors:
         assert "Connection refused" in exc.details["exception_message"]
 
     def test_cache_exception(self):
-        """Test CacheException"""
+        """Test CacheException."""
         exc = CacheException(
             message="Cache operation failed",
             operation="GET",
@@ -190,10 +190,10 @@ class TestServerErrorrors:
 
 
 class TestExceptionFactoryFunctions:
-    """Test exception factory functions"""
+    """Test exception factory functions."""
 
     def test_create_validation_error(self):
-        """Test create_validation_error function"""
+        """Test create_validation_error function."""
         exc = create_validation_error(
             field="codigo",
             error_message="Code must be at least 5 characters",
@@ -207,7 +207,7 @@ class TestExceptionFactoryFunctions:
         assert exc.details["validation_errors"]["errors"][0]["invalid_value"] == "ABC"
 
     def test_wrap_exception_value_error(self):
-        """Test wrap_exception with ValueError"""
+        """Test wrap_exception with ValueError."""
         original_exc = ValueError("Invalid value")
         wrapped = wrap_exception(original_exc)
 
@@ -216,7 +216,7 @@ class TestExceptionFactoryFunctions:
         assert wrapped.details["original_exception"] == "ValueError"
 
     def test_wrap_exception_key_error(self):
-        """Test wrap_exception with KeyError"""
+        """Test wrap_exception with KeyError."""
         original_exc = KeyError("missing_key")
         wrapped = wrap_exception(original_exc)
 
@@ -225,7 +225,7 @@ class TestExceptionFactoryFunctions:
         assert wrapped.details["original_exception"] == "KeyError"
 
     def test_wrap_exception_permission_error(self):
-        """Test wrap_exception with PermissionError"""
+        """Test wrap_exception with PermissionError."""
         original_exc = PermissionError("Access denied")
         wrapped = wrap_exception(original_exc)
 
@@ -234,7 +234,7 @@ class TestExceptionFactoryFunctions:
         assert wrapped.details["original_exception"] == "PermissionError"
 
     def test_wrap_exception_file_not_found(self):
-        """Test wrap_exception with FileNotFoundError"""
+        """Test wrap_exception with FileNotFoundError."""
         original_exc = FileNotFoundError("/path/to/file.txt")
         wrapped = wrap_exception(original_exc)
 
@@ -249,10 +249,10 @@ class TestExceptionFactoryFunctions:
 
 
 class TestErrorResponseFunctions:
-    """Test error response creation functions"""
+    """Test error response creation functions."""
 
     def test_create_error_response_basic(self):
-        """Test create_error_response with basic parameters"""
+        """Test create_error_response with basic parameters."""
         response = create_error_response(
             message="Test error", error_code="TEST_ERROR", status_code=500
         )
@@ -263,7 +263,7 @@ class TestErrorResponseFunctions:
         assert "timestamp" in response
 
     def test_create_error_response_with_details(self):
-        """Test create_error_response with details"""
+        """Test create_error_response with details."""
         response = create_error_response(
             message="Validation error",
             error_code="VALIDATION_ERROR",
@@ -276,7 +276,7 @@ class TestErrorResponseFunctions:
         assert response["details"]["invalid_value"] == "ABC"
 
     def test_create_error_response_with_debug_info(self):
-        """Test create_error_response with debug info"""
+        """Test create_error_response with debug info."""
         debug_info = {"request_id": "req-123", "query_params": {"page": 1}}
 
         response = create_error_response(
@@ -298,11 +298,11 @@ class TestErrorResponseFunctions:
 
 
 class TestExceptionHandlersIntegration:
-    """Test exception handlers with FastAPI integration"""
+    """Test exception handlers with FastAPI integration."""
 
     @pytest.fixture
     def app_with_handlers(self):
-        """Create FastAPI app with exception handlers"""
+        """Create FastAPI app with exception handlers."""
         app = FastAPI()
         register_exception_handlers(app)
 
@@ -336,7 +336,7 @@ class TestExceptionHandlersIntegration:
         return app
 
     def test_api_exception_handler(self, app_with_handlers):
-        """Test API exception handler returns correct response"""
+        """Test API exception handler returns correct response."""
         client = TestClient(app_with_handlers)
         response = client.get("/test-api-exception")
 
@@ -348,7 +348,7 @@ class TestExceptionHandlersIntegration:
         assert "timestamp" in data
 
     def test_http_exception_handler(self, app_with_handlers):
-        """Test HTTP exception handler returns correct response"""
+        """Test HTTP exception handler returns correct response."""
         client = TestClient(app_with_handlers)
         response = client.get("/test-http-exception")
 
@@ -359,7 +359,7 @@ class TestExceptionHandlersIntegration:
         assert data["status_code"] == 404
 
     def test_generic_exception_handler(self, app_with_handlers):
-        """Test generic exception handler catches unexpected errors"""
+        """Test generic exception handler catches unexpected errors."""
         client = TestClient(app_with_handlers)
         response = client.get("/test-generic-exception")
 
@@ -368,9 +368,7 @@ class TestExceptionHandlersIntegration:
         assert "error" in data
         assert data["error_code"] == "INTERNAL_ERROR"
         assert data["status_code"] == 500
-        assert "ZeroDivisionError" in data.get("details", {}).get(
-            "original_exception", ""
-        )
+        assert "ZeroDivisionError" in data.get("details", {}).get("original_exception", "")
 
 
 # ==============================================================================
@@ -379,11 +377,11 @@ class TestExceptionHandlersIntegration:
 
 
 class TestErrorResponsesWithRealEndpoints:
-    """Test error responses with real V2 endpoints"""
+    """Test error responses with real V2 endpoints."""
 
     @pytest.fixture
     def productos_app(self):
-        """Create productos app with error handling"""
+        """Create productos app with error handling."""
         app = FastAPI()
         register_exception_handlers(app)
 
@@ -394,7 +392,7 @@ class TestErrorResponsesWithRealEndpoints:
         return app
 
     def test_invalid_page_parameter(self, productos_app):
-        """Test that invalid page parameter returns validation error"""
+        """Test that invalid page parameter returns validation error."""
         client = TestClient(productos_app)
         response = client.get("/api/productos/v2/paginated?page=-1")
 
@@ -402,7 +400,7 @@ class TestErrorResponsesWithRealEndpoints:
         assert response.status_code in [422, 400]
 
     def test_invalid_per_page_parameter(self, productos_app):
-        """Test that invalid per_page parameter returns validation error"""
+        """Test that invalid per_page parameter returns validation error."""
         client = TestClient(productos_app)
         response = client.get("/api/productos/v2/paginated?per_page=999")
 
@@ -410,7 +408,7 @@ class TestErrorResponsesWithRealEndpoints:
         assert response.status_code in [422, 400]
 
     def test_invalid_sort_field(self, productos_app):
-        """Test that invalid sort field is handled appropriately"""
+        """Test that invalid sort field is handled appropriately."""
         client = TestClient(productos_app)
         response = client.get("/api/productos/v2/paginated?sort=invalid_field:asc")
 
@@ -418,7 +416,7 @@ class TestErrorResponsesWithRealEndpoints:
         assert response.status_code in [200, 400, 500]
 
     def test_invalid_price_range(self, productos_app):
-        """Test that invalid price range is handled appropriately"""
+        """Test that invalid price range is handled appropriately."""
         client = TestClient(productos_app)
         response = client.get("/api/productos/v2/paginated?pvp_min=-100")
 
@@ -426,13 +424,11 @@ class TestErrorResponsesWithRealEndpoints:
         assert response.status_code in [200, 400, 500]
 
     def test_malformed_query_parameters(self, productos_app):
-        """Test handling of malformed query parameters"""
+        """Test handling of malformed query parameters."""
         client = TestClient(productos_app)
 
         # Test with special characters in search
-        response = client.get(
-            "/api/productos/v2/paginated?buscar=<script>alert('xss')</script>"
-        )
+        response = client.get("/api/productos/v2/paginated?buscar=<script>alert('xss')</script>")
         assert response.status_code == 200  # Should handle safely
 
         # Test with very long parameter values

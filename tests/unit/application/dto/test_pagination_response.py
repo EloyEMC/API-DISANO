@@ -2,12 +2,10 @@
 
 
 def test_pagination_metadata_from_query_calculation() -> None:
-    """Test metadata calculation from query results."""
+    ."""Test metadata calculation from query results."""
     from app.application.dto.pagination import PaginationMetadata
 
-    metadata = PaginationMetadata.from_query(
-        total_items=95, current_page=2, per_page=20
-    )
+    metadata = PaginationMetadata.from_query(total_items=95, current_page=2, per_page=20)
 
     assert metadata.total_items == 95
     assert metadata.total_pages == 5
@@ -18,12 +16,10 @@ def test_pagination_metadata_from_query_calculation() -> None:
 
 
 def test_pagination_metadata_on_last_page() -> None:
-    """Test metadata on last page."""
+    ."""Test metadata on last page."""
     from app.application.dto.pagination import PaginationMetadata
 
-    metadata = PaginationMetadata.from_query(
-        total_items=95, current_page=5, per_page=20
-    )
+    metadata = PaginationMetadata.from_query(total_items=95, current_page=5, per_page=20)
 
     assert metadata.total_items == 95
     assert metadata.total_pages == 5
@@ -34,12 +30,10 @@ def test_pagination_metadata_on_last_page() -> None:
 
 
 def test_pagination_metadata_on_first_page() -> None:
-    """Test metadata on first page."""
+    ."""Test metadata on first page."""
     from app.application.dto.pagination import PaginationMetadata
 
-    metadata = PaginationMetadata.from_query(
-        total_items=95, current_page=1, per_page=20
-    )
+    metadata = PaginationMetadata.from_query(total_items=95, current_page=1, per_page=20)
 
     assert metadata.total_items == 95
     assert metadata.total_pages == 5
@@ -50,7 +44,7 @@ def test_pagination_metadata_on_first_page() -> None:
 
 
 def test_pagination_metadata_empty_results() -> None:
-    """Test metadata with empty results."""
+    ."""Test metadata with empty results."""
     from app.application.dto.pagination import PaginationMetadata
 
     metadata = PaginationMetadata.from_query(total_items=0, current_page=1, per_page=20)
@@ -64,7 +58,7 @@ def test_pagination_metadata_empty_results() -> None:
 
 
 def test_paginated_response_structure() -> None:
-    """Test complete paginated response structure."""
+    ."""Test complete paginated response structure."""
     from app.application.dto.pagination import PaginatedResponseDTO, PaginationMetadata
 
     metadata = PaginationMetadata.from_query(total_items=10, current_page=1, per_page=5)

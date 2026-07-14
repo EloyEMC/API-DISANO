@@ -1,7 +1,7 @@
 """Performance benchmarks for critical endpoints
 
 Tests response time degradation is minimal (< 100ms P95)
-"""
+."""
 
 import time
 import statistics
@@ -11,7 +11,7 @@ from app.main import app
 
 
 class PerformanceBenchmark:
-    """Performance benchmarking for API endpoints"""
+    """Performance benchmarking for API endpoints."""
 
     def __init__(self, client: TestClient):
         self.client = client
@@ -24,7 +24,7 @@ class PerformanceBenchmark:
 
         Returns:
             (mean_ms, p95_ms, p99_ms, all_times)
-        """
+        ."""
         times = []
 
         for _ in range(num_requests):
@@ -45,7 +45,7 @@ class PerformanceBenchmark:
         return mean_ms, p95_ms, p99_ms, times
 
     def print_results(self, endpoint: str, results: Tuple[float, float, float]):
-        """Print benchmark results"""
+        """Print benchmark results."""
         mean_ms, p95_ms, p99_ms = results
         print(f"\n📊 {endpoint}")
         print(f"  Mean: {mean_ms:.2f}ms")
@@ -60,7 +60,7 @@ class PerformanceBenchmark:
 
 
 def main():
-    """Run performance benchmarks for critical endpoints"""
+    """Run performance benchmarks for critical endpoints."""
     print("🚀 Starting Performance Benchmarks")
     print("=" * 50)
 

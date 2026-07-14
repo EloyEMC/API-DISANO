@@ -1,17 +1,17 @@
 """Performance tests for N+1 query detection
 
 Tests to identify and prevent N+1 query problems in the application
-"""
+."""
 
 import time
 from unittest.mock import patch
 
 
 class TestNPlusOneDetection:
-    """Tests for detecting and preventing N+1 query problems"""
+    """Tests for detecting and preventing N+1 query problems."""
 
     def test_no_n_plus_one_in_product_search(self):
-        """Test that product search doesn't trigger N+1 queries"""
+        """Test that product search doesn't trigger N+1 queries."""
         from app.domain.services.producto import ProductoService
         from app.infrastructure.repositories.producto import (
             SQLAlchemyProductoRepository,
@@ -41,9 +41,9 @@ class TestNPlusOneDetection:
 
             # Should use single query (or minimal number), not N+1
             # Allow up to 2 queries (one main query + maybe one metadata query)
-            assert query_count[0] <= 2, (
-                f"Product search triggered {query_count[0]} queries (possible N+1 problem)"
-            )
+            assert (
+                query_count[0] <= 2
+            ), f"Product search triggered {query_count[0]} queries (possible N+1 problem)"
 
             print(f"✅ Product search used {query_count[0]} queries (acceptable)")
 
@@ -51,7 +51,7 @@ class TestNPlusOneDetection:
             session.close()
 
     def test_no_n_plus_one_in_product_detail(self):
-        """Test that product detail doesn't trigger N+1 queries"""
+        """Test that product detail doesn't trigger N+1 queries."""
         from app.domain.services.producto import ProductoService
         from app.infrastructure.repositories.producto import (
             SQLAlchemyProductoRepository,
@@ -77,9 +77,9 @@ class TestNPlusOneDetection:
                     pass  # Product might not exist in test DB
 
             # Single product detail should use 1 query maximum
-            assert query_count[0] <= 1, (
-                f"Product detail triggered {query_count[0]} queries (N+1 problem)"
-            )
+            assert (
+                query_count[0] <= 1
+            ), f"Product detail triggered {query_count[0]} queries (N+1 problem)"
 
             print(f"✅ Product detail used {query_count[0]} queries (optimal)")
 
@@ -87,7 +87,7 @@ class TestNPlusOneDetection:
             session.close()
 
     def test_no_n_plus_one_in_bc3_stats(self):
-        """Test that BC3 statistics doesn't trigger N+1 queries"""
+        """Test that BC3 statistics doesn't trigger N+1 queries."""
         from app.domain.services.producto import ProductoService
         from app.infrastructure.repositories.producto import (
             SQLAlchemyProductoRepository,
@@ -111,9 +111,9 @@ class TestNPlusOneDetection:
                 service.get_all_productos(skip=0, limit=100)
 
             # Stats calculation should use efficient queries, not N+1
-            assert query_count[0] <= 3, (
-                f"BC3 stats triggered {query_count[0]} queries (inefficient)"
-            )
+            assert (
+                query_count[0] <= 3
+            ), f"BC3 stats triggered {query_count[0]} queries (inefficient)"
 
             print(f"✅ BC3 stats used {query_count[0]} queries (efficient)")
 
@@ -121,7 +121,7 @@ class TestNPlusOneDetection:
             session.close()
 
     def test_bulk_queries_more_efficient_than_loops(self):
-        """Test that bulk queries are more efficient than loop-based queries"""
+        """Test that bulk queries are more efficient than loop-based queries."""
         import time
 
         # Simulate N+1 pattern (inefficient)
@@ -149,20 +149,18 @@ class TestNPlusOneDetection:
         efficient_time = time.time() - start
 
         # Efficient should be significantly faster
-        assert efficient_time < inefficient_time, (
-            "Bulk queries should be faster than N+1 pattern"
-        )
+        assert efficient_time < inefficient_time, "Bulk queries should be faster than N+1 pattern"
 
         # Efficiency improvement should be significant (> 5x)
         efficiency_ratio = inefficient_time / efficient_time
-        assert efficiency_ratio >= 5.0, (
-            f"Efficiency improvement should be at least 5x, got {efficiency_ratio:.2f}x"
-        )
+        assert (
+            efficiency_ratio >= 5.0
+        ), f"Efficiency improvement should be at least 5x, got {efficiency_ratio:.2f}x"
 
         print(f"⚡ Efficiency improvement: {efficiency_ratio:.2f}x")
 
     def test_repository_uses_efficient_queries(self):
-        """Test that repository uses efficient query patterns"""
+        """Test that repository uses efficient query patterns."""
         import app.infrastructure.repositories.producto as producto_repo_module
 
         import inspect
@@ -182,7 +180,7 @@ class TestNPlusOneDetection:
         print("✅ Repository uses efficient query patterns")
 
     def test_service_layer_avoids_n_plus_one(self):
-        """Test that service layer doesn't introduce N+1 problems"""
+        """Test that service layer doesn't introduce N+1 problems."""
         from app.domain.services.producto import ProductoService
 
         import inspect
@@ -194,18 +192,14 @@ class TestNPlusOneDetection:
         assert "repository." in source, "Service should use repository methods"
 
         # Should not have database connection logic in service
-        assert "sqlite3" not in source.lower(), (
-            "Service should not have direct database access"
-        )
+        assert "sqlite3" not in source.lower(), "Service should not have direct database access"
 
-        assert "session.execute" not in source, (
-            "Service should not execute queries directly"
-        )
+        assert "session.execute" not in source, "Service should not execute queries directly"
 
         print("✅ Service layer follows clean architecture principles")
 
     def test_http_layer_uses_dependency_injection(self):
-        """Test that HTTP layer uses dependency injection properly"""
+        """Test that HTTP layer uses dependency injection properly."""
         from app.interfaces.http import productos as productos_http
 
         import inspect
@@ -219,14 +213,12 @@ class TestNPlusOneDetection:
         # Repository instances are NOT created directly in endpoint functions
 
         # Should not have session management in endpoints
-        assert "SessionLocal()" not in source, (
-            "Session management should be in DI layer"
-        )
+        assert "SessionLocal()" not in source, "Session management should be in DI layer"
 
         print("✅ HTTP layer uses proper dependency injection")
 
     def test_performance_regression_prevention(self):
-        """Test that we can detect performance regressions"""
+        """Test that we can detect performance regressions."""
         from fastapi.testclient import TestClient
         from app.main import app
 
@@ -258,10 +250,8 @@ class TestNPlusOneDetection:
 
         # Current should not be significantly worse than baseline
         # Allow up to 2x degradation (generous threshold)
-        assert current_avg <= baseline_avg * 2.0, (
-            f"Performance regression detected: {current_avg:.4f}s vs baseline {baseline_avg:.4f}s"
-        )
+        assert (
+            current_avg <= baseline_avg * 2.0
+        ), f"Performance regression detected: {current_avg:.4f}s vs baseline {baseline_avg:.4f}s"
 
-        print(
-            f"⏱️ Performance: baseline={baseline_avg:.4f}s, current={current_avg:.4f}s"
-        )
+        print(f"⏱️ Performance: baseline={baseline_avg:.4f}s, current={current_avg:.4f}s")

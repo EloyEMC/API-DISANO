@@ -4,10 +4,10 @@ from app.infrastructure.repositories.producto import SQLAlchemyProductoRepositor
 
 
 class TestProductoRepositoryPagination:
-    """Comprehensive tests for Producto repository pagination."""
+    ."""Comprehensive tests for Producto repository pagination."""
 
     def test_repository_pagination_first_page(self, sqlalchemy_session) -> None:
-        """Test pagination on first page."""
+        ."""Test pagination on first page."""
         repo = SQLAlchemyProductoRepository(sqlalchemy_session)
 
         dto: dict = {
@@ -123,9 +123,7 @@ class TestProductoRepositoryPagination:
             if item.pvp:
                 assert 10 <= item.pvp <= 200
 
-    def test_repository_pagination_text_search_case_insensitive(
-        self, sqlalchemy_session
-    ) -> None:
+    def test_repository_pagination_text_search_case_insensitive(self, sqlalchemy_session) -> None:
         """Test text search is case-insensitive."""
         repo = SQLAlchemyProductoRepository(sqlalchemy_session)
 
@@ -152,9 +150,7 @@ class TestProductoRepositoryPagination:
         # Should return same results
         assert total_lower == total_upper
 
-    def test_repository_pagination_various_sort_orders(
-        self, sqlalchemy_session
-    ) -> None:
+    def test_repository_pagination_various_sort_orders(self, sqlalchemy_session) -> None:
         """Test various sort orders."""
         repo = SQLAlchemyProductoRepository(sqlalchemy_session)
 
@@ -173,9 +169,7 @@ class TestProductoRepositoryPagination:
             assert len(items) <= 10
             assert total >= len(items)
 
-    def test_repository_pagination_bc3_product_type_filter(
-        self, sqlalchemy_session
-    ) -> None:
+    def test_repository_pagination_bc3_product_type_filter(self, sqlalchemy_session) -> None:
         """Test filtering by BC3 product type."""
         repo = SQLAlchemyProductoRepository(sqlalchemy_session)
 
@@ -192,9 +186,7 @@ class TestProductoRepositoryPagination:
         assert len(items) <= 10
         assert total >= len(items)
 
-    def test_repository_pagination_no_bc3_descripcion_filter(
-        self, sqlalchemy_session
-    ) -> None:
+    def test_repository_pagination_no_bc3_descripcion_filter(self, sqlalchemy_session) -> None:
         """Test filtering for products without BC3 description."""
         repo = SQLAlchemyProductoRepository(sqlalchemy_session)
 
@@ -214,9 +206,7 @@ class TestProductoRepositoryPagination:
         # Just verify it doesn't crash and returns results
         assert total >= 0
 
-    def test_repository_pagination_combined_text_and_filters(
-        self, sqlalchemy_session
-    ) -> None:
+    def test_repository_pagination_combined_text_and_filters(self, sqlalchemy_session) -> None:
         """Test combining text search with filters."""
         repo = SQLAlchemyProductoRepository(sqlalchemy_session)
 
@@ -236,9 +226,7 @@ class TestProductoRepositoryPagination:
         for item in items:
             assert item.marca == "Disano"
 
-    def test_repository_pagination_price_boundary_filters(
-        self, sqlalchemy_session
-    ) -> None:
+    def test_repository_pagination_price_boundary_filters(self, sqlalchemy_session) -> None:
         """Test price filters at boundary values."""
         repo = SQLAlchemyProductoRepository(sqlalchemy_session)
 
@@ -372,10 +360,8 @@ class TestProductoRepositoryPagination:
 class TestProductoRepositoryIntegration:
     """Integration tests combining repository methods."""
 
-    def test_repository_pagination_and_total_consistency(
-        self, sqlalchemy_session
-    ) -> None:
-        """Test that pagination and total methods are consistent."""
+    def test_repository_pagination_and_total_consistency(self, sqlalchemy_session) -> None:
+        ."""Test that pagination and total methods are consistent."""
         repo = SQLAlchemyProductoRepository(sqlalchemy_session)
 
         # Get total from count_total
@@ -394,9 +380,7 @@ class TestProductoRepositoryIntegration:
         # Should match
         assert total_from_count == total_from_pagination
 
-    def test_repository_pagination_vs_traditional_search(
-        self, sqlalchemy_session
-    ) -> None:
+    def test_repository_pagination_vs_traditional_search(self, sqlalchemy_session) -> None:
         """Test pagination results match traditional search."""
         repo = SQLAlchemyProductoRepository(sqlalchemy_session)
 

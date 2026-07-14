@@ -1,16 +1,16 @@
 """Integration tests for query optimization
 
 Tests to verify that ANALYZE and other optimization techniques work correctly
-"""
+."""
 
 from sqlalchemy import text
 
 
 class TestQueryOptimization:
-    """Tests for database query optimization"""
+    """Tests for database query optimization."""
 
     def test_analyze_updates_query_statistics(self):
-        """Test that ANALYZE updates query statistics"""
+        """Test that ANALYZE updates query statistics."""
         from app.infrastructure.database.connection import SessionLocal
 
         session = SessionLocal()
@@ -22,10 +22,12 @@ class TestQueryOptimization:
 
             # Verify statistics were created/updated
             result = session.execute(
-                text("""
-                SELECT COUNT(*) as stat_count 
+                text(
+                    """
+                SELECT COUNT(*) as stat_count
                 FROM sqlite_stat1
-            """)
+            ."""
+                )
             )
             stat_count = result.fetchone()[0]
 
@@ -36,11 +38,13 @@ class TestQueryOptimization:
 
             # Verify we can query specific table statistics
             result = session.execute(
-                text("""
-                SELECT tbl, idx 
-                FROM sqlite_stat1 
+                text(
+                    """
+                SELECT tbl, idx
+                FROM sqlite_stat1
                 LIMIT 1
-            """)
+            ."""
+                )
             )
             stat = result.fetchone()
 
@@ -51,7 +55,7 @@ class TestQueryOptimization:
             session.close()
 
     def test_get_query_planner_info(self):
-        """Test that we can get query planner information"""
+        """Test that we can get query planner information."""
         from app.infrastructure.database.connection import SessionLocal
         from app.infrastructure.database.analyze_database import get_query_planner_info
 
@@ -81,7 +85,7 @@ class TestQueryOptimization:
             session.close()
 
     def test_database_settings_configurable(self):
-        """Test that database settings can be configured"""
+        """Test that database settings can be configured."""
         from app.infrastructure.database.connection import SessionLocal
 
         session = SessionLocal()
@@ -95,24 +99,20 @@ class TestQueryOptimization:
             cache_size = result.fetchone()[0]
 
             # Settings should be reasonable values
-            assert 1024 <= page_size <= 65536, (
-                f"Page size {page_size} should be between 1KB and 64KB"
-            )
+            assert (
+                1024 <= page_size <= 65536
+            ), f"Page size {page_size} should be between 1KB and 64KB"
 
             # Cache size can be negative (dynamic mode) or positive (fixed size)
-            assert isinstance(cache_size, int), (
-                f"Cache size {cache_size} should be an integer"
-            )
+            assert isinstance(cache_size, int), f"Cache size {cache_size} should be an integer"
 
-            print(
-                f"💾 Current settings: page_size={page_size}, cache_size={cache_size}"
-            )
+            print(f"💾 Current settings: page_size={page_size}, cache_size={cache_size}")
 
         finally:
             session.close()
 
     def test_optimization_improves_query_performance(self):
-        """Test that optimization improves query performance"""
+        """Test that optimization improves query performance."""
         import time
         from app.infrastructure.database.connection import SessionLocal
         from app.infrastructure.repositories.producto import (
@@ -149,15 +149,15 @@ class TestQueryOptimization:
 
             # Performance should be similar or better
             # (might not be significantly different in small test database)
-            assert time_after <= time_before * 2.0, (
-                "Optimization should not degrade performance significantly"
-            )
+            assert (
+                time_after <= time_before * 2.0
+            ), "Optimization should not degrade performance significantly"
 
         finally:
             session.close()
 
     def test_multiple_analyze_runs_safe(self):
-        """Test that running ANALYZE multiple times is safe"""
+        """Test that running ANALYZE multiple times is safe."""
         from app.infrastructure.database.connection import SessionLocal
 
         session = SessionLocal()

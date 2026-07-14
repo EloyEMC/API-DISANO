@@ -2,7 +2,7 @@
 
 
 def test_pagination_dto_package_import() -> None:
-    """Test that pagination DTO package can be imported."""
+    ."""Test that pagination DTO package can be imported."""
     from app.application.dto.pagination import (
         PaginationRequestDTO,
         PaginatedResponseDTO,

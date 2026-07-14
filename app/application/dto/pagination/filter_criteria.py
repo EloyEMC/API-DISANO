@@ -4,16 +4,14 @@ from pydantic import BaseModel, Field, model_validator
 
 
 class FilterCriteria(BaseModel):
-    """DTO for advanced filtering with comprehensive filters."""
+    ."""DTO for advanced filtering with comprehensive filters."""
 
     marca: str | None = Field(None, max_length=50, description="Filter by brand")
     familia: str | None = Field(None, max_length=50, description="Filter by family")
     pvp_min: float | None = Field(None, ge=0, description="Min price")
     pvp_max: float | None = Field(None, ge=0, description="Max price")
     bc3_product_type: str | None = Field(None, description="BC3 product type filter")
-    bc3_has_descripcion_corta: bool | None = Field(
-        None, description="Has short description"
-    )
+    bc3_has_descripcion_corta: bool | None = Field(None, description="Has short description")
     buscar: str | None = Field(None, min_length=1, description="Search term")
 
     @model_validator(mode="after")

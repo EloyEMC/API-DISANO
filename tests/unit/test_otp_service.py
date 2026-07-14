@@ -3,7 +3,7 @@ Tests del Servicio OTP
 ========================
 
 Tests para verificar el funcionamiento del servicio 2FA/OTP.
-"""
+."""
 
 import pytest
 from datetime import datetime, timedelta
@@ -14,7 +14,7 @@ class TestOTPServiceGeneration:
     """Tests para la generación de OTP."""
 
     def test_generate_otp_valid_email(self):
-        """Verificar que se genera un OTP para email válido."""
+        ."""Verificar que se genera un OTP para email válido."""
         otp_service = OTPService()
         otp = otp_service.generate_otp("admin@example.com")
 
@@ -60,7 +60,7 @@ class TestOTPServiceVerification:
     """Tests para la verificación de OTP."""
 
     def test_verify_otp_valid(self):
-        """Verificar que un OTP válido se verifica correctamente."""
+        ."""Verificar que un OTP válido se verifica correctamente."""
         otp_service = OTPService()
         email = "admin@example.com"
 
@@ -158,7 +158,7 @@ class TestOTPServiceCleanup:
     """Tests para la limpieza de OTPs expirados."""
 
     def test_cleanup_expired_otps(self):
-        """Verificar que se limpian los OTPs expirados."""
+        ."""Verificar que se limpian los OTPs expirados."""
         otp_service = OTPService()
 
         # Crear 3 OTPs
@@ -184,7 +184,7 @@ class TestOTPServiceStatus:
     """Tests para obtener estado de OTPs."""
 
     def test_get_otp_status_existing(self):
-        """Verificar que se obtiene el estado de un OTP existente."""
+        ."""Verificar que se obtiene el estado de un OTP existente."""
         otp_service = OTPService()
         email = "admin@example.com"
 
@@ -226,36 +226,36 @@ class TestOTPServiceConstants:
     """Tests para las constantes del servicio OTP."""
 
     def test_otp_expiry_minutes(self):
-        """Verificar que el expiry es de 10 minutos."""
+        ."""Verificar que el expiry es de 10 minutos."""
         otp_service = OTPService()
 
         assert otp_service.otp_expiry_minutes == 10
 
     def test_max_attempts(self):
-        """Verificar que el máximo de intentos es 3."""
+        ."""Verificar que el máximo de intentos es 3."""
         otp_service = OTPService()
 
         assert otp_service.max_attempts == 3
 
     def test_otp_length(self):
-        """Verificar que el OTP tiene 6 dígitos."""
+        ."""Verificar que el OTP tiene 6 dígitos."""
         otp_service = OTPService()
 
         assert otp_service.otp_length == 6
 
 
 class TestOTPServiceSingleton:
-    """Tests para la instancia singleton."""
+    ."""Tests para la instancia singleton."""
 
     def test_singleton_instance_exists(self):
-        """Verificar que existe una instancia singleton."""
+        ."""Verificar que existe una instancia singleton."""
         from app.security.otp_service import otp_service
 
         assert otp_service is not None
         assert isinstance(otp_service, OTPService)
 
     def test_singleton_is_same_instance(self):
-        """Verificar que múltiples imports devuelven la misma instancia."""
+        ."""Verificar que múltiples imports devuelven la misma instancia."""
         from app.security.otp_service import otp_service as otp1
         from app.security.otp_service import otp_service as otp2
 

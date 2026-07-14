@@ -40,7 +40,7 @@ settings = get_settings()
 
 
 def is_user_agent_allowed(request: Request) -> bool:
-    """
+    ."""
     Verifica si el User-Agent de la petición está permitido.
 
     Comprueba si el User-Agent coincide con alguno de los patrones bloqueados.

@@ -6,14 +6,14 @@ Tests que importan y ejecutan código real de app/middleware.py.
 BC3-Suite patterns: TDD (RED→GREEN→REFACTOR), AAA pattern.
 
 El módulo app/middleware.py contiene funciones de rate limiting y security.
-"""
+."""
 
 import pytest
 from fastapi import Request
 
 
 class TestMiddlewareGetApiKeys:
-    """Tests de get_api_keys() en app/middleware.py (TDD + AAA)"""
+    """Tests de get_api_keys() en app/middleware.py (TDD + AAA)."""
 
     def test_get_api_keys_returns_list_from_environment(self):
         """
@@ -23,7 +23,7 @@ class TestMiddlewareGetApiKeys:
         - Arrange: Configurar API_KEYS environment
         - Act: Importar y llamar get_api_keys()
         - Assert: Debe retornar lista con keys
-        """
+        ."""
         # Arrange
         import os
 
@@ -44,7 +44,7 @@ class TestMiddlewareGetApiKeys:
     def test_get_api_keys_empty_when_no_environment(self):
         """
         GREEN: get_api_keys() retorna lista vacía cuando no hay environment.
-        """
+        ."""
         # Arrange
         import os
 
@@ -62,12 +62,12 @@ class TestMiddlewareGetApiKeys:
 
 
 class TestMiddlewareGetEnvironment:
-    """Tests de get_environment() en app/middleware.py (TDD + AAA)"""
+    """Tests de get_environment() en app/middleware.py (TDD + AAA)."""
 
     def test_get_environment_default_development(self):
         """
         RED: get_environment() retorna 'development' por defecto.
-        """
+        ."""
         # Arrange
         import os
 
@@ -85,7 +85,7 @@ class TestMiddlewareGetEnvironment:
     def test_get_environment_returns_production_when_set(self):
         """
         GREEN: get_environment() retorna 'production' cuando está configurado.
-        """
+        ."""
         # Arrange
         import os
 
@@ -101,12 +101,12 @@ class TestMiddlewareGetEnvironment:
 
 
 class TestMiddlewareGetRateLimit:
-    """Tests de get_rate_limit() en app/middleware.py (TDD + AAA)"""
+    """Tests de get_rate_limit() en app/middleware.py (TDD + AAA)."""
 
     def test_get_rate_limit_default_30(self):
         """
         RED: get_rate_limit() retorna 30 por defecto.
-        """
+        ."""
         # Arrange
         import os
 
@@ -124,7 +124,7 @@ class TestMiddlewareGetRateLimit:
     def test_get_rate_limit_custom_value(self):
         """
         GREEN: get_rate_limit() retorna valor custom del environment.
-        """
+        ."""
         # Arrange
         import os
 
@@ -141,12 +141,12 @@ class TestMiddlewareGetRateLimit:
 
 
 class TestMiddlewareGetAdminKeys:
-    """Tests de get_admin_keys() en app/middleware.py (TDD + AAA)"""
+    """Tests de get_admin_keys() en app/middleware.py (TDD + AAA)."""
 
     def test_get_admin_keys_returns_list_from_environment(self):
         """
         RED: get_admin_keys() debe retornar lista desde ADMIN_API_KEYS environment.
-        """
+        ."""
         # Arrange
         import os
 
@@ -166,7 +166,7 @@ class TestMiddlewareGetAdminKeys:
     def test_get_admin_keys_empty_when_no_environment(self):
         """
         GREEN: get_admin_keys() retorna lista vacía cuando no hay environment.
-        """
+        ."""
         # Arrange
         import os
 
@@ -183,12 +183,12 @@ class TestMiddlewareGetAdminKeys:
 
 
 class TestMiddlewareVerifyAdminApiKey:
-    """Tests de verify_admin_api_key() en app/middleware.py (TDD + AAA)"""
+    """Tests de verify_admin_api_key() en app/middleware.py (TDD + AAA)."""
 
     def test_verify_admin_api_key_always_true_in_development(self):
         """
         RED: verify_admin_api_key() retorna True siempre en development.
-        """
+        ."""
         # Arrange
         import os
 
@@ -209,7 +209,7 @@ class TestMiddlewareVerifyAdminApiKey:
     def test_verify_admin_api_key_checks_in_production(self):
         """
         GREEN: verify_admin_api_key() verifica headers en production.
-        """
+        ."""
         # Arrange
         import os
 
@@ -231,12 +231,12 @@ class TestMiddlewareVerifyAdminApiKey:
 
 
 class TestMiddlewareRateLimitStore:
-    """Tests de rate_limit_store en app/middleware.py (TDD + AAA)"""
+    """Tests de rate_limit_store en app/middleware.py (TDD + AAA)."""
 
     def test_rate_limit_store_is_dict_of_lists(self):
         """
         GREEN: rate_limit_store es un dict de listas.
-        """
+        ."""
         # Arrange & Act
         from app.middleware import rate_limit_store
 
@@ -247,7 +247,7 @@ class TestMiddlewareRateLimitStore:
     def test_rate_limit_store_allows_adding_timestamps(self):
         """
         GREEN: rate_limit_store permite agregar timestamps.
-        """
+        ."""
         # Arrange
         from app.middleware import rate_limit_store
         import time

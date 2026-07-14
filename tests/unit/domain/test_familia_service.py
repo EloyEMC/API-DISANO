@@ -1,7 +1,7 @@
 """Unit tests for FamiliaService
 
 Tests business logic and aggregation rules using TDD approach
-"""
+."""
 
 from unittest.mock import Mock
 
@@ -11,10 +11,10 @@ from app.domain.entities.familia import FamiliaEntity
 
 
 class TestFamiliaService:
-    """Tests for FamiliaService business logic"""
+    """Tests for FamiliaService business logic."""
 
     def test_get_all_familias(self):
-        """Test getting all families"""
+        """Test getting all families."""
         mock_repo = Mock(spec=FamiliaRepositoryInterface)
         mock_repo.get_all.return_value = [
             FamiliaEntity(
@@ -34,7 +34,7 @@ class TestFamiliaService:
         mock_repo.get_all.assert_called_once()
 
     def test_get_familia_by_nombre(self):
-        """Test getting family by name"""
+        """Test getting family by name."""
         mock_repo = Mock(spec=FamiliaRepositoryInterface)
         mock_repo.get_by_nombre.return_value = FamiliaEntity(
             nombre="Emergencia",
@@ -51,7 +51,7 @@ class TestFamiliaService:
         mock_repo.get_by_nombre.assert_called_once_with("Emergencia")
 
     def test_get_statistics(self):
-        """Test getting aggregate statistics"""
+        """Test getting aggregate statistics."""
         mock_repo = Mock(spec=FamiliaRepositoryInterface)
         mock_repo.get_statistics.return_value = {
             "total_familias": 5,
@@ -66,7 +66,7 @@ class TestFamiliaService:
         mock_repo.get_statistics.assert_called_once()
 
     def test_get_bc3_coverage_leaderboard(self):
-        """Test getting BC3 coverage leaderboard"""
+        """Test getting BC3 coverage leaderboard."""
         mock_repo = Mock(spec=FamiliaRepositoryInterface)
         mock_repo.get_all.return_value = [
             FamiliaEntity(
@@ -101,7 +101,7 @@ class TestFamiliaService:
         mock_repo.get_all.assert_called_once()
 
     def test_bc3_coverage_calculation(self):
-        """Test that BC3 coverage is calculated correctly"""
+        """Test that BC3 coverage is calculated correctly."""
         familia = FamiliaEntity(
             nombre="Test",
             total_productos=100,

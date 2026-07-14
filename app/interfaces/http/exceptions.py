@@ -2,14 +2,14 @@
 
 Provides domain-specific exceptions with proper HTTP status codes
 and error message formatting.
-"""
+."""
 
 from typing import Optional, Dict, Any
 from enum import Enum
 
 
 class ErrorCode(str, Enum):
-    """Standardized error codes for API responses"""
+    """Standardized error codes for API responses."""
 
     # General errors (4xx)
     BAD_REQUEST = "BAD_REQUEST"
@@ -45,7 +45,7 @@ class ErrorCode(str, Enum):
 
 
 class APIException(Exception):
-    """Base exception for API errors"""
+    """Base exception for API errors."""
 
     def __init__(
         self,
@@ -64,7 +64,7 @@ class APIException(Exception):
             status_code: HTTP status code
             details: Additional error details
             context: Request context for debugging
-        """
+        ."""
         self.message = message
         self.error_code = error_code
         self.status_code = status_code
@@ -73,7 +73,7 @@ class APIException(Exception):
         super().__init__(self.message)
 
     def to_dict(self) -> Dict[str, Any]:
-        """Convert exception to dictionary for API response"""
+        """Convert exception to dictionary for API response."""
         error_dict = {
             "error": self.message,
             "error_code": self.error_code.value,
@@ -91,7 +91,7 @@ class APIException(Exception):
 
 
 def datetime_utc_now():
-    """Get current UTC datetime as ISO string"""
+    """Get current UTC datetime as ISO string."""
     from datetime import datetime, timezone
 
     return datetime.now(timezone.utc).isoformat()
@@ -103,7 +103,7 @@ def datetime_utc_now():
 
 
 class BadRequestException(APIException):
-    """Bad Request (400) - Invalid request parameters"""
+    """Bad Request (400) - Invalid request parameters."""
 
     def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
         super().__init__(
@@ -115,25 +115,21 @@ class BadRequestException(APIException):
 
 
 class UnauthorizedException(APIException):
-    """Unauthorized (401) - Authentication required"""
+    """Unauthorized (401) - Authentication required."""
 
     def __init__(self, message: str = "Authentication required"):
-        super().__init__(
-            message=message, error_code=ErrorCode.UNAUTHORIZED, status_code=401
-        )
+        super().__init__(message=message, error_code=ErrorCode.UNAUTHORIZED, status_code=401)
 
 
 class ForbiddenException(APIException):
-    """Forbidden (403) - Insufficient permissions"""
+    """Forbidden (403) - Insufficient permissions."""
 
     def __init__(self, message: str = "Insufficient permissions"):
-        super().__init__(
-            message=message, error_code=ErrorCode.FORBIDDEN, status_code=403
-        )
+        super().__init__(message=message, error_code=ErrorCode.FORBIDDEN, status_code=403)
 
 
 class NotFoundException(APIException):
-    """Not Found (404) - Resource not found"""
+    """Not Found (404) - Resource not found."""
 
     def __init__(self, message: str, resource_type: Optional[str] = None):
         details = {"resource_type": resource_type} if resource_type else None
@@ -146,7 +142,7 @@ class NotFoundException(APIException):
 
 
 class ConflictException(APIException):
-    """Conflict (409) - Resource conflict"""
+    """Conflict (409) - Resource conflict."""
 
     def __init__(self, message: str, details: Optional[Dict[str, Any]] = None):
         super().__init__(
@@ -158,14 +154,10 @@ class ConflictException(APIException):
 
 
 class ValidationException(APIException):
-    """Validation Error (422) - Invalid data format"""
+    """Validation Error (422) - Invalid data format."""
 
-    def __init__(
-        self, message: str, validation_errors: Optional[Dict[str, Any]] = None
-    ):
-        details = (
-            {"validation_errors": validation_errors} if validation_errors else None
-        )
+    def __init__(self, message: str, validation_errors: Optional[Dict[str, Any]] = None):
+        details = {"validation_errors": validation_errors} if validation_errors else None
         super().__init__(
             message=message,
             error_code=ErrorCode.VALIDATION_ERROR,
@@ -180,7 +172,7 @@ class ValidationException(APIException):
 
 
 class PaginationException(APIException):
-    """Pagination parameter errors"""
+    """Pagination parameter errors."""
 
     def __init__(
         self,
@@ -202,13 +194,11 @@ class PaginationException(APIException):
         else:
             error_code = ErrorCode.VALIDATION_ERROR
 
-        super().__init__(
-            message=message, error_code=error_code, status_code=400, details=details
-        )
+        super().__init__(message=message, error_code=error_code, status_code=400, details=details)
 
 
 class SortException(APIException):
-    """Sorting parameter errors"""
+    """Sorting parameter errors."""
 
     def __init__(
         self,
@@ -224,18 +214,14 @@ class SortException(APIException):
             details["valid_fields"] = valid_fields
 
         error_code = (
-            ErrorCode.INVALID_SORT_FIELD
-            if invalid_field
-            else ErrorCode.INVALID_SORT_DIRECTION
+            ErrorCode.INVALID_SORT_FIELD if invalid_field else ErrorCode.INVALID_SORT_DIRECTION
         )
 
-        super().__init__(
-            message=message, error_code=error_code, status_code=400, details=details
-        )
+        super().__init__(message=message, error_code=error_code, status_code=400, details=details)
 
 
 class FilterException(APIException):
-    """Filter parameter errors"""
+    """Filter parameter errors."""
 
     def __init__(
         self,
@@ -258,7 +244,7 @@ class FilterException(APIException):
 
 
 class PriceRangeException(APIException):
-    """Price range validation errors"""
+    """Price range validation errors."""
 
     def __init__(
         self,
@@ -287,17 +273,15 @@ class PriceRangeException(APIException):
 
 
 class ProductNotFoundException(NotFoundException):
-    """Product not found"""
+    """Product not found."""
 
     def __init__(self, codigo: str):
-        super().__init__(
-            message=f"Producto '{codigo}' no encontrado", resource_type="producto"
-        )
+        super().__init__(message=f"Producto '{codigo}' no encontrado", resource_type="producto")
         self.details = {"codigo": codigo}
 
 
 class InvalidProductException(APIException):
-    """Invalid product data"""
+    """Invalid product data."""
 
     def __init__(self, message: str, product_data: Optional[Dict[str, Any]] = None):
         super().__init__(
@@ -309,17 +293,15 @@ class InvalidProductException(APIException):
 
 
 class FamiliaNotFoundException(NotFoundException):
-    """Familia not found"""
+    """Familia not found."""
 
     def __init__(self, nombre: str):
-        super().__init__(
-            message=f"Familia '{nombre}' no encontrada", resource_type="familia"
-        )
+        super().__init__(message=f"Familia '{nombre}' no encontrada", resource_type="familia")
         self.details = {"nombre": nombre}
 
 
 class BC3DataException(APIException):
-    """BC3 data validation errors"""
+    """BC3 data validation errors."""
 
     def __init__(
         self,
@@ -348,7 +330,7 @@ class BC3DataException(APIException):
 
 
 class InternalServerException(APIException):
-    """Internal Server Error (500)"""
+    """Internal Server Error (500)."""
 
     def __init__(self, message: str, original_exception: Optional[Exception] = None):
         details = None
@@ -368,7 +350,7 @@ class InternalServerException(APIException):
 
 
 class DatabaseException(APIException):
-    """Database operation errors"""
+    """Database operation errors."""
 
     def __init__(
         self,
@@ -396,7 +378,7 @@ class DatabaseException(APIException):
 
 
 class CacheException(APIException):
-    """Cache operation errors"""
+    """Cache operation errors."""
 
     def __init__(
         self,
@@ -424,7 +406,7 @@ class CacheException(APIException):
 
 
 class CacheMissException(APIException):
-    """Cache miss - treated as informational, not error"""
+    """Cache miss - treated as informational, not error."""
 
     def __init__(self, cache_key: str):
         super().__init__(
@@ -436,12 +418,10 @@ class CacheMissException(APIException):
 
 
 class ServiceUnavailableException(APIException):
-    """Service Unavailable (503)"""
+    """Service Unavailable (503)."""
 
     def __init__(self, message: str = "Service temporarily unavailable"):
-        super().__init__(
-            message=message, error_code=ErrorCode.SERVICE_UNAVAILABLE, status_code=503
-        )
+        super().__init__(message=message, error_code=ErrorCode.SERVICE_UNAVAILABLE, status_code=503)
 
 
 # ==============================================================================
@@ -466,7 +446,7 @@ def create_validation_error(
 
     Returns:
         ValidationException with formatted details
-    """
+    ."""
     validation_errors = {
         "field": field,
         "error": error_message,
@@ -499,7 +479,7 @@ def wrap_exception(
 
     Returns:
         APIException with appropriate error information
-    """
+    ."""
     message = custom_message or str(exception)
     error_code = error_code or ErrorCode.INTERNAL_ERROR
 

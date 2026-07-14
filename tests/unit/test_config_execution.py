@@ -4,13 +4,13 @@ Tests Unitarios - Config Execution (TDD + AAA + BC3-Suite)
 
 Tests que importan Settings con TDD real para app/config.py.
 BC3-Suite patterns: TDD (RED→GREEN→REFACTOR), AAA pattern.
-"""
+."""
 
 import pytest
 
 
 class TestConfigSettingsRequiredFields:
-    """Tests de campos obligatorios en Settings (TDD + AAA)"""
+    """Tests de campos obligatorios en Settings (TDD + AAA)."""
 
     def test_settings_secret_key_required_validation(self):
         """
@@ -20,7 +20,7 @@ class TestConfigSettingsRequiredFields:
         - Arrange: Configurar SECRET_KEY vacío
         - Act: Crear Settings
         - Assert: Debe lanzar ValueError
-        """
+        ."""
         # Arrange
         from app.config import Settings
 
@@ -31,7 +31,7 @@ class TestConfigSettingsRequiredFields:
     def test_settings_api_keys_required_validation(self):
         """
         GREEN: Settings debe fallar sin API_KEYS válidos.
-        """
+        ."""
         # Arrange
         from app.config import Settings
 
@@ -42,7 +42,7 @@ class TestConfigSettingsRequiredFields:
     def test_settings_valid_configuration(self):
         """
         GREEN: Settings válidos funcionan.
-        """
+        ."""
         # Arrange & Act
         from app.config import Settings
 
@@ -56,7 +56,7 @@ class TestConfigSettingsRequiredFields:
 
 
 class TestConfigFieldValidators:
-    """Tests de field validators en Settings (TDD + AAA)"""
+    """Tests de field validators en Settings (TDD + AAA)."""
 
     def test_api_keys_parser_from_string(self):
         """
@@ -66,7 +66,7 @@ class TestConfigFieldValidators:
         - Arrange: Crear Settings con API_KEYS como string
         - Act: Validar parseo vía api_keys_list
         - Assert: Debe retornar lista con 2 keys
-        """
+        ."""
         # Arrange & Act
         from app.config import Settings
 
@@ -82,7 +82,7 @@ class TestConfigFieldValidators:
     def test_api_keys_parser_from_list(self):
         """
         GREEN: Field validator acepta API_KEYS como lista.
-        """
+        ."""
         # Arrange & Act
         from app.config import Settings
 
@@ -95,7 +95,7 @@ class TestConfigFieldValidators:
     def test_admin_api_keys_parser_from_string(self):
         """
         GREEN: Field validator parsea ADMIN_API_KEYS de string a lista.
-        """
+        ."""
         # Arrange & Act
         import os
 
@@ -119,7 +119,7 @@ class TestConfigFieldValidators:
     def test_cors_origins_parser_from_string(self):
         """
         GREEN: Field validator parsea CORS_ORIGINS de string a lista.
-        """
+        ."""
         # Arrange & Act
         from app.config import Settings
 
@@ -135,12 +135,12 @@ class TestConfigFieldValidators:
 
 
 class TestConfigProperties:
-    """Tests de properties en Settings (TDD + AAA)"""
+    """Tests de properties en Settings (TDD + AAA)."""
 
     def test_is_production_returns_false_in_development(self):
         """
         RED: is_production() retorna False en development.
-        """
+        ."""
         # Arrange & Act
         from app.config import Settings
 
@@ -154,7 +154,7 @@ class TestConfigProperties:
     def test_is_production_returns_true_in_production(self):
         """
         GREEN: is_production() retorna True en production.
-        """
+        ."""
         # Arrange & Act
         from app.config import Settings
 
@@ -168,7 +168,7 @@ class TestConfigProperties:
     def test_api_keys_list_property_returns_list(self):
         """
         GREEN: api_keys_list property retorna lista correctamente.
-        """
+        ."""
         # Arrange & Act
         from app.config import Settings
 
@@ -181,7 +181,7 @@ class TestConfigProperties:
     def test_validate_required_passes_with_valid_config(self):
         """
         GREEN: validate_required() pasa con configuración válida en producción.
-        """
+        ."""
         # Arrange & Act
         from app.config import Settings
 
@@ -197,7 +197,7 @@ class TestConfigProperties:
     def test_validate_required_fails_without_secret_key_in_production(self):
         """
         RED: validate_required() falla sin SECRET_KEY en producción.
-        """
+        ."""
         # Arrange
         from app.config import Settings
 
@@ -211,12 +211,12 @@ class TestConfigProperties:
 
 
 class TestConfigDefaultValues:
-    """Tests de valores default en Settings (TDD + AAA)"""
+    """Tests de valores default en Settings (TDD + AAA)."""
 
     def test_default_api_title(self):
         """
         GREEN: api_title tiene default razonable.
-        """
+        ."""
         # Arrange & Act
         from app.config import Settings
 
@@ -228,7 +228,7 @@ class TestConfigDefaultValues:
     def test_default_api_version(self):
         """
         GREEN: api_version tiene default razonable.
-        """
+        ."""
         # Arrange & Act
         from app.config import Settings
 
@@ -240,7 +240,7 @@ class TestConfigDefaultValues:
     def test_default_rate_limit_values(self):
         """
         GREEN: rate_limit tiene defaults razonables.
-        """
+        ."""
         # Arrange & Act
         from app.config import Settings
 
@@ -254,7 +254,7 @@ class TestConfigDefaultValues:
     def test_default_cors_configuration(self):
         """
         GREEN: CORS tiene defaults razonables.
-        """
+        ."""
         # Arrange & Act
         from app.config import Settings
 

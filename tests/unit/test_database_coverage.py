@@ -3,7 +3,7 @@ Tests Unitarios - Database (Aumenta coverage sin Settings import)
 ========================================================
 
 Tests que cubren app/database.py SIN importar Settings para evitar bloqueo.
-"""
+."""
 
 import pytest
 from pathlib import Path

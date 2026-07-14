@@ -1,17 +1,17 @@
 """Performance tests for query pattern analysis
 
 Tests to analyze query patterns and identify indexing opportunities
-"""
+."""
 
 import time
 from collections import Counter
 
 
 class TestQueryAnalysis:
-    """Tests for query pattern analysis"""
+    """Tests for query pattern analysis."""
 
     def test_identify_most_frequent_queries(self):
-        """Test that we can identify the most frequent query patterns"""
+        """Test that we can identify the most frequent query patterns."""
         from fastapi.testclient import TestClient
         from app.main import app
 
@@ -49,7 +49,7 @@ class TestQueryAnalysis:
         assert most_frequent[0] == "product_search"
 
     def test_measure_query_execution_times(self):
-        """Test that we can measure query execution times"""
+        """Test that we can measure query execution times."""
         from fastapi.testclient import TestClient
         from app.main import app
 
@@ -84,7 +84,7 @@ class TestQueryAnalysis:
         assert len(execution_times) >= 3
 
     def test_identify_slow_queries(self):
-        """Test that we can identify slow queries (> 50ms)"""
+        """Test that we can identify slow queries (> 50ms)."""
         from fastapi.testclient import TestClient
         from app.main import app
 
@@ -104,12 +104,12 @@ class TestQueryAnalysis:
         slow_queries = [q for q in query_times if q["time"] > 0.05]
 
         # In an optimized system, we should have minimal slow queries
-        assert len(slow_queries) < len(query_times), (
-            f"Too many slow queries: {len(slow_queries)}/{len(query_times)}"
-        )
+        assert len(slow_queries) < len(
+            query_times
+        ), f"Too many slow queries: {len(slow_queries)}/{len(query_times)}"
 
     def test_identify_fields_for_indexing(self):
-        """Test that we can identify fields that need indexing"""
+        """Test that we can identify fields that need indexing."""
         from app.infrastructure.repositories.producto import (
             SQLAlchemyProductoRepository,
         )
@@ -155,7 +155,7 @@ class TestQueryAnalysis:
         assert "codigo" in frequent_fields  # Primary key always queried
 
     def test_query_pattern_documentation(self):
-        """Test that query patterns are properly documented"""
+        """Test that query patterns are properly documented."""
         # This test verifies that we have documentation for query patterns
         from pathlib import Path
 

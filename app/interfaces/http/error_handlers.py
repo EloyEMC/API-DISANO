@@ -1,9 +1,9 @@
 """FastAPI exception handlers for API-DISANO V2 endpoints
-    
+
 Provides centralized error handling with standardized error responses
 and proper HTTP status codes for different error types.
-"""
-    
+."""
+
 from fastapi import Request, status
 from fastapi.exceptions import RequestValidationError, HTTPException
 from typing import Any, Optional
@@ -35,7 +35,7 @@ async def api_exception_handler(request: Request, exc: APIException) -> JSONResp
 
     Returns:
         JSONResponse with standardized error format
-    """
+    ."""
     # Log the error
     logger.error(
         f"API Exception: {exc.error_code.value} - {exc.message}",
@@ -88,7 +88,7 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> JSONRe
 
     Returns:
         JSONResponse with standardized error format
-    """
+    ."""
     # Log the error
     logger.warning(
         f"HTTP Exception: {exc.status_code} - {exc.detail}",
@@ -124,7 +124,7 @@ async def validation_exception_handler(
 
     Returns:
         JSONResponse with validation error details
-    """
+    ."""
     # Log the validation error
     logger.warning(
         f"Validation Error: {len(exc.errors())} field(s) failed validation",
@@ -162,7 +162,9 @@ async def validation_exception_handler(
         },
     }
 
-    return JSONResponse(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, content=error_response)
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, content=error_response
+    )
 
 
 async def generic_exception_handler(request: Request, exc: Exception) -> JSONResponse:
@@ -175,7 +177,7 @@ async def generic_exception_handler(request: Request, exc: Exception) -> JSONRes
 
     Returns:
         JSONResponse with internal server error
-    """
+    ."""
     # Log the unexpected error
     logger.exception(
         f"Unexpected Exception: {type(exc).__name__} - {str(exc)}",
@@ -227,7 +229,7 @@ def register_exception_handlers(app) -> None:
 
     Args:
         app: FastAPI application instance
-    """
+    ."""
     # Register custom API exception handler
     app.add_exception_handler(APIException, api_exception_handler)
 
@@ -247,7 +249,7 @@ def register_exception_handlers(app) -> None:
 
 
 def datetime_utc_now():
-    """Get current UTC datetime as ISO string"""
+    """Get current UTC datetime as ISO string."""
     from datetime import datetime, timezone
 
     return datetime.now(timezone.utc).isoformat()
@@ -259,7 +261,7 @@ def is_development_mode() -> bool:
 
     Returns:
         True if development mode, False otherwise
-    """
+    ."""
     import os
 
     return os.getenv("ENVIRONMENT", "development").lower() == "development"
@@ -284,7 +286,7 @@ def create_error_response(
 
     Returns:
         Standardized error response dictionary
-    """
+    ."""
     response = {
         "error": message,
         "error_code": error_code,
@@ -315,7 +317,7 @@ def log_error(
         error: Exception that occurred
         request: FastAPI request object
         additional_context: Optional additional context
-    """
+    ."""
     context = {
         "path": request.url.path,
         "method": request.method,

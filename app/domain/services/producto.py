@@ -1,7 +1,7 @@
 """Domain service for Producto
 
 Business logic layer that coordinates repositories and applies domain rules.
-"""
+."""
 
 from app.domain.entities.producto import ProductoEntity
 from app.domain.exceptions.not_found import (
@@ -29,7 +29,7 @@ class ProductoService:
     This service contains business rules and validation logic.
     It uses the repository interface for data access, maintaining
     dependency inversion and testability.
-    """
+    ."""
 
     def __init__(self, repository: ProductoRepositoryInterface):
         """
@@ -37,7 +37,7 @@ class ProductoService:
 
         Args:
             repository: Producto repository implementation
-        """
+        ."""
         self.repository = repository
 
     def crear_producto(self, dto: ProductoCreateDTO) -> ProductoEntity:
@@ -58,7 +58,7 @@ class ProductoService:
         Raises:
             ValidationException: If validation fails
             ProductoYaExisteException: If code already exists
-        """
+        ."""
         # 1. Validations
         if len(dto.descripcion) < 2:
             raise ValidationException("descripcion", "Mínimo 2 caracteres")
@@ -82,9 +82,7 @@ class ProductoService:
         # 4. Persist through repository
         return self.repository.save(producto)
 
-    def actualizar_producto(
-        self, codigo: str, dto: ProductoUpdateDTO
-    ) -> ProductoEntity:
+    def actualizar_producto(self, codigo: str, dto: ProductoUpdateDTO) -> ProductoEntity:
         """
         Update existing product.
 
@@ -98,7 +96,7 @@ class ProductoService:
         Raises:
             ProductoNotFoundException: If product doesn't exist
             ValidationException: If validation fails
-        """
+        ."""
         # 1. Get existing
         existing = self.repository.get_by_codigo(codigo)
 
@@ -126,7 +124,7 @@ class ProductoService:
 
         Returns:
             list[ProductoEntity]: Matching products
-        """
+        ."""
         return self.repository.buscar_productos(
             termino=dto.buscar or "",
             limit=dto.limit,
@@ -146,7 +144,7 @@ class ProductoService:
 
         Raises:
             ProductoNotFoundException: If not found
-        """
+        ."""
         return self.repository.get_by_codigo(codigo)
 
     def eliminar_producto(self, codigo: str) -> bool:
@@ -158,7 +156,7 @@ class ProductoService:
 
         Returns:
             bool: True if deleted, False if not found
-        """
+        ."""
         # 1. Verify exists
         try:
             self.repository.get_by_codigo(codigo)
@@ -168,9 +166,7 @@ class ProductoService:
         # 2. Delete
         return self.repository.delete(codigo)
 
-    def get_all_productos(
-        self, skip: int = 0, limit: int = 100
-    ) -> list[ProductoEntity]:
+    def get_all_productos(self, skip: int = 0, limit: int = 100) -> list[ProductoEntity]:
         """
         Get all products with pagination.
 
@@ -180,7 +176,7 @@ class ProductoService:
 
         Returns:
             list[ProductoEntity]: Products in range
-        """
+        ."""
         return self.repository.get_all(skip=skip, limit=limit)
 
     def count_productos(self) -> int:
@@ -189,12 +185,10 @@ class ProductoService:
 
         Returns:
             int: Total number of products
-        """
+        ."""
         return self.repository.count_total()
 
-    def buscar_productos_paginado(
-        self, request_dto: PaginationRequestDTO
-    ) -> PaginatedResponseDTO:
+    def buscar_productos_paginado(self, request_dto: PaginationRequestDTO) -> PaginatedResponseDTO:
         """Search products with pagination, sorting, and filtering.
 
         Args:
@@ -202,7 +196,7 @@ class ProductoService:
 
         Returns:
             PaginatedResponseDTO: Products with pagination metadata
-        """
+        ."""
         # Convert DTO to dict format for repository
         dto_dict: dict = {
             "page": request_dto.page,

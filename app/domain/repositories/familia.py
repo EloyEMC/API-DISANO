@@ -1,7 +1,7 @@
 """Repository interface for Familia
 
 Abstract repository interface following Domain-Driven Design principles.
-"""
+."""
 
 from abc import ABC, abstractmethod
 from typing import List, Dict
@@ -9,7 +9,7 @@ from app.domain.entities.familia import FamiliaEntity
 
 
 class FamiliaRepositoryInterface(ABC):
-    """Abstract repository for Familia operations"""
+    """Abstract repository for Familia operations."""
 
     @abstractmethod
     def get_all(self) -> List[FamiliaEntity]:
@@ -18,7 +18,7 @@ class FamiliaRepositoryInterface(ABC):
 
         Returns:
             List[FamiliaEntity]: All families with BC3 statistics
-        """
+        ."""
         pass
 
     @abstractmethod
@@ -34,7 +34,7 @@ class FamiliaRepositoryInterface(ABC):
 
         Raises:
             Exception: If family not found
-        """
+        ."""
         pass
 
     @abstractmethod
@@ -44,7 +44,7 @@ class FamiliaRepositoryInterface(ABC):
 
         Returns:
             Dict: Aggregate statistics including total families, products, BC3 coverage
-        """
+        ."""
         pass
 
     @abstractmethod
@@ -58,5 +58,5 @@ class FamiliaRepositoryInterface(ABC):
                     tuple[list[FamiliaEntity], int]:
         - List of entities for current page
         - Total count of matching items
-        """
+        ."""
         pass

@@ -16,7 +16,7 @@ Usage:
     from app.middleware_redis import RedisRateLimitMiddleware
 
     app.add_middleware(RedisRateLimitMiddleware)
-"""
+."""
 
 import time
 from collections import defaultdict
@@ -35,7 +35,7 @@ class RedisRateLimitMiddleware(BaseHTTPMiddleware):
     """Rate limiting middleware using Redis for shared state."""
 
     def __init__(self, app):
-        """Initialize with Redis client (in-memory fallback)."""
+        ."""Initialize with Redis client (in-memory fallback)."""
         super().__init__(app)
         self.rate_limit_store: dict[str, list] = defaultdict(list)
         self.rate_limit_per_client = settings.rate_limit_per_client

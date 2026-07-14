@@ -6,7 +6,7 @@ Provides comprehensive cache warming for optimal performance:
 - Configurable warming schedules
 - Priority-based warming (hot, warm, cold)
 - Performance metrics tracking
-"""
+."""
 
 from typing import Dict, List, Any, Optional
 from app.infrastructure.cache.pagination_cache import get_pagination_cache
@@ -18,7 +18,7 @@ class CacheWarmingStrategy:
 
     This class provides methods to pre-populate cache with frequently
     accessed data for improved performance.
-    """
+    ."""
 
     def __init__(self):
         """Initialize cache warming strategy."""
@@ -27,7 +27,7 @@ class CacheWarmingStrategy:
     def warm_popular_product_pages(
         self, per_page_values: Optional[List[int]] = None
     ) -> Dict[str, Any]:
-        """
+        ."""
         Warm cache with popular product pagination queries.
 
         Args:
@@ -60,9 +60,7 @@ class CacheWarmingStrategy:
                         }
                     )
 
-            warmed = self.pagination_cache.warm_pagination_cache(
-                "productos", warming_queries
-            )
+            warmed = self.pagination_cache.warm_pagination_cache("productos", warming_queries)
             results["warmed_queries"] = warmed
 
         except Exception as e:
@@ -81,7 +79,7 @@ class CacheWarmingStrategy:
 
         Returns:
             Dict with warming results
-        """
+        ."""
         if per_page_values is None:
             per_page_values = [10, 20]
 
@@ -106,9 +104,7 @@ class CacheWarmingStrategy:
                         }
                     )
 
-            warmed = self.pagination_cache.warm_pagination_cache(
-                "familias", warming_queries
-            )
+            warmed = self.pagination_cache.warm_pagination_cache("familias", warming_queries)
             results["warmed_queries"] = warmed
 
         except Exception as e:
@@ -128,7 +124,7 @@ class CacheWarmingStrategy:
 
         Returns:
             Dict with warming results
-        """
+        ."""
         results = {
             "entity_type": entity_type,
             "warmed_filters": 0,
@@ -148,9 +144,7 @@ class CacheWarmingStrategy:
                     }
                 )
 
-            warmed = self.pagination_cache.warm_pagination_cache(
-                entity_type, warming_queries
-            )
+            warmed = self.pagination_cache.warm_pagination_cache(entity_type, warming_queries)
             results["warmed_filters"] = warmed
 
         except Exception as e:
@@ -167,7 +161,7 @@ class CacheWarmingStrategy:
 
         Returns:
             Dict with warming results
-        """
+        ."""
         if top_brands is None:
             # Default popular brands
             top_brands = ["SIEMENS", "BOSCH", "AEG", "MIELE", "DYSON"]
@@ -197,9 +191,7 @@ class CacheWarmingStrategy:
 
         return results
 
-    def warm_price_ranges(
-        self, price_ranges: Optional[List[tuple]] = None
-    ) -> Dict[str, Any]:
+    def warm_price_ranges(self, price_ranges: Optional[List[tuple]] = None) -> Dict[str, Any]:
         """
         Warm cache for common price range filters.
 
@@ -208,7 +200,7 @@ class CacheWarmingStrategy:
 
         Returns:
             Dict with warming results
-        """
+        ."""
         if price_ranges is None:
             # Default popular price ranges
             price_ranges = [
@@ -255,7 +247,7 @@ class CacheWarmingStrategy:
 
         Returns:
             Dict with warming results
-        """
+        ."""
         results = {
             "warmed_bc3_filters": 0,
             "status": "success",
@@ -287,7 +279,7 @@ class CacheWarmingStrategy:
 
         Returns:
             Dict with comprehensive warming results
-        """
+        ."""
         results = {
             "product_pages": self.warm_popular_product_pages(),
             "familia_pages": self.warm_popular_familia_pages(),
@@ -317,7 +309,7 @@ class CacheWarmingStrategy:
 
         Returns:
             Dict with warming recommendations
-        """
+        ."""
         stats = self.pagination_cache.get_pagination_statistics()
 
         recommendations = {
@@ -368,7 +360,7 @@ def get_cache_warming_strategy() -> CacheWarmingStrategy:
 
     Returns:
         Global cache warming strategy instance
-    """
+    ."""
     global _global_warming_strategy
 
     if _global_warming_strategy is None:

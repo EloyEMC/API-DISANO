@@ -4,7 +4,7 @@ import pytest
 
 
 def test_filter_criteria_all_optional() -> None:
-    """Test all filter fields are optional."""
+    ."""Test all filter fields are optional."""
     from app.application.dto.pagination import FilterCriteria
 
     criteria = FilterCriteria()
@@ -19,12 +19,10 @@ def test_filter_criteria_all_optional() -> None:
 
 
 def test_filter_criteria_exact_match_filters() -> None:
-    """Test exact match filters work."""
+    ."""Test exact match filters work."""
     from app.application.dto.pagination import FilterCriteria
 
-    criteria = FilterCriteria(
-        marca="Disano", familia="Iluminación", bc3_product_type="columna"
-    )
+    criteria = FilterCriteria(marca="Disano", familia="Iluminación", bc3_product_type="columna")
 
     assert criteria.marca == "Disano"
     assert criteria.familia == "Iluminación"
@@ -55,9 +53,7 @@ def test_filter_criteria_price_range_invalid() -> None:
         FilterCriteria(pvp_min=100, pvp_max=50)
 
     errors = exc_info.value.errors()
-    assert any(
-        "pvp_min cannot be greater than pvp_max" in error["msg"] for error in errors
-    )
+    assert any("pvp_min cannot be greater than pvp_max" in error["msg"] for error in errors)
 
 
 def test_filter_criteria_text_search() -> None:

@@ -3,7 +3,7 @@ Tests Unitarios - Config & Settings (Sin Client)
 ================================================
 
 Tests que NO dependen del client fixture para evitar import settings.
-"""
+."""
 
 import pytest
 from app.config import Settings
@@ -13,7 +13,7 @@ class TestSettingsBasic:
     """Tests básicos de Settings sin carga de .env."""
 
     def test_settings_default_values(self):
-        """Verificar valores por defecto de Settings."""
+        ."""Verificar valores por defecto de Settings."""
         settings = Settings()
 
         # Valores por defecto esperados
@@ -74,7 +74,7 @@ class TestSettingsBasic:
         assert settings.rate_limit_burst == 10
 
     def test_database_url_defaults(self):
-        """Verificar URL de base de datos por defecto."""
+        ."""Verificar URL de base de datos por defecto."""
         settings = Settings()
 
         assert settings.database_path == "database/tarifa_disano.db"
@@ -91,7 +91,7 @@ class TestSecurityValidation:
     """Tests de validación de seguridad."""
 
     def test_validate_required_in_development_empty(self):
-        """Validación no requerida en desarrollo con valores vacíos."""
+        ."""Validación no requerida en desarrollo con valores vacíos."""
         settings = Settings(environment="development", secret_key="", api_keys=[])
 
         # No debería lanzar error

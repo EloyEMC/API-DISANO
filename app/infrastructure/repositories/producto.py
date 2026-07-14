@@ -17,7 +17,7 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
     This class implements the ProductoRepositoryInterface contract
     using SQLAlchemy ORM for database operations. It maps between
     domain entities (ProductoEntity) and database models (ProductoModel).
-    """
+    ."""
 
     def __init__(self, session: Session):
         """
@@ -25,7 +25,7 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
 
         Args:
             session: SQLAlchemy session for database operations
-        """
+        ."""
         self.session = session
 
     def get_by_codigo(self, codigo: str) -> ProductoEntity:
@@ -40,12 +40,8 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
 
         Raises:
             ProductoNotFoundException: If product doesn't exist
-        """
-        model = (
-            self.session.query(ProductoModel)
-            .filter(ProductoModel.codigo == codigo)
-            .first()
-        )
+        ."""
+        model = self.session.query(ProductoModel).filter(ProductoModel.codigo == codigo).first()
 
         if not model:
             raise ProductoNotFoundException(codigo)
@@ -70,7 +66,7 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
 
         Returns:
             List[ProductoEntity]: Matching products
-        """
+        ."""
         query = self.session.query(ProductoModel)
 
         # Apply text search if term provided
@@ -113,7 +109,7 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
 
         Returns:
             List[ProductoEntity]: Products in specified range
-        """
+        ."""
         query = self.session.query(ProductoModel).offset(skip).limit(limit)
         return [model.to_entity() for model in query.all()]
 
@@ -126,7 +122,7 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
 
         Returns:
             ProductoEntity: Saved product with any DB-generated fields
-        """
+        ."""
         # Create model from entity
         model = ProductoModel.from_entity(producto)
 
@@ -145,12 +141,8 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
 
         Returns:
             bool: True if deleted, False if not found
-        """
-        model = (
-            self.session.query(ProductoModel)
-            .filter(ProductoModel.codigo == codigo)
-            .first()
-        )
+        ."""
+        model = self.session.query(ProductoModel).filter(ProductoModel.codigo == codigo).first()
 
         if not model:
             return False
@@ -166,7 +158,7 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
 
         Returns:
             int: Total number of products in database
-        """
+        ."""
         return self.session.query(ProductoModel).count()
 
     def buscar_productos_paginado(self, dto: dict) -> Tuple[List[ProductoEntity], int]:
@@ -182,7 +174,7 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
             Tuple[list[ProductoEntity], int]:
                 - List of entities for current page
                 - Total count of matching items
-        """
+        ."""
         # Get pagination cache wrapper
         cache = get_pagination_cache()
 
@@ -226,7 +218,7 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
             Tuple[list[ProductoEntity], int]:
                 - List of entities for current page
                 - Total count of matching items
-        """
+        ."""
         # Base query
         query = self.session.query(ProductoModel)
 
@@ -245,9 +237,7 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
             query = query.filter(ProductoModel.pvp <= filters["pvp_max"])
 
         if filters.get("bc3_product_type"):
-            query = query.filter(
-                ProductoModel.bc3_product_type == filters["bc3_product_type"]
-            )
+            query = query.filter(ProductoModel.bc3_product_type == filters["bc3_product_type"])
 
         if filters.get("bc3_has_descripcion_corta") is not None:
             if filters["bc3_has_descripcion_corta"]:

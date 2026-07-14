@@ -1,7 +1,7 @@
 """Acceptance tests for V2 Product List Endpoint with pagination.
 
 Tests follow TDD principles (RED -> GREEN -> REFACTOR).
-"""
+."""
 
 import pytest
 from fastapi.testclient import TestClient
@@ -27,11 +27,9 @@ def client(app):
 
 @pytest.fixture
 def mock_producto_service(mocker):
-    """Mock ProductoService for testing."""
+    ."""Mock ProductoService for testing."""
     mock_service = mocker.Mock(spec=ProductoService)
-    mocker.patch(
-        "app.interfaces.http.productos.get_producto_service", return_value=mock_service
-    )
+    mocker.patch("app.interfaces.http.productos.get_producto_service", return_value=mock_service)
     return mock_service
 
 
@@ -39,7 +37,7 @@ class TestV2ProductPaginationEndpoint:
     """Test V2 product list endpoint with pagination."""
 
     def test_pagination_endpoint_requires_parameters(self, client):
-        """Test that pagination endpoint works without required parameters."""
+        ."""Test that pagination endpoint works without required parameters."""
         response = client.get("/api/productos/v2/paginated")
 
         # Should not fail, should use defaults
@@ -179,9 +177,7 @@ class TestV2ProductPaginationEndpoint:
     def test_pagination_error_handling(self, client, mock_producto_service):
         """Test error handling in pagination endpoint."""
         # Mock service to raise exception
-        mock_producto_service.buscar_productos_paginado.side_effect = Exception(
-            "Database error"
-        )
+        mock_producto_service.buscar_productos_paginado.side_effect = Exception("Database error")
 
         response = client.get("/api/productos/v2/paginated?page=1")
 

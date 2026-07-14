@@ -3,7 +3,7 @@ Tests Unitarios - Models Coverage (TDD approach)
 ==============================================
 
 Tests que aumentan coverage de app/models.py.
-"""
+."""
 
 import pytest
 

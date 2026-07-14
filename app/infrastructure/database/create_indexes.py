@@ -1,7 +1,7 @@
 """Database index creation script
 
 Creates strategic indexes on the base productos table for query optimization.
-"""
+."""
 
 from sqlalchemy import text
 from app.infrastructure.database.connection import SessionLocal
@@ -13,7 +13,7 @@ def create_strategic_indexes():
 
     Note: SQLite doesn't allow indexing on views, so indexes are created
     on the base 'productos' table. The 'productos_clean' view benefits from these indexes.
-    """
+    ."""
 
     session = SessionLocal()
 
@@ -67,18 +67,20 @@ def create_strategic_indexes():
 def analyze_index_usage():
     """
     Analyze index usage and provide recommendations
-    """
+    ."""
     session = SessionLocal()
 
     try:
         # Get index statistics
         result = session.execute(
-            text("""
-            SELECT name, tbl 
-            FROM sqlite_master 
+            text(
+                """
+            SELECT name, tbl
+            FROM sqlite_master
             WHERE type='index' AND name LIKE 'idx_productos_%'
             ORDER BY name
-        """)
+        ."""
+            )
         )
 
         indexes = result.fetchall()
@@ -91,9 +93,11 @@ def analyze_index_usage():
 
         # Get table statistics
         result = session.execute(
-            text("""
+            text(
+                """
             SELECT stat FROM sqlite_stat1 WHERE tbl='productos'
-        """)
+        ."""
+            )
         )
 
         stats = result.fetchall()

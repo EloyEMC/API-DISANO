@@ -1,14 +1,14 @@
 """Integration tests for BC3 endpoints
 
 Tests HTTP interface with dependency injection using TDD approach
-"""
+."""
 
 
 class TestBC3Endpoints:
-    """Tests for BC3 HTTP endpoints"""
+    """Tests for BC3 HTTP endpoints."""
 
     def test_get_bc3_stats(self, client):
-        """Test getting BC3 statistics"""
+        """Test getting BC3 statistics."""
         response = client.get("/api/bc3/stats")
 
         assert response.status_code == 200
@@ -26,7 +26,7 @@ class TestBC3Endpoints:
         assert stats["con_tipo_producto"] >= 0
 
     def test_get_productos_por_tipo_bc3(self, client):
-        """Test getting products by BC3 type"""
+        """Test getting products by BC3 type."""
         response = client.get("/api/bc3/tipo/columna?limit=5")
 
         assert response.status_code == 200
@@ -39,7 +39,7 @@ class TestBC3Endpoints:
         assert isinstance(data["productos"], list)
 
     def test_get_columnas(self, client):
-        """Test getting all columnas products"""
+        """Test getting all columnas products."""
         response = client.get("/api/bc3/columnas?limit=5")
 
         assert response.status_code == 200
@@ -50,7 +50,7 @@ class TestBC3Endpoints:
         assert isinstance(data["productos"], list)
 
     def test_get_articulaciones(self, client):
-        """Test getting all articulaciones products"""
+        """Test getting all articulaciones products."""
         response = client.get("/api/bc3/articulaciones?limit=5")
 
         assert response.status_code == 200
@@ -61,7 +61,7 @@ class TestBC3Endpoints:
         assert isinstance(data["productos"], list)
 
     def test_get_bc3_descripcion_success(self, client):
-        """Test getting BC3 description for existing product"""
+        """Test getting BC3 description for existing product."""
         # First get a product to find one with BC3 data
         productos_response = client.get("/api/productos/v2/list?buscar=test&limit=10")
         if productos_response.status_code == 200:
@@ -78,13 +78,13 @@ class TestBC3Endpoints:
                 assert bc3_data["codigo"] == codigo
 
     def test_get_bc3_descripcion_not_found(self, client):
-        """Test getting BC3 description for non-existent product"""
+        """Test getting BC3 description for non-existent product."""
         response = client.get("/api/bc3/XYZNonexistent")
 
         assert response.status_code == 404
 
     def test_bc3_stats_data_consistency(self, client):
-        """Test that BC3 statistics are consistent"""
+        """Test that BC3 statistics are consistent."""
         response = client.get("/api/bc3/stats")
 
         assert response.status_code == 200
@@ -102,7 +102,7 @@ class TestBC3Endpoints:
         assert individual_sum >= total or individual_sum == 0
 
     def test_backward_compatibility_legacy_format(self, client):
-        """Test that V1 format matches legacy router output"""
+        """Test that V1 format matches legacy router output."""
         response = client.get("/api/bc3/stats")
 
         assert response.status_code == 200

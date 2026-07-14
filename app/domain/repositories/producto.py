@@ -2,7 +2,7 @@
 
 Defines the contract for Producto data access.
 Following Dependency Inversion Principle: infrastructure depends on this interface.
-"""
+."""
 
 from abc import ABC, abstractmethod
 from typing import List
@@ -23,7 +23,7 @@ class ProductoRepositoryInterface(ABC):
         get_all: Retrieve all products with pagination
         save: Create or update product
         delete: Remove product
-    """
+    ."""
 
     @abstractmethod
     def get_by_codigo(self, codigo: str) -> ProductoEntity:
@@ -37,7 +37,7 @@ class ProductoRepositoryInterface(ABC):
 
         Raises:
             ProductoNotFoundException: If product doesn't exist
-        """
+        ."""
         pass
 
     @abstractmethod
@@ -58,7 +58,7 @@ class ProductoRepositoryInterface(ABC):
 
         Returns:
             List[ProductoEntity]: Matching products
-        """
+        ."""
         pass
 
     @abstractmethod
@@ -71,7 +71,7 @@ class ProductoRepositoryInterface(ABC):
 
         Returns:
             List[ProductoEntity]: Products in specified range
-        """
+        ."""
         pass
 
     @abstractmethod
@@ -83,7 +83,7 @@ class ProductoRepositoryInterface(ABC):
 
         Returns:
             ProductoEntity: Saved product with any DB-generated fields
-        """
+        ."""
         pass
 
     @abstractmethod
@@ -95,7 +95,7 @@ class ProductoRepositoryInterface(ABC):
 
         Returns:
             bool: True if deleted, False if not found
-        """
+        ."""
         pass
 
     @abstractmethod
@@ -104,7 +104,7 @@ class ProductoRepositoryInterface(ABC):
 
         Returns:
             int: Total number of products in database
-        """
+        ."""
         pass
 
     @abstractmethod
@@ -118,5 +118,5 @@ class ProductoRepositoryInterface(ABC):
             tuple[list[ProductoEntity], int]:
                 - List of entities for current page
                 - Total count of matching items
-        """
+        ."""
         pass

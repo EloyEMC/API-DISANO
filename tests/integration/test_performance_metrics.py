@@ -4,7 +4,7 @@ Performance metrics collection and dashboard tests following TDD methodology.
 RED Phase: Write failing tests for metrics collection and dashboard.
 GREEN Phase: Implement metrics collector and dashboard generator.
 REFACTOR Phase: Optimize while maintaining functionality.
-"""
+."""
 
 import time
 from typing import Any
@@ -14,15 +14,13 @@ class TestPerformanceMetricsCollectionRed:
     """RED Phase: Failing tests for performance metrics collection."""
 
     def test_response_time_metrics_collected(self):
-        """Test that response time metrics are collected."""
+        ."""Test that response time metrics are collected."""
         from app.monitoring.metrics import MetricsCollector
 
         collector = MetricsCollector()
 
         # Record response time metric
-        collector.record(
-            "response_time", 0.050, tags={"endpoint": "/api/productos/v2/list"}
-        )
+        collector.record("response_time", 0.050, tags={"endpoint": "/api/productos/v2/list"})
 
         # Verify metric was collected
         metrics = collector.get_metrics("response_time")
@@ -53,14 +51,10 @@ class TestPerformanceMetricsCollectionRed:
         collector = MetricsCollector()
 
         # Record cache hit metric
-        collector.record(
-            "cache_hit", 1, tags={"cache": "product_cache", "operation": "read"}
-        )
+        collector.record("cache_hit", 1, tags={"cache": "product_cache", "operation": "read"})
 
         # Record cache miss metric
-        collector.record(
-            "cache_miss", 1, tags={"cache": "product_cache", "operation": "read"}
-        )
+        collector.record("cache_miss", 1, tags={"cache": "product_cache", "operation": "read"})
 
         # Verify both metrics were collected
         hit_metrics = collector.get_metrics("cache_hit")
@@ -76,9 +70,7 @@ class TestPerformanceMetricsCollectionRed:
         collector = MetricsCollector()
 
         # Record some metrics
-        collector.record(
-            "response_time", 0.050, tags={"endpoint": "/api/productos/v2/list"}
-        )
+        collector.record("response_time", 0.050, tags={"endpoint": "/api/productos/v2/list"})
         collector.record("query_time", 0.015, tags={"query": "product_search"})
 
         # Export metrics
@@ -98,15 +90,9 @@ class TestPerformanceMetricsCollectionRed:
         collector = MetricsCollector()
 
         # Record multiple metrics with same tag
-        collector.record(
-            "response_time", 0.050, tags={"endpoint": "/api/productos/v2/list"}
-        )
-        collector.record(
-            "response_time", 0.075, tags={"endpoint": "/api/productos/v2/list"}
-        )
-        collector.record(
-            "response_time", 0.030, tags={"endpoint": "/api/productos/v2/detail"}
-        )
+        collector.record("response_time", 0.050, tags={"endpoint": "/api/productos/v2/list"})
+        collector.record("response_time", 0.075, tags={"endpoint": "/api/productos/v2/list"})
+        collector.record("response_time", 0.030, tags={"endpoint": "/api/productos/v2/detail"})
 
         # Get aggregated metrics
         endpoint_list = collector.get_aggregated_metrics(
@@ -127,7 +113,7 @@ class TestMetricsStatisticsRed:
     """RED Phase: Failing tests for metrics statistics."""
 
     def test_response_time_statistics_calculated(self):
-        """Test that response time statistics are calculated."""
+        ."""Test that response time statistics are calculated."""
         from app.monitoring.metrics import MetricsCollector
 
         collector = MetricsCollector()
@@ -223,7 +209,7 @@ class TestPerformanceDashboardRed:
     """RED Phase: Failing tests for performance dashboard."""
 
     def test_performance_dashboard_generated(self):
-        """Test that performance dashboard is generated."""
+        ."""Test that performance dashboard is generated."""
         from app.monitoring.dashboard import generate_dashboard
 
         dashboard = generate_dashboard()
@@ -281,7 +267,7 @@ class TestMetricsCollectorIntegrationRed:
     """RED Phase: Failing integration tests for metrics collector."""
 
     def test_metrics_collector_tracks_all_operations(self):
-        """Test that metrics collector tracks all database operations."""
+        ."""Test that metrics collector tracks all database operations."""
         from app.monitoring.metrics import MetricsCollector
 
         collector = MetricsCollector()
@@ -310,9 +296,7 @@ class TestMetricsCollectorIntegrationRed:
         collector = MetricsCollector()
 
         # Record some metrics
-        collector.record(
-            "response_time", 0.050, tags={"endpoint": "/api/productos/v2/list"}
-        )
+        collector.record("response_time", 0.050, tags={"endpoint": "/api/productos/v2/list"})
 
         # Verify metric exists
         metrics = collector.get_metrics("response_time")

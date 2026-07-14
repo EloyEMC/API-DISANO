@@ -4,7 +4,7 @@ import pytest
 
 
 def test_sort_criteria_default_sort() -> None:
-    """Test default sorting is codigo asc."""
+    ."""Test default sorting is codigo asc."""
     from app.application.dto.pagination import SortCriteria
 
     criteria = SortCriteria(field="codigo", order="asc")

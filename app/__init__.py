@@ -1,3 +1,3 @@
-"""API Disano - Application Package"""
+"""API Disano - Application Package."""
 
 __version__ = "1.0.0"

@@ -1,7 +1,7 @@
 """Database optimization script using SQLite ANALYZE
 
 Updates query planner statistics for improved performance.
-"""
+."""
 
 from sqlalchemy import text
 from app.infrastructure.database.connection import SessionLocal
@@ -13,7 +13,7 @@ def analyze_database():
 
     ANALYZE collects statistics about tables and indexes to help
     the query optimizer make better decisions about query execution plans.
-    """
+    ."""
 
     session = SessionLocal()
 
@@ -26,10 +26,12 @@ def analyze_database():
 
         # Verify statistics were updated
         result = session.execute(
-            text("""
-            SELECT COUNT(*) as stat_count 
+            text(
+                """
+            SELECT COUNT(*) as stat_count
             FROM sqlite_stat1
-        """)
+        ."""
+            )
         )
         stat_count = result.fetchone()[0]
 
@@ -39,11 +41,13 @@ def analyze_database():
         if stat_count > 0:
             # Show some statistics
             result = session.execute(
-                text("""
-                SELECT tbl, stat 
-                FROM sqlite_stat1 
+                text(
+                    """
+                SELECT tbl, stat
+                FROM sqlite_stat1
                 LIMIT 5
-            """)
+            ."""
+                )
             )
 
             print("📈 Sample statistics:")
@@ -63,7 +67,7 @@ def analyze_database():
 def get_query_planner_info():
     """
     Get query planner information for optimization analysis
-    """
+    ."""
     session = SessionLocal()
 
     try:

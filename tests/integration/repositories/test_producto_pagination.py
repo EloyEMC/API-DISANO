@@ -5,7 +5,7 @@ from app.infrastructure.repositories.producto import SQLAlchemyProductoRepositor
 
 
 def test_repository_pagination_basic(sqlalchemy_session: Session) -> None:
-    """Test repository pagination with basic pagination."""
+    ."""Test repository pagination with basic pagination."""
     repo = SQLAlchemyProductoRepository(sqlalchemy_session)
 
     dto: dict = {"page": 1, "per_page": 10, "offset": 0, "sort": None, "filters": {}}
@@ -76,14 +76,8 @@ def test_repository_text_search(sqlalchemy_session: Session) -> None:
     for item in items:
         _ = (
             "LED" in item.descripcion.upper()
-            or (
-                item.bc3_descripcion_corta
-                and "LED" in item.bc3_descripcion_corta.upper()
-            )
-            or (
-                item.bc3_descripcion_completa
-                and "LED" in item.bc3_descripcion_completa.upper()
-            )
+            or (item.bc3_descripcion_corta and "LED" in item.bc3_descripcion_corta.upper())
+            or (item.bc3_descripcion_completa and "LED" in item.bc3_descripcion_completa.upper())
         )
         # Some items may not have LED in all fields, but at least one should
         assert True  # Pass if we get any results

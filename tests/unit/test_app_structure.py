@@ -3,7 +3,7 @@ Tests Unitarios - Código Simple (Aumenta coverage sin Settings import)
 =========================================================
 
 Tests que cubren código simple SIN importar Settings para evitar bloqueo.
-"""
+."""
 
 import pytest
 

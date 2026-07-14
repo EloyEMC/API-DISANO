@@ -3,7 +3,7 @@ Tests Unitarios - Módulos Security (Sin Client Fixture)
 =========================================================
 
 Tests unitarios de módulos security que NO usan client fixture.
-"""
+."""
 
 import pytest
 from app.security.otp_service import OTPService
@@ -13,7 +13,7 @@ class TestOTPServiceUnit:
     """Tests unitarios del servicio OTP sin client fixture."""
 
     def test_otp_generates_valid_code(self):
-        """Verificar que OTP generado es válido (6 dígitos)."""
+        ."""Verificar que OTP generado es válido (6 dígitos)."""
         otp_service = OTPService()
         email = "test@example.com"
 
@@ -40,7 +40,7 @@ class TestOTPServiceUnit:
         assert otp_service.otp_length == 6
 
     def test_otp_status_returns_metadata(self):
-        """Verificar que get_otp_status retorna metadatos correctos."""
+        ."""Verificar que get_otp_status retorna metadatos correctos."""
         otp_service = OTPService()
         email = "test@example.com"
 

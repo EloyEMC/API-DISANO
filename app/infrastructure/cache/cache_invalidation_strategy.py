@@ -6,7 +6,7 @@ Provides comprehensive cache invalidation logic for different scenarios:
 - Pattern-based invalidation for complex scenarios
 - Event-driven invalidation hooks
 - Transaction-safe cache operations
-"""
+."""
 
 from typing import Dict, List, Any, Optional, Callable
 from app.infrastructure.cache.pagination_cache import get_pagination_cache
@@ -23,7 +23,7 @@ class CacheInvalidationStrategy:
     - Filter-based invalidation (marca, familia, price ranges)
     - Pattern-based invalidation for complex scenarios
     - Event-driven invalidation hooks
-    """
+    ."""
 
     def __init__(self):
         """Initialize cache invalidation strategy."""
@@ -36,7 +36,7 @@ class CacheInvalidationStrategy:
         marca: Optional[str] = None,
         familia: Optional[str] = None,
     ) -> Dict[str, Any]:
-        """
+        ."""
         Invalidate cache entries when a product changes (create, update, delete).
 
         Args:
@@ -88,7 +88,7 @@ class CacheInvalidationStrategy:
 
         Returns:
             Dict with invalidation results
-        """
+        ."""
         results = {
             "familia_name": familia_name,
             "invalidated_familias_count": 0,
@@ -118,7 +118,7 @@ class CacheInvalidationStrategy:
 
         Returns:
             Dict with invalidation results
-        """
+        ."""
         results = {
             "invalidated_bc3_count": 0,
             "status": "success",
@@ -134,9 +134,7 @@ class CacheInvalidationStrategy:
 
         return results
 
-    def invalidate_on_price_range_change(
-        self, marca: Optional[str] = None
-    ) -> Dict[str, Any]:
+    def invalidate_on_price_range_change(self, marca: Optional[str] = None) -> Dict[str, Any]:
         """
         Invalidate cache when prices change significantly.
 
@@ -145,7 +143,7 @@ class CacheInvalidationStrategy:
 
         Returns:
             Dict with invalidation results
-        """
+        ."""
         results = {
             "marca": marca,
             "invalidated_count": 0,
@@ -176,7 +174,7 @@ class CacheInvalidationStrategy:
 
         Returns:
             Dict with invalidation results
-        """
+        ."""
         results = {
             "invalidated_entities": 0,
             "status": "success",
@@ -197,7 +195,7 @@ class CacheInvalidationStrategy:
 
         Returns:
             Dict with cache statistics
-        """
+        ."""
         return {
             "pagination_stats": self.pagination_cache.get_pagination_statistics(),
             "general_stats": self.cache_manager.get_statistics(),
@@ -216,7 +214,7 @@ class CacheInvalidationStrategy:
 
         Returns:
             Dict with invalidation results
-        """
+        ."""
         invalidation_map = {
             "product_change": self.invalidate_on_product_change,
             "familia_change": self.invalidate_on_familia_change,
@@ -244,7 +242,7 @@ class CacheInvalidationStrategy:
 
         Returns:
             List of invalidation results
-        """
+        ."""
         results = []
 
         for event in events:
@@ -267,7 +265,7 @@ class CacheInvalidationStrategy:
 
         Returns:
             Dict with transaction results
-        """
+        ."""
         result = {
             "status": "success",
             "message": "Invalidation completed",
@@ -302,7 +300,7 @@ def get_cache_invalidation_strategy() -> CacheInvalidationStrategy:
 
     Returns:
         Global cache invalidation strategy instance
-    """
+    ."""
     global _global_invalidation_strategy
 
     if _global_invalidation_strategy is None:

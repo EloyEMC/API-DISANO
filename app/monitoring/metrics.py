@@ -7,7 +7,7 @@ from datetime import datetime
 
 
 class MetricsCollector:
-    """
+    ."""
     Performance metrics collector for monitoring application performance.
 
     Collects, analyzes, and exports performance metrics including response times,
@@ -15,15 +15,11 @@ class MetricsCollector:
     """
 
     def __init__(self) -> None:
-        """Initialize the metrics collector."""
+        ."""Initialize the metrics collector."""
         self._metrics: dict[str, list[dict[str, Any]]] = defaultdict(list)
-        self._cache_stats: dict[str, dict[str, int]] = defaultdict(
-            lambda: {"hits": 0, "misses": 0}
-        )
+        self._cache_stats: dict[str, dict[str, int]] = defaultdict(lambda: {"hits": 0, "misses": 0})
 
-    def record(
-        self, metric_name: str, value: float, tags: dict[str, str] | None = None
-    ) -> None:
+    def record(self, metric_name: str, value: float, tags: dict[str, str] | None = None) -> None:
         """
         Record a metric with optional tags.
 
@@ -59,7 +55,7 @@ class MetricsCollector:
 
         Returns:
             List of metric entries
-        """
+        ."""
         return self._metrics.get(metric_name, [])
 
     def get_aggregated_metrics(
@@ -74,7 +70,7 @@ class MetricsCollector:
 
         Returns:
             List of metric entries matching the tags
-        """
+        ."""
         all_metrics = self.get_metrics(metric_name)
 
         if not tags:
@@ -95,7 +91,7 @@ class MetricsCollector:
 
         Returns:
             Dictionary with all metrics organized by name
-        """
+        ."""
         exported = {"timestamp": datetime.now().isoformat(), "metrics": {}}
 
         for metric_name, metrics_list in self._metrics.items():
@@ -123,7 +119,7 @@ class MetricsCollector:
 
         Returns:
             Dictionary with calculated statistics
-        """
+        ."""
         metrics_list = self.get_metrics(metric_name)
 
         if not metrics_list:
@@ -163,13 +159,11 @@ class MetricsCollector:
 
         Returns:
             Dictionary with cache statistics
-        """
+        ."""
         cache_data = self._cache_stats.get(cache_name, {"hits": 0, "misses": 0})
 
         total_operations = cache_data["hits"] + cache_data["misses"]
-        hit_rate = (
-            cache_data["hits"] / total_operations if total_operations > 0 else 0.0
-        )
+        hit_rate = cache_data["hits"] / total_operations if total_operations > 0 else 0.0
 
         return {
             "total_hits": cache_data["hits"],
@@ -189,7 +183,7 @@ class MetricsCollector:
 
         Returns:
             Dictionary with trend analysis
-        """
+        ."""
         metrics_list = self.get_metrics(metric_name)
 
         if len(metrics_list) < 2:
@@ -233,7 +227,7 @@ class MetricsCollector:
 
         Returns:
             Dictionary with all metrics
-        """
+        ."""
         return dict(self._metrics)
 
     def reset(self) -> None:

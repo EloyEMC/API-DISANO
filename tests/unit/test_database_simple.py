@@ -3,7 +3,7 @@ Tests Unitarios - Database Module (Aumenta coverage sin client fixture)
 ==================================================================
 
 Tests que cubren código real de app/database.py SIN usar Settings().
-"""
+."""
 
 import pytest
 import os

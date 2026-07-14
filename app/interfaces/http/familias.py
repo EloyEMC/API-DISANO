@@ -1,7 +1,7 @@
 """HTTP interface for Familia using hexagonal architecture
 
 FastAPI router with dependency injection for families endpoints.
-"""
+."""
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import List
@@ -25,7 +25,7 @@ router = APIRouter(prefix="/familias", tags=["familias"])
 
 
 def get_db_session() -> Session:
-    """DI function to get database session"""
+    """DI function to get database session."""
     session = SessionLocal()
     try:
         yield session
@@ -34,7 +34,7 @@ def get_db_session() -> Session:
 
 
 def get_familia_service(session: Session = Depends(get_db_session)) -> FamiliaService:
-    """DI function to create FamiliaService with repository"""
+    """DI function to create FamiliaService with repository."""
     return FamiliaService(SQLAlchemyFamiliaRepository(session))
 
 
@@ -60,7 +60,7 @@ async def buscar_familias_paginado(
 
     Endpoint público con soporte completo de paginación, ordenamiento y filtros.
     Proporciona metadatos de paginación y caché integrado.
-    """
+    ."""
     try:
         # Build pagination request DTO
         pagination_dto = PaginationRequestDTO(
@@ -98,7 +98,7 @@ async def get_top_bc3_coverage_v2(
     Obtener familias con mayor cobertura BC3 V2.
 
     **V2 New Feature** - Endpoint mejorado con funcionalidad adicional
-    """
+    ."""
     try:
         leaderboard = service.get_bc3_coverage_leaderboard(limit=limit)
         return [
@@ -126,7 +126,7 @@ async def get_familias(
     Get all families with BC3 statistics
 
     **V1 Backward Compatible** - Returns same format as legacy router
-    """
+    ."""
     try:
         familias = service.get_all_familias()
         return [familia.model_dump() for familia in familias[:limit]]
@@ -142,7 +142,7 @@ async def get_familias_stats(
     Get aggregate statistics across all families
 
     **V1 Backward Compatible** - Returns same format as legacy router
-    """
+    ."""
     try:
         stats = service.get_statistics()
         return stats
@@ -159,7 +159,7 @@ async def get_familia_by_nombre(
     Get family by name with statistics
 
     **V1 Backward Compatible** - Returns same format as legacy router
-    """
+    ."""
     try:
         familia = service.get_familia_by_nombre(nombre)
         return familia.model_dump()
@@ -178,7 +178,7 @@ async def get_top_bc3_coverage(
     Get families with highest BC3 coverage
 
     **V2 New Feature** - New endpoint with enhanced functionality
-    """
+    ."""
     try:
         leaderboard = service.get_bc3_coverage_leaderboard(limit=limit)
         return [

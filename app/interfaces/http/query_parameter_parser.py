@@ -2,7 +2,7 @@
 
 Handles parsing, validation, and conversion of HTTP query parameters
 into proper data structures for pagination, sorting, and filtering.
-"""
+."""
 
 from typing import Optional, Dict, List, Any, Union
 from dataclasses import dataclass
@@ -10,7 +10,7 @@ from enum import Enum
 
 
 class SortDirection(str, Enum):
-    """Valid sorting directions"""
+    """Valid sorting directions."""
 
     ASC = "asc"
     DESC = "desc"
@@ -18,7 +18,7 @@ class SortDirection(str, Enum):
 
 @dataclass
 class ParsedSortCriteria:
-    """Parsed sort criteria from query parameter"""
+    """Parsed sort criteria from query parameter."""
 
     field: str
     direction: SortDirection = SortDirection.ASC
@@ -36,7 +36,7 @@ class ParsedSortCriteria:
 
         Raises:
             ValueError: If format is invalid
-        """
+        ."""
         if not sort_string:
             raise ValueError("Sort string cannot be empty")
 
@@ -59,13 +59,13 @@ class ParsedSortCriteria:
         return cls(field=field, direction=direction)
 
     def to_string(self) -> str:
-        """Convert back to string format"""
+        """Convert back to string format."""
         return f"{self.field}:{self.direction.value}"
 
 
 @dataclass
 class ParsedFilters:
-    """Parsed filters from query parameters"""
+    """Parsed filters from query parameters."""
 
     filters: Dict[str, Any]
     errors: List[str]
@@ -82,7 +82,7 @@ class ParsedFilters:
             key: Filter key
             value: Filter value
             validator: Optional validation function
-        """
+        ."""
         if value is None:
             return
 
@@ -96,16 +96,16 @@ class ParsedFilters:
             self.errors.append(f"Invalid filter '{key}': {str(e)}")
 
     def has_errors(self) -> bool:
-        """Check if there are validation errors"""
+        """Check if there are validation errors."""
         return len(self.errors) > 0
 
     def get_errors(self) -> List[str]:
-        """Get validation errors"""
+        """Get validation errors."""
         return self.errors
 
 
 class QueryParameterParser:
-    """Parser for HTTP query parameters in V2 endpoints"""
+    """Parser for HTTP query parameters in V2 endpoints."""
 
     # Valid sort fields for different entity types
     VALID_SORT_FIELDS = {
@@ -153,7 +153,7 @@ class QueryParameterParser:
 
         Raises:
             ValueError: If sort field is invalid for entity type
-        """
+        ."""
         if not sort_string:
             return None
 
@@ -182,14 +182,12 @@ class QueryParameterParser:
 
         Returns:
             ParsedFilters object with filters and any validation errors
-        """
+        ."""
         parsed = ParsedFilters()
 
         # Common filters
         if "buscar" in query_params and query_params["buscar"]:
-            parsed.add_filter(
-                "buscar", query_params["buscar"], cls._validate_search_term
-            )
+            parsed.add_filter("buscar", query_params["buscar"], cls._validate_search_term)
 
         # Entity-specific filters
         if entity_type == "productos":
@@ -203,14 +201,14 @@ class QueryParameterParser:
 
     @classmethod
     def _validate_search_term(cls, term: str) -> str:
-        """Validate search term"""
+        """Validate search term."""
         if not term or not term.strip():
             raise ValueError("Search term cannot be empty")
         return term.strip()
 
     @classmethod
     def _validate_price(cls, price: Union[str, float]) -> float:
-        """Validate price parameter"""
+        """Validate price parameter."""
         try:
             price_value = float(price) if isinstance(price, str) else price
             if price_value < 0:
@@ -221,7 +219,7 @@ class QueryParameterParser:
 
     @classmethod
     def _validate_page_number(cls, page: Union[str, int]) -> int:
-        """Validate page number"""
+        """Validate page number."""
         try:
             page_value = int(page) if isinstance(page, str) else page
             if page_value < 1:
@@ -232,7 +230,7 @@ class QueryParameterParser:
 
     @classmethod
     def _validate_per_page(cls, per_page: Union[str, int]) -> int:
-        """Validate per_page parameter"""
+        """Validate per_page parameter."""
         try:
             per_page_value = int(per_page) if isinstance(per_page, str) else per_page
             if per_page_value < 1:
@@ -245,7 +243,7 @@ class QueryParameterParser:
 
     @classmethod
     def _parse_producto_filters(cls, params: Dict[str, Any], parsed: ParsedFilters):
-        """Parse product-specific filters"""
+        """Parse product-specific filters."""
         if "marca" in params and params["marca"]:
             parsed.add_filter("marca", params["marca"])
 
@@ -269,21 +267,19 @@ class QueryParameterParser:
                 "bc3_has_descripcion_corta",
                 params["bc3_has_descripcion_corta"],
                 lambda x: (
-                    bool(x)
-                    if isinstance(x, bool)
-                    else bool(str(x).lower() in ("true", "1", "yes"))
+                    bool(x) if isinstance(x, bool) else bool(str(x).lower() in ("true", "1", "yes"))
                 ),
             )
 
     @classmethod
     def _parse_familia_filters(cls, params: Dict[str, Any], parsed: ParsedFilters):
-        """Parse familia-specific filters"""
+        """Parse familia-specific filters."""
         # Familia filters are mainly based on search term
         pass  # Currently familia only supports "buscar"
 
     @classmethod
     def _parse_bc3_filters(cls, params: Dict[str, Any], parsed: ParsedFilters):
-        """Parse BC3-specific filters"""
+        """Parse BC3-specific filters."""
         if "bc3_product_type" in params and params["bc3_product_type"]:
             parsed.add_filter("bc3_product_type", params["bc3_product_type"])
 
@@ -295,9 +291,7 @@ class QueryParameterParser:
                 "bc3_has_descripcion_corta",
                 params["bc3_has_descripcion_corta"],
                 lambda x: (
-                    bool(x)
-                    if isinstance(x, bool)
-                    else bool(str(x).lower() in ("true", "1", "yes"))
+                    bool(x) if isinstance(x, bool) else bool(str(x).lower() in ("true", "1", "yes"))
                 ),
             )
 
@@ -309,9 +303,7 @@ class QueryParameterParser:
                 "bc3_has_descripcion_completa",
                 params["bc3_has_descripcion_completa"],
                 lambda x: (
-                    bool(x)
-                    if isinstance(x, bool)
-                    else bool(str(x).lower() in ("true", "1", "yes"))
+                    bool(x) if isinstance(x, bool) else bool(str(x).lower() in ("true", "1", "yes"))
                 ),
             )
 
@@ -331,7 +323,7 @@ class QueryParameterParser:
 
         Raises:
             ValueError: If parameters are invalid
-        """
+        ."""
         validated_page = cls._validate_page_number(page)
         validated_per_page = cls._validate_per_page(per_page)
 
@@ -353,7 +345,7 @@ class QueryParameterParser:
 
         Raises:
             ValueError: If any parameter is invalid
-        """
+        ."""
         validated = {}
 
         # Validate pagination
@@ -364,17 +356,13 @@ class QueryParameterParser:
 
         # Validate sort
         if "sort" in query_params and query_params["sort"]:
-            validated["sort_criteria"] = cls.parse_sort_parameter(
-                query_params["sort"], entity_type
-            )
+            validated["sort_criteria"] = cls.parse_sort_parameter(query_params["sort"], entity_type)
             validated["sort"] = validated["sort_criteria"].to_string()
 
         # Validate filters
         parsed_filters = cls.parse_filters(query_params, entity_type)
         if parsed_filters.has_errors():
-            raise ValueError(
-                f"Filter validation errors: {'; '.join(parsed_filters.get_errors())}"
-            )
+            raise ValueError(f"Filter validation errors: {'; '.join(parsed_filters.get_errors())}")
         validated["filters"] = parsed_filters.filters
 
         # Add remaining parameters

@@ -3,7 +3,7 @@ Factories para tests de API-DISANO
 =========================================
 
 Factories pytest para crear datos de prueba siguiendo BC3-Suite patterns.
-"""
+."""
 
 import random
 from datetime import datetime, timedelta
@@ -16,7 +16,7 @@ class ProductoFactory:
 
     @staticmethod
     def base() -> dict:
-        """
+        ."""
         Producto base con campos mínimos.
 
         Returns:
@@ -47,7 +47,7 @@ class ProductoFactory:
 
         Returns:
             dict: Producto con BC3
-        """
+        ."""
         producto = ProductoFactory.base()
         producto.update(
             {
@@ -68,7 +68,7 @@ class ProductoFactory:
 
         Returns:
             dict: Producto con imagen
-        """
+        ."""
         producto = ProductoFactory.base()
         producto["url_imagen"] = f"https://example.com/images/{producto['codigo']}.jpg"
         producto["img_url"] = producto["url_imagen"]
@@ -81,7 +81,7 @@ class ProductoFactory:
 
         Returns:
             dict: Producto descontinuado
-        """
+        ."""
         producto = ProductoFactory.base()
         producto["descontinuado"] = True
         return producto
@@ -111,11 +111,11 @@ class ProductoFactory:
 
 @dataclass
 class OTPFactory:
-    """Factory para crear datos OTP de prueba."""
+    ."""Factory para crear datos OTP de prueba."""
 
     @staticmethod
     def valid() -> dict:
-        """
+        ."""
         OTP válido con metadatos completos.
 
         Returns:
@@ -136,7 +136,7 @@ class OTPFactory:
 
         Returns:
             dict: OTP expirado
-        """
+        ."""
         return {
             "code": "123456",
             "email": "test@example.com",
@@ -152,7 +152,7 @@ class OTPFactory:
 
         Returns:
             dict: OTP bloqueado
-        """
+        ."""
         return {
             "code": "123456",
             "email": "test@example.com",
@@ -168,7 +168,7 @@ class RequestFactory:
 
     @staticmethod
     def create_producto_get_request(codigo: str | None = None, **kwargs) -> dict:
-        """
+        ."""
         Request GET para producto.
 
         Args:
@@ -233,7 +233,7 @@ class UserFactory:
 
     @staticmethod
     def admin() -> dict:
-        """
+        ."""
         Usuario admin de prueba.
 
         Returns:
@@ -254,7 +254,7 @@ class UserFactory:
 
         Returns:
             dict: Usuario sales
-        """
+        ."""
         return {
             "id": "sales-user-1",
             "email": "sales@example.com",
@@ -270,7 +270,7 @@ class UserFactory:
 
         Returns:
             dict: Usuario coordinador
-        """
+        ."""
         return {
             "id": "coordinador-user-1",
             "email": "coordinador@example.com",

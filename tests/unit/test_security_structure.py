@@ -3,7 +3,7 @@ Tests Unitarios - Security Functions Execution (TDD)
 =======================================================
 
 Tests que ejecutan funciones reales para aumentar coverage.
-"""
+."""
 
 import pytest
 from pathlib import Path

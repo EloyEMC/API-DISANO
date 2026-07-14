@@ -1,7 +1,7 @@
 """Unit tests for Domain Exceptions
 
 Tests validation and not found exceptions.
-"""
+."""
 
 from app.domain.exceptions.not_found import (
     ValidationException,
@@ -11,10 +11,10 @@ from app.domain.exceptions.not_found import (
 
 
 class TestValidationException:
-    """Tests for ValidationException"""
+    """Tests for ValidationException."""
 
     def test_creation_with_field_and_message(self):
-        """Test creating exception with field and message"""
+        """Test creating exception with field and message."""
         exception = ValidationException("codigo", "Código inválido")
 
         assert exception.field == "codigo"
@@ -23,7 +23,7 @@ class TestValidationException:
         assert "Código inválido" in str(exception)
 
     def test_str_representation(self):
-        """Test string representation"""
+        """Test string representation."""
         exception = ValidationException("descripcion", "Mínimo 2 caracteres")
 
         expected = "Validation error on descripcion: Mínimo 2 caracteres"
@@ -31,10 +31,10 @@ class TestValidationException:
 
 
 class TestProductoNotFoundException:
-    """Tests for ProductoNotFoundException"""
+    """Tests for ProductoNotFoundException."""
 
     def test_creation_with_codigo(self):
-        """Test creating exception with product code"""
+        """Test creating exception with product code."""
         exception = ProductoNotFoundException("TEST001")
 
         assert exception.codigo == "TEST001"
@@ -42,7 +42,7 @@ class TestProductoNotFoundException:
         assert "no encontrado" in str(exception).lower()
 
     def test_custom_message(self):
-        """Test creating exception with custom message"""
+        """Test creating exception with custom message."""
         exception = ProductoNotFoundException("TEST002", "Producto eliminado: TEST002")
 
         assert exception.codigo == "TEST002"
@@ -50,10 +50,10 @@ class TestProductoNotFoundException:
 
 
 class TestProductoYaExisteException:
-    """Tests for ProductoYaExisteException"""
+    """Tests for ProductoYaExisteException."""
 
     def test_creation(self):
-        """Test creating exception"""
+        """Test creating exception."""
         exception = ProductoYaExisteException("TEST001")
 
         assert exception.codigo == "TEST001"
@@ -62,16 +62,14 @@ class TestProductoYaExisteException:
         assert "validation error" in str(exception).lower()
 
     def test_default_message(self):
-        """Test default message is used"""
+        """Test default message is used."""
         exception = ProductoYaExisteException("TEST001")
 
         assert "ya existe" in str(exception).lower()
         assert "código" in str(exception).lower()
 
     def test_custom_message(self):
-        """Test custom message"""
-        exception = ProductoYaExisteException(
-            "TEST001", "Código duplicado en importación"
-        )
+        """Test custom message."""
+        exception = ProductoYaExisteException("TEST001", "Código duplicado en importación")
 
         assert "Código duplicado en importación" in str(exception)

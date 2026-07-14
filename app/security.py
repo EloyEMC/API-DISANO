@@ -1,7 +1,7 @@
 """
 Security Module for API DISANO
 Simple API Key authentication and rate limiting
-"""
+."""
 from fastapi import Request, HTTPException, status
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
@@ -17,23 +17,23 @@ from typing import Dict
 rate_limit_store: Dict[str, list] = defaultdict(list)
 
 def get_api_keys():
-    """Get API keys from environment"""
+    """Get API keys from environment."""
     keys = os.getenv("API_KEYS", "")
     if keys:
         return keys.split(",")
     return []
 
 def get_environment():
-    """Get environment from settings"""
+    """Get environment from settings."""
     return os.getenv("ENVIRONMENT", "development")
 
 def get_rate_limit():
-    """Get rate limit from settings"""
+    """Get rate limit from settings."""
     return int(os.getenv("RATE_LIMIT_PER_MINUTE", "30"))
 
 
 def get_admin_keys():
-    """Get admin API keys from environment"""
+    """Get admin API keys from environment."""
     keys = os.getenv("ADMIN_API_KEYS", "")
     if keys:
         return keys.split(",")
@@ -41,7 +41,7 @@ def get_admin_keys():
 
 
 def verify_admin_api_key(request: Request) -> bool:
-    """Verify if request has a valid admin API key"""
+    """Verify if request has a valid admin API key."""
     if get_environment() == "development":
         return True
 
@@ -54,7 +54,7 @@ def verify_admin_api_key(request: Request) -> bool:
 
 
 class APIKeyMiddleware(BaseHTTPMiddleware):
-    """Middleware to validate API Key on every request"""
+    """Middleware to validate API Key on every request."""
 
     # Paths that don't require API key
     EXEMPT_PATHS = {"/", "/health", "/docs", "/redoc", "/openapi.json"}
@@ -99,7 +99,7 @@ class APIKeyMiddleware(BaseHTTPMiddleware):
 
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
-    """Simple rate limiting middleware (30 requests per minute per API key)"""
+    """Simple rate limiting middleware (30 requests per minute per API key)."""
 
     # Paths that don't require rate limiting
     EXEMPT_PATHS = {"/", "/health"}
@@ -158,7 +158,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
 
 class UserAgentMiddleware(BaseHTTPMiddleware):
-    """Block suspicious User-Agents"""
+    """Block suspicious User-Agents."""
 
     BLOCKED_AGENTS = [
         "python-requests",
@@ -189,7 +189,7 @@ class UserAgentMiddleware(BaseHTTPMiddleware):
 
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
-    """Add security headers"""
+    """Add security headers."""
 
     async def dispatch(self, request: Request, call_next):
         response = await call_next(request)

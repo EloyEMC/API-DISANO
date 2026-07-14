@@ -1,14 +1,14 @@
 """Final verification tests for Fase 3 completion
 
 Comprehensive verification that all Fase 3 objectives are met
-"""
+."""
 
 
 class TestFase3Completion:
-    """Comprehensive verification tests for Fase 3 completion"""
+    """Comprehensive verification tests for Fase 3 completion."""
 
     def test_hexagonal_architecture_structure(self):
-        """Test that hexagonal architecture is properly structured"""
+        """Test that hexagonal architecture is properly structured."""
         import os
 
         # Verify hexagonal structure exists
@@ -27,7 +27,7 @@ class TestFase3Completion:
             assert os.path.exists(path), f"Hexagonal path missing: {path}"
 
     def test_no_legacy_files_exist(self):
-        """Test that all legacy files have been removed"""
+        """Test that all legacy files have been removed."""
         import os
 
         legacy_files = [
@@ -42,7 +42,7 @@ class TestFase3Completion:
             assert not os.path.exists(file), f"Legacy file still exists: {file}"
 
     def test_hexagonal_routers_work(self, client):
-        """Test that all hexagonal routers are functional"""
+        """Test that all hexagonal routers are functional."""
         # Productos
         productos_response = client.get("/api/productos/")
         assert productos_response.status_code == 200
@@ -56,7 +56,7 @@ class TestFase3Completion:
         assert bc3_response.status_code == 200
 
     def test_backward_compatibility_maintained(self, client):
-        """Test that backward compatibility is maintained"""
+        """Test that backward compatibility is maintained."""
         # V1 endpoints should still work
         v1_response = client.get("/api/productos/?limit=10")
         assert v1_response.status_code == 200
@@ -66,7 +66,7 @@ class TestFase3Completion:
         assert v2_response.status_code == 200
 
     def test_tdd_methodology_applied(self):
-        """Test that TDD methodology was applied (tests exist)"""
+        """Test that TDD methodology was applied (tests exist)."""
         import os
 
         # Verify test files exist for all major components
@@ -85,7 +85,7 @@ class TestFase3Completion:
             assert os.path.exists(file), f"Test file missing: {file}"
 
     def test_documentation_updated(self):
-        """Test that documentation has been updated"""
+        """Test that documentation has been updated."""
         import os
 
         # Verify hexagonal architecture documentation exists
@@ -95,7 +95,7 @@ class TestFase3Completion:
             assert os.path.exists(doc), f"Documentation missing: {doc}"
 
     def test_dependency_injection_used(self):
-        """Test that dependency injection is properly used"""
+        """Test that dependency injection is properly used."""
         import inspect
         import app.interfaces.http.productos as productos_http
         import app.interfaces.http.familias as familias_http
@@ -109,7 +109,7 @@ class TestFase3Completion:
             assert has_di, f"{module.__name__} doesn't use dependency injection"
 
     def test_no_sqlite3_in_hexagonal_code(self):
-        """Test that hexagonal code doesn't use sqlite3 directly"""
+        """Test that hexagonal code doesn't use sqlite3 directly."""
         import inspect
         import app.domain.services.producto as producto_service
         import app.domain.services.familia as familia_service
@@ -117,19 +117,15 @@ class TestFase3Completion:
         # Domain services should not use sqlite3
         for module in [producto_service, familia_service]:
             source = inspect.getsource(module)
-            assert "sqlite3" not in source.lower(), (
-                f"{module.__name__} uses sqlite3 directly"
-            )
+            assert "sqlite3" not in source.lower(), f"{module.__name__} uses sqlite3 directly"
 
     def test_domain_entities_exist(self):
-        """Test that domain entities exist and are properly structured"""
+        """Test that domain entities exist and are properly structured."""
         from app.domain.entities.producto import ProductoEntity
         from app.domain.entities.familia import FamiliaEntity
 
         # Verify entities have required attributes
-        producto = ProductoEntity(
-            codigo="TEST", descripcion="Test", marca="Test", pvp=99.99
-        )
+        producto = ProductoEntity(codigo="TEST", descripcion="Test", marca="Test", pvp=99.99)
         assert producto.codigo == "TEST"
         assert producto.descripcion == "Test"
 
@@ -144,7 +140,7 @@ class TestFase3Completion:
         assert familia.get_bc3_coverage_percentage() == 50.0
 
     def test_all_phases_complete(self):
-        """Test that all Fase 3 phases are complete"""
+        """Test that all Fase 3 phases are complete."""
         import os
 
         # Verify artifacts from all phases exist

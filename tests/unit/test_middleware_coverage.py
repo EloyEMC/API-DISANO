@@ -3,7 +3,7 @@ Tests Unitarios - Middleware (TDD approach)
 ==========================================
 
 Tests que aumentan coverage de app/middleware.py.
-"""
+."""
 
 import pytest
 
