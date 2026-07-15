@@ -1,4 +1,5 @@
-"""Rate Limiting Middleware with Redis.
+"""
+Rate Limiting Middleware with Redis
 ====================================
 
 Redis-based rate limiting for shared state across Gunicorn workers.
@@ -34,7 +35,8 @@ class RedisRateLimitMiddleware(BaseHTTPMiddleware):
     """Rate limiting middleware using Redis for shared state."""
 
     def __init__(self, app):
-        """Initialize with Redis client (in-memory fallback)."""super().__init__(app).
+        """Initialize with Redis client (in-memory fallback)."""
+        super().__init__(app)
         self.rate_limit_store: dict[str, list] = defaultdict(list)
         self.rate_limit_per_client = settings.rate_limit_per_client
         self.rate_limit_global = settings.rate_limit_global
@@ -53,7 +55,8 @@ class RedisRateLimitMiddleware(BaseHTTPMiddleware):
         # )
 
     async def dispatch(self, request: Request, call_next):
-        """Rate limit the request."""path = request.url.path.
+        """Rate limit the request."""
+        path = request.url.path
 
         # Skip rate limiting for exempt paths
         if path in self.EXEMPT_PATHS:
@@ -107,7 +110,8 @@ class RedisRateLimitMiddleware(BaseHTTPMiddleware):
             if result["exceeded"]:
                 # Rate limit exceeded
                 pass
-        """current_time = time.time().
+        """
+        current_time = time.time()
         minute_ago = current_time - 60
 
         # Clean old requests (older than 1 minute)
@@ -165,7 +169,8 @@ class RedisRateLimitMiddleware(BaseHTTPMiddleware):
     #     return f"ratelimit:{client_id}"
 
     # def _increment_redis_count(self, client_id: str) -> int:
-    #     """Increment request count in Redis."""#     key = self._get_redis_key(client_id).
+    #     """Increment request count in Redis."""
+    #     key = self._get_redis_key(client_id)
     #     count = self.redis_client.incr(key)
     #     self.redis_client.expire(key, 60)  # Expire after 1 minute
     #     return count

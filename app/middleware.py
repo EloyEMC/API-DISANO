@@ -1,6 +1,8 @@
-"""Security Module for API DISANO.
+"""
+Security Module for API DISANO
 Simple API Key authentication and rate limiting
-."""from fastapi import Request, HTTPException, status.
+."""
+from fastapi import Request, status
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 import os
