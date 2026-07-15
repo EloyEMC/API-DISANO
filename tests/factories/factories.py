@@ -3,7 +3,7 @@ Factories para tests de API-DISANO
 =========================================
     
 Factories pytest para crear datos de prueba siguiendo BC3-Suite patterns.
-""""
+"""
 
 import random
 from datetime import datetime, timedelta

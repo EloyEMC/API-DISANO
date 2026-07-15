@@ -12,7 +12,6 @@ Fixtures compartidos para tests siguiendo patrones BC3-Suite:
 BC3-Suite Reference: /Users/eloymartinezcuesta/Documents/BC3-Suite/tests/conftest.py
 """
 
-
 import pytest
 from pathlib import Path
 from typing import Generator
