@@ -1,5 +1,4 @@
-"""
-API REST de Disano - Productos y Tarifas
+"""API REST de Disano - Productos y Tarifas.
 FastAPI con SQLite - CON SEGURIDAD
 ."""
 
@@ -72,8 +71,7 @@ register_exception_handlers(app)
 # Endpoint raíz
 @app.get("/")
 async def root():
-    """Endpoint raíz - Información de la API."""
-    endpoints = {
+    """Endpoint raíz - Información de la API."""endpoints = {.
         "productos": "/api/productos",
         "familias": "/api/familias",
         "bc3": "/api/bc3",

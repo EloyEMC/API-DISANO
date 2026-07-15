@@ -1,5 +1,4 @@
-"""
-Sistema de logging estructurado con loguru
+"""Sistema de logging estructurado con loguru.
 Registra accesos, errores y eventos de seguridad
 ."""
 
@@ -15,8 +14,7 @@ def setup_logging():
     """
     Configura loguru para toda la aplicación.
     Llamar al inicio de main.py
-    ."""
-    # Remover handler default de stderr
+    ."""# Remover handler default de stderr.
     logger.remove()
 
     # Crear directorio de logs si no existe

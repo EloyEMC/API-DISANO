@@ -1,5 +1,4 @@
-"""
-Sistema de Rate Limiting usando slowapi
+"""Sistema de Rate Limiting usando slowapi.
 =======================================
 
 Este módulo implementa limitación de tasa de peticiones para prevenir:
@@ -60,8 +59,7 @@ def get_api_key_identifier(request: Request) -> str:
 
         # Sin API key:
         "ip:192.168.1.1"
-    """
-    # Intentar obtener API key del header
+    """# Intentar obtener API key del header.
     api_key = request.headers.get(settings.api_key_header)
 
     if api_key:
@@ -113,8 +111,7 @@ async def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded):
                 "retry_after": 45
             }
         }
-    """
-    identifier = get_api_key_identifier(request)
+    """identifier = get_api_key_identifier(request).
     logger.warning(
         f"Rate limit excedido por {identifier}. " f"Límite: {settings.rate_limit_per_client}/minute"
     )
