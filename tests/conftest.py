@@ -88,7 +88,9 @@ connection_module.engine = create_engine(
 connection_module.SessionFactory = sessionmaker(
     bind=connection_module.engine, expire_on_commit=False
 )
-connection_module.SessionLocal = sessionmaker(bind=connection_module.engine, expire_on_commit=False)
+connection_module.SessionLocal = sessionmaker(
+    bind=connection_module.engine, expire_on_commit=False
+)
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -100,7 +102,7 @@ def test_db_path() -> Path:
         Path: Ruta a testing/testing.db
 
     ⚠️ IMPORTANTE: Nunca usa database/tarifa_disano.db desde tests!
-"""
+    """
     return Path(__file__).parent.parent / "testing" / "testing.db"
 
 
@@ -116,7 +118,7 @@ def db_session(test_db_path: Path) -> Generator[sqlite3.Connection, None, None]:
 
     Yields:
         sqlite3.Connection: Sesión de base de datos
-"""
+    """
     connection = sqlite3.connect(test_db_path)
     connection.row_factory = sqlite3.Row
     yield connection
@@ -137,7 +139,7 @@ def sqlalchemy_session(
 
     Yields:
         Session: SQLAlchemy ORM session
-"""
+    """
     from sqlalchemy import create_engine
     from sqlalchemy.orm import sessionmaker
     from app.infrastructure.models.producto_clean import (
@@ -165,7 +167,7 @@ def client() -> TestClient:
 
     Returns:
         TestClient: Cliente HTTP para testing
-"""
+    """
     from app.main import app
 
     return TestClient(app)

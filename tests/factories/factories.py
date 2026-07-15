@@ -1,7 +1,7 @@
 """
 Factories para tests de API-DISANO
 =========================================
-    
+
 Factories pytest para crear datos de prueba siguiendo BC3-Suite patterns.
 """
 
@@ -53,7 +53,9 @@ class ProductoFactory:
             {
                 "bc3_descripcion_corta": f"Test BC3 {producto['codigo']}",
                 "bc3_descripcion_larga": f"Descripción larga BC3 de {producto['codigo']}",
-                "bc3_product_type": random.choice(["Lámpara", "Conmutador", "Cable", "Material"]),
+                "bc3_product_type": random.choice(
+                    ["Lámpara", "Conmutador", "Cable", "Material"]
+                ),
                 "bc3_descripcion_completa": f"BC3 completo: {producto['descripcion']}",
                 "bc3_processed_at": datetime.now().isoformat(),
                 "url_imagen": f"https://example.com/images/{producto['codigo']}.jpg",
