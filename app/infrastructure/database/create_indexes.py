@@ -1,4 +1,4 @@
-"""Database index creation script
+"""Database index creation script."
 
 Creates strategic indexes on the base productos table for query optimization.
 ."""

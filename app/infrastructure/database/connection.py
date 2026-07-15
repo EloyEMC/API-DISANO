@@ -1,4 +1,4 @@
-"""Database connection management
+"""Database connection management."
 
 SQLAlchemy engine and session management for infrastructure layer.
 ."""

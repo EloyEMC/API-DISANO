@@ -1,4 +1,4 @@
-"""Database optimization script using SQLite ANALYZE
+"""Database optimization script using SQLite ANALYZE."
 
 Updates query planner statistics for improved performance.
 ."""
