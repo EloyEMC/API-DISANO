@@ -39,7 +39,7 @@ settings = get_settings()
 
 
 def get_api_key_identifier(request: Request) -> str:
-    ."""
+    """
     Genera un identificador único para rate limiting basado en API key.
 
     Si hay API key, usa la key como identificador (rate limiting por cliente).
@@ -116,7 +116,8 @@ async def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded):
     """
     identifier = get_api_key_identifier(request)
     logger.warning(
-        f"Rate limit excedido por {identifier}. " f"Límite: {settings.rate_limit_per_client}/minute"
+        f"Rate limit excedido por {identifier}. "
+        f"Límite: {settings.rate_limit_per_client}/minute"
     )
     log_security_event(
         event_type="rate_limit",

@@ -118,14 +118,18 @@ class UnauthorizedException(APIException):
     """Unauthorized (401) - Authentication required."""
 
     def __init__(self, message: str = "Authentication required"):
-        super().__init__(message=message, error_code=ErrorCode.UNAUTHORIZED, status_code=401)
+        super().__init__(
+            message=message, error_code=ErrorCode.UNAUTHORIZED, status_code=401
+        )
 
 
 class ForbiddenException(APIException):
     """Forbidden (403) - Insufficient permissions."""
 
     def __init__(self, message: str = "Insufficient permissions"):
-        super().__init__(message=message, error_code=ErrorCode.FORBIDDEN, status_code=403)
+        super().__init__(
+            message=message, error_code=ErrorCode.FORBIDDEN, status_code=403
+        )
 
 
 class NotFoundException(APIException):
@@ -156,8 +160,12 @@ class ConflictException(APIException):
 class ValidationException(APIException):
     """Validation Error (422) - Invalid data format."""
 
-    def __init__(self, message: str, validation_errors: Optional[Dict[str, Any]] = None):
-        details = {"validation_errors": validation_errors} if validation_errors else None
+    def __init__(
+        self, message: str, validation_errors: Optional[Dict[str, Any]] = None
+    ):
+        details = (
+            {"validation_errors": validation_errors} if validation_errors else None
+        )
         super().__init__(
             message=message,
             error_code=ErrorCode.VALIDATION_ERROR,
@@ -194,7 +202,9 @@ class PaginationException(APIException):
         else:
             error_code = ErrorCode.VALIDATION_ERROR
 
-        super().__init__(message=message, error_code=error_code, status_code=400, details=details)
+        super().__init__(
+            message=message, error_code=error_code, status_code=400, details=details
+        )
 
 
 class SortException(APIException):
@@ -214,10 +224,14 @@ class SortException(APIException):
             details["valid_fields"] = valid_fields
 
         error_code = (
-            ErrorCode.INVALID_SORT_FIELD if invalid_field else ErrorCode.INVALID_SORT_DIRECTION
+            ErrorCode.INVALID_SORT_FIELD
+            if invalid_field
+            else ErrorCode.INVALID_SORT_DIRECTION
         )
 
-        super().__init__(message=message, error_code=error_code, status_code=400, details=details)
+        super().__init__(
+            message=message, error_code=error_code, status_code=400, details=details
+        )
 
 
 class FilterException(APIException):
@@ -276,7 +290,9 @@ class ProductNotFoundException(NotFoundException):
     """Product not found."""
 
     def __init__(self, codigo: str):
-        super().__init__(message=f"Producto '{codigo}' no encontrado", resource_type="producto")
+        super().__init__(
+            message=f"Producto '{codigo}' no encontrado", resource_type="producto"
+        )
         self.details = {"codigo": codigo}
 
 
@@ -296,7 +312,9 @@ class FamiliaNotFoundException(NotFoundException):
     """Familia not found."""
 
     def __init__(self, nombre: str):
-        super().__init__(message=f"Familia '{nombre}' no encontrada", resource_type="familia")
+        super().__init__(
+            message=f"Familia '{nombre}' no encontrada", resource_type="familia"
+        )
         self.details = {"nombre": nombre}
 
 
@@ -421,7 +439,9 @@ class ServiceUnavailableException(APIException):
     """Service Unavailable (503)."""
 
     def __init__(self, message: str = "Service temporarily unavailable"):
-        super().__init__(message=message, error_code=ErrorCode.SERVICE_UNAVAILABLE, status_code=503)
+        super().__init__(
+            message=message, error_code=ErrorCode.SERVICE_UNAVAILABLE, status_code=503
+        )
 
 
 # ==============================================================================

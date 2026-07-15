@@ -48,14 +48,18 @@ def get_producto_service(session: Session = Depends(get_db_session)) -> Producto
 async def buscar_productos_paginado(
     page: int = Query(1, ge=1, description="Número de página"),
     per_page: int = Query(20, ge=1, le=100, description="Resultados por página"),
-    sort: str = Query(None, description="Criterio de ordenamiento (ej: codigo:asc, pvp:desc)"),
+    sort: str = Query(
+        None, description="Criterio de ordenamiento (ej: codigo:asc, pvp:desc)"
+    ),
     buscar: str = Query(None, description="Término de búsqueda"),
     marca: str = Query(None, description="Filtrar por marca"),
     familia: str = Query(None, description="Filtrar por familia"),
     pvp_min: float = Query(None, ge=0, description="Precio mínimo"),
     pvp_max: float = Query(None, ge=0, description="Precio máximo"),
     bc3_product_type: str = Query(None, description="Tipo de producto BC3"),
-    bc3_has_descripcion_corta: bool = Query(None, description="Filtrar por descripción corta BC3"),
+    bc3_has_descripcion_corta: bool = Query(
+        None, description="Filtrar por descripción corta BC3"
+    ),
     service: ProductoService = Depends(get_producto_service),
 ) -> dict:
     """
@@ -108,15 +112,21 @@ async def buscar_productos_paginado(
 @router.get("/v2/list")
 async def buscar_productos_list_v2(
     page: int = Query(1, ge=1, description="Número de página"),
-    limit: int = Query(20, ge=1, le=100, description="Resultados por página (alias de per_page)"),
-    sort: str = Query(None, description="Criterio de ordenamiento (ej: codigo:asc, pvp:desc)"),
+    limit: int = Query(
+        20, ge=1, le=100, description="Resultados por página (alias de per_page)"
+    ),
+    sort: str = Query(
+        None, description="Criterio de ordenamiento (ej: codigo:asc, pvp:desc)"
+    ),
     buscar: str = Query(None, description="Término de búsqueda"),
     marca: str = Query(None, description="Filtrar por marca"),
     familia: str = Query(None, description="Filtrar por familia"),
     pvp_min: float = Query(None, ge=0, description="Precio mínimo"),
     pvp_max: float = Query(None, ge=0, description="Precio máximo"),
     bc3_product_type: str = Query(None, description="Tipo de producto BC3"),
-    bc3_has_descripcion_corta: bool = Query(None, description="Filtrar por descripción corta BC3"),
+    bc3_has_descripcion_corta: bool = Query(
+        None, description="Filtrar por descripción corta BC3"
+    ),
     service: ProductoService = Depends(get_producto_service),
 ) -> list:
     """
@@ -155,7 +165,9 @@ async def buscar_productos_list_v2(
 
         return response_dict.get("items", [])
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error en búsqueda: {str(e)}") from None
+        raise HTTPException(
+            status_code=500, detail=f"Error en búsqueda: {str(e)}"
+        ) from None
 
 
 # ============================================

@@ -187,7 +187,9 @@ class QueryParameterParser:
 
         # Common filters
         if "buscar" in query_params and query_params["buscar"]:
-            parsed.add_filter("buscar", query_params["buscar"], cls._validate_search_term)
+            parsed.add_filter(
+                "buscar", query_params["buscar"], cls._validate_search_term
+            )
 
         # Entity-specific filters
         if entity_type == "productos":
@@ -267,7 +269,9 @@ class QueryParameterParser:
                 "bc3_has_descripcion_corta",
                 params["bc3_has_descripcion_corta"],
                 lambda x: (
-                    bool(x) if isinstance(x, bool) else bool(str(x).lower() in ("true", "1", "yes"))
+                    bool(x)
+                    if isinstance(x, bool)
+                    else bool(str(x).lower() in ("true", "1", "yes"))
                 ),
             )
 
@@ -291,7 +295,9 @@ class QueryParameterParser:
                 "bc3_has_descripcion_corta",
                 params["bc3_has_descripcion_corta"],
                 lambda x: (
-                    bool(x) if isinstance(x, bool) else bool(str(x).lower() in ("true", "1", "yes"))
+                    bool(x)
+                    if isinstance(x, bool)
+                    else bool(str(x).lower() in ("true", "1", "yes"))
                 ),
             )
 
@@ -303,7 +309,9 @@ class QueryParameterParser:
                 "bc3_has_descripcion_completa",
                 params["bc3_has_descripcion_completa"],
                 lambda x: (
-                    bool(x) if isinstance(x, bool) else bool(str(x).lower() in ("true", "1", "yes"))
+                    bool(x)
+                    if isinstance(x, bool)
+                    else bool(str(x).lower() in ("true", "1", "yes"))
                 ),
             )
 
@@ -356,13 +364,17 @@ class QueryParameterParser:
 
         # Validate sort
         if "sort" in query_params and query_params["sort"]:
-            validated["sort_criteria"] = cls.parse_sort_parameter(query_params["sort"], entity_type)
+            validated["sort_criteria"] = cls.parse_sort_parameter(
+                query_params["sort"], entity_type
+            )
             validated["sort"] = validated["sort_criteria"].to_string()
 
         # Validate filters
         parsed_filters = cls.parse_filters(query_params, entity_type)
         if parsed_filters.has_errors():
-            raise ValueError(f"Filter validation errors: {'; '.join(parsed_filters.get_errors())}")
+            raise ValueError(
+                f"Filter validation errors: {'; '.join(parsed_filters.get_errors())}"
+            )
         validated["filters"] = parsed_filters.filters
 
         # Add remaining parameters

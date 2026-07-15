@@ -42,7 +42,7 @@ settings = get_settings()
 
 
 class ScrapingDetector:
-    ."""
+    """
     Detector de patrones de scraping usando análisis heurístico.
 
     Mantiene estadísticas en memoria de peticiones por IP/API key.
@@ -62,7 +62,7 @@ class ScrapingDetector:
     """
 
     def __init__(self):
-        """Inicializa el detector con estructuras de datos vacías."""
+        """Inicializa el detector con estructuras de datos vacías"""
         # Historial de peticiones: {identifier: [(timestamp, endpoint), ...]}
         self.request_history: Dict[str, List[tuple]] = defaultdict(list)
 
@@ -112,7 +112,8 @@ class ScrapingDetector:
         for identifier in list(self.request_history.keys()):
             # Filtrar peticiones recientes
             self.request_history[identifier] = [
-                (ts, endpoint) for ts, endpoint in self.request_history[identifier]
+                (ts, endpoint)
+                for ts, endpoint in self.request_history[identifier]
                 if ts > cutoff_time
             ]
 
@@ -139,7 +140,9 @@ class ScrapingDetector:
         # Calcular intervalos entre peticiones
         intervals = []
         for i in range(1, min(len(request_history), 20)):
-            interval = (request_history[i][0] - request_history[i-1][0]).total_seconds()
+            interval = (
+                request_history[i][0] - request_history[i - 1][0]
+            ).total_seconds()
             intervals.append(interval)
 
         # Si todos los intervalos son < 200ms y muy consistentes
@@ -147,8 +150,10 @@ class ScrapingDetector:
             avg_interval = sum(intervals) / len(intervals)
             if avg_interval < 0.2:  # Menos de 200ms promedio
                 # Calcular desviación estándar
-                variance = sum((x - avg_interval) ** 2 for x in intervals) / len(intervals)
-                std_dev = variance ** 0.5
+                variance = sum((x - avg_interval) ** 2 for x in intervals) / len(
+                    intervals
+                )
+                std_dev = variance**0.5
                 # Si desviación estándar es baja → timing perfecto (scraper)
                 if std_dev < 0.05:
                     return True
@@ -174,8 +179,9 @@ class ScrapingDetector:
         # Extraer códigos de producto de endpoints
         # Ejemplo: /v1/internal/products/11253300
         import re
+
         product_codes = []
-        pattern = r'/products/(\d+)'
+        pattern = r"/products/(\d+)"
 
         for _, endpoint in request_history[-50:]:  # Últimas 50 peticiones
             match = re.search(pattern, endpoint)
@@ -190,7 +196,7 @@ class ScrapingDetector:
         if len(product_codes) >= 20:
             # Calcular diferencias entre códigos consecutivos
             differences = [
-                product_codes[i+1] - product_codes[i]
+                product_codes[i + 1] - product_codes[i]
                 for i in range(len(product_codes) - 1)
             ]
 
@@ -213,7 +219,7 @@ class ScrapingDetector:
 
         Returns:
             bool: True si no tiene referer (suspicioso)
-        ."""
+        """
         referer = request.headers.get("referer", "")
         return not referer
 
@@ -277,7 +283,9 @@ class ScrapingDetector:
             patterns["no_referer"] = 10
 
         # 4. Demasiadas peticiones en poco tiempo (máximo 20 puntos)
-        recent_count = len([ts for ts, _ in history if (current_time - ts).total_seconds() < 60])
+        recent_count = len(
+            [ts for ts, _ in history if (current_time - ts).total_seconds() < 60]
+        )
         if recent_count > 50:
             score += 20
             reasons.append(f"Too many requests: {recent_count}/minute")
@@ -298,14 +306,14 @@ class ScrapingDetector:
             log_security_event(
                 event_type="scraping_detected",
                 details=f"Score: {score} - {', '.join(reasons)}",
-                api_key=identifier.split(":")[1] if "apikey:" in identifier else "none"
+                api_key=identifier.split(":")[1] if "apikey:" in identifier else "none",
             )
 
         return {
             "score": score,
             "is_suspicious": is_suspicious,
             "reasons": reasons,
-            "patterns": patterns
+            "patterns": patterns,
         }
 
     def is_suspicious_request(self, request: Request) -> bool:
@@ -319,7 +327,7 @@ class ScrapingDetector:
 
         Returns:
             bool: True si la petición parece ser de un scraper
-        ."""
+        """
         if not settings.scraping_detection_enabled:
             return False
 
@@ -339,7 +347,9 @@ class ScrapingDetector:
         if analysis["score"] >= 90:
             ban_duration = settings.ban_duration_first_offense
             self.banned_ips[client_ip] = datetime.now().timestamp() + ban_duration
-            logger.warning(f"IP baneada temporalmente: {client_ip} - Duración: {ban_duration}s")
+            logger.warning(
+                f"IP baneada temporalmente: {client_ip} - Duración: {ban_duration}s"
+            )
 
         return analysis["is_suspicious"]
 
@@ -361,7 +371,7 @@ class ScrapingDetector:
             - /api/products/export
             - /api/all-products
             - /sitemap.xml
-        ."""
+        """
         honeypot_paths = [
             "/api/sitemap.xml",
             "/api/products/export",
@@ -372,18 +382,20 @@ class ScrapingDetector:
 
         if any(request.url.path.startswith(path) for path in honeypot_paths):
             client_ip = request.client.host if request.client else "unknown"
-            self.honeypot_accesses[client_ip] = self.honeypot_accesses.get(client_ip, 0) + 1
+            self.honeypot_accesses[client_ip] = (
+                self.honeypot_accesses.get(client_ip, 0) + 1
+            )
 
             logger.warning(f"HONEYPOT accedido: {request.url.path} desde {client_ip}")
             log_security_event(
                 event_type="honeypot_access",
                 details=f"Honeypot: {request.url.path}",
-                api_key="none"
+                api_key="none",
             )
 
             # Banear permanentemente tras 2 accesos a honeypot
             if self.honeypot_accesses[client_ip] >= 2:
-                self.banned_ips[client_ip] = float('inf')  # Ban permanente
+                self.banned_ips[client_ip] = float("inf")  # Ban permanente
                 logger.error(f"IP baneada permanentemente por honeypot: {client_ip}")
 
             return True
@@ -403,8 +415,9 @@ class ScrapingDetector:
 
         # Filtrar bans expirados
         active_bans = [
-            ip for ip, expiry in self.banned_ips.items()
-            if expiry > current_time or expiry == float('inf')
+            ip
+            for ip, expiry in self.banned_ips.items()
+            if expiry > current_time or expiry == float("inf")
         ]
 
         return active_bans
@@ -418,7 +431,7 @@ class ScrapingDetector:
 
         Returns:
             bool: True si la IP estaba baneada y fue desbloqueada
-        ."""
+        """
         if ip in self.banned_ips:
             del self.banned_ips[ip]
             logger.info(f"IP desbloqueada: {ip}")

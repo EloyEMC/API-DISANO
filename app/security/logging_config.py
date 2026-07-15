@@ -14,7 +14,7 @@ def setup_logging():
     """
     Configura loguru para toda la aplicación.
     Llamar al inicio de main.py
-    ."""# Remover handler default de stderr.
+    ."""  # Remover handler default de stderr.
     logger.remove()
 
     # Crear directorio de logs si no existe
@@ -36,7 +36,7 @@ def setup_logging():
         level=settings.log_level,
         colorize=True,
         backtrace=True,
-        diagnose=True
+        diagnose=True,
     )
 
     # File handler (rotación y retención)
@@ -49,7 +49,7 @@ def setup_logging():
         compression="zip",  # Comprimir logs antiguos
         backtrace=True,
         diagnose=True,
-        encoding="utf-8"
+        encoding="utf-8",
     )
 
     # File handler específico para seguridad (security.log)
@@ -61,7 +61,7 @@ def setup_logging():
             level="WARNING",  # Solo WARNING y superior
             rotation="100 MB",
             retention="30 days",
-            compression="zip"
+            compression="zip",
         )
 
     logger.info(f"Logging configurado - Nivel: {settings.log_level}")
@@ -71,11 +71,7 @@ def setup_logging():
 
 
 def log_access_request(
-    api_key: str,
-    endpoint: str,
-    method: str,
-    client_ip: str,
-    status_code: int
+    api_key: str, endpoint: str, method: str, client_ip: str, status_code: int
 ):
     """
     Registra un acceso a la API.
@@ -94,10 +90,7 @@ def log_access_request(
 
 
 def log_security_event(
-    event_type: str,
-    details: str,
-    client_ip: str = "unknown",
-    api_key: str = "none"
+    event_type: str, details: str, client_ip: str = "unknown", api_key: str = "none"
 ):
     """
     Registra un evento de seguridad.

@@ -14,7 +14,9 @@ class PaginationMetadata(BaseModel):
     has_previous: bool = Field(..., description="Has previous page")
 
     @classmethod
-    def from_query(cls, total_items: int, current_page: int, per_page: int) -> "PaginationMetadata":
+    def from_query(
+        cls, total_items: int, current_page: int, per_page: int
+    ) -> "PaginationMetadata":
         """Create metadata from query results."""
         total_pages = (total_items + per_page - 1) // per_page
         return cls(

@@ -219,7 +219,9 @@ def get_pool_optimization_recommendations() -> list[str]:
             "StaticPool is optimal for SQLite development. "
             "For production with PostgreSQL/MySQL, use QueuePool."
         )
-        recommendations.append("Consider increasing pool_size for production: 10-20 connections.")
+        recommendations.append(
+            "Consider increasing pool_size for production: 10-20 connections."
+        )
         recommendations.append("Set max_overflow to 5-10 for burst traffic handling.")
         recommendations.append(
             "Configure pool_recycle to 1800 seconds (30 minutes) for production."
@@ -242,12 +244,15 @@ def get_pool_optimization_recommendations() -> list[str]:
 
         if pool_size < 10:
             recommendations.append(
-                "Pool size is relatively small. " "Consider increasing to 10-20 for production."
+                "Pool size is relatively small. "
+                "Consider increasing to 10-20 for production."
             )
 
     # General recommendations
     recommendations.append("Enable pool_pre_ping for connection health checks.")
-    recommendations.append("Set reasonable pool_timeout (30 seconds) to prevent hanging.")
+    recommendations.append(
+        "Set reasonable pool_timeout (30 seconds) to prevent hanging."
+    )
 
     return recommendations
 
@@ -267,7 +272,9 @@ def create_production_engine(database_url: str | None = None) -> Engine:
     # Get database URL or use settings
     if database_url is None:
         settings = get_settings()
-        database_url = getattr(settings, "database_url", f"sqlite:///{get_database_path()}")
+        database_url = getattr(
+            settings, "database_url", f"sqlite:///{get_database_path()}"
+        )
 
     # Ensure we have a valid database URL
     if database_url is None:

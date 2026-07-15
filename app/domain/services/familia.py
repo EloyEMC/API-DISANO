@@ -83,7 +83,9 @@ class FamiliaService:
 
         return sorted_familias[:limit]
 
-    def buscar_familias_paginado(self, request_dto: PaginationRequestDTO) -> PaginatedResponseDTO:
+    def buscar_familias_paginado(
+        self, request_dto: PaginationRequestDTO
+    ) -> PaginatedResponseDTO:
         """Search families with pagination, sorting, and filtering.
 
         Args:
@@ -120,7 +122,9 @@ class FamiliaService:
             items=items,
             pagination=metadata,
             filters_applied={
-                key: value for key, value in dto_dict["filters"].items() if value is not None
+                key: value
+                for key, value in dto_dict["filters"].items()
+                if value is not None
             },
             sorting_applied={
                 "field": request_dto.sort.split(":")[0] if request_dto.sort else None,

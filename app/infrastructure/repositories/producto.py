@@ -41,7 +41,11 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
         Raises:
             ProductoNotFoundException: If product doesn't exist
         ."""
-        model = self.session.query(ProductoModel).filter(ProductoModel.codigo == codigo).first()
+        model = (
+            self.session.query(ProductoModel)
+            .filter(ProductoModel.codigo == codigo)
+            .first()
+        )
 
         if not model:
             raise ProductoNotFoundException(codigo)
@@ -142,7 +146,11 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
         Returns:
             bool: True if deleted, False if not found
         """
-        model = self.session.query(ProductoModel).filter(ProductoModel.codigo == codigo).first()
+        model = (
+            self.session.query(ProductoModel)
+            .filter(ProductoModel.codigo == codigo)
+            .first()
+        )
 
         if not model:
             return False
@@ -237,7 +245,9 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
             query = query.filter(ProductoModel.pvp <= filters["pvp_max"])
 
         if filters.get("bc3_product_type"):
-            query = query.filter(ProductoModel.bc3_product_type == filters["bc3_product_type"])
+            query = query.filter(
+                ProductoModel.bc3_product_type == filters["bc3_product_type"]
+            )
 
         if filters.get("bc3_has_descripcion_corta") is not None:
             if filters["bc3_has_descripcion_corta"]:

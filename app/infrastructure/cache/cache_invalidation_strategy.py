@@ -134,7 +134,9 @@ class CacheInvalidationStrategy:
 
         return results
 
-    def invalidate_on_price_range_change(self, marca: Optional[str] = None) -> Dict[str, Any]:
+    def invalidate_on_price_range_change(
+        self, marca: Optional[str] = None
+    ) -> Dict[str, Any]:
         """
         Invalidate cache when prices change significantly.
 

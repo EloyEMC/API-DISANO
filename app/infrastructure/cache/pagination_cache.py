@@ -64,7 +64,9 @@ class PaginationCacheWrapper:
 
         # Add filters to fingerprint in sorted order
         if filters:
-            sorted_filters = sorted((k, str(v)) for k, v in filters.items() if v is not None)
+            sorted_filters = sorted(
+                (k, str(v)) for k, v in filters.items() if v is not None
+            )
             fingerprint_parts.extend(f"{k}={v}" for k, v in sorted_filters)
 
         fingerprint = "|".join(fingerprint_parts)
@@ -141,7 +143,9 @@ class PaginationCacheWrapper:
         Returns:
             True if successful, False otherwise
         ."""
-        cache_type = self._cache_type_mapping.get(entity_type, f"pagination_{entity_type}")
+        cache_type = self._cache_type_mapping.get(
+            entity_type, f"pagination_{entity_type}"
+        )
         pattern = f"{self.cache_manager._safe_key(cache_type)}:*"
 
         count = self.cache_manager.invalidate_pattern(pattern)
@@ -160,7 +164,9 @@ class PaginationCacheWrapper:
         Returns:
             Number of cache entries invalidated
         ."""
-        cache_type = self._cache_type_mapping.get(entity_type, f"pagination_{entity_type}")
+        cache_type = self._cache_type_mapping.get(
+            entity_type, f"pagination_{entity_type}"
+        )
         base_pattern = f"{self.cache_manager._safe_key(cache_type)}:*"
         target_pattern = f"*{filter_field}={filter_value}*"
 
@@ -244,14 +250,18 @@ class PaginationCacheWrapper:
             for entity_type in self._cache_type_mapping.values():
                 type_counts[entity_type] = 0
                 for key in self.cache_manager.memory_cache.keys():
-                    if key.startswith(f"api_disano:{self.cache_manager._safe_key(entity_type)}:"):
+                    if key.startswith(
+                        f"api_disano:{self.cache_manager._safe_key(entity_type)}:"
+                    ):
                         type_counts[entity_type] += 1
 
             pagination_stats["pagination_type_counts"] = type_counts
 
         return pagination_stats
 
-    def warm_pagination_cache(self, entity_type: str, warming_queries: List[Dict[str, Any]]) -> int:
+    def warm_pagination_cache(
+        self, entity_type: str, warming_queries: List[Dict[str, Any]]
+    ) -> int:
         """Warm cache with frequently accessed pagination queries.
 
         Args:
@@ -300,7 +310,9 @@ class PaginationCacheWrapper:
         Returns:
             Dictionary with entity-specific cache statistics
         ."""
-        cache_type = self._cache_type_mapping.get(entity_type, f"pagination_{entity_type}")
+        cache_type = self._cache_type_mapping.get(
+            entity_type, f"pagination_{entity_type}"
+        )
 
         # Count entries for this entity type
         entity_count = 0

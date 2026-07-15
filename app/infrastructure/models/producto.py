@@ -228,7 +228,8 @@ class ProductoModel(Base):
             pvp=self.PVP_26_01_26,
             bc3_descripcion_corta=self.bc3_descripcion_corta or self.descripcion_corta,
             bc3_product_type=self.bc3_product_type,
-            bc3_descripcion_completa=self.bc3_descripcion_completa or self.bc3_descripcion_larga,
+            bc3_descripcion_completa=self.bc3_descripcion_completa
+            or self.bc3_descripcion_larga,
             created_at=self.bc3_processed_at,
             updated_at=self.bc3_processed_at,
         )

@@ -1,4 +1,5 @@
-"""Two-Factor Authentication (2FA) Service.
+"""
+Two-Factor Authentication (2FA) Service
 ========================================
 
 OTP-based 2FA for admin endpoints following BC3-Suite security patterns.
@@ -35,16 +36,17 @@ settings = get_settings()
 
 
 class OTPService:
-    """Service for OTP generation, delivery, and verification."""
+    """Service for OTP generation, delivery, and verification"""
 
     def __init__(self):
-        """Initialize OTP service with in-memory store."""self.otp_store: dict[str, dict] = defaultdict(dict).
+        """Initialize OTP service with in-memory store"""
+        self.otp_store: dict[str, dict] = defaultdict(dict)
         self.otp_expiry_minutes = 10
         self.max_attempts = 3
         self.otp_length = 6
 
     def generate_otp(self, email: str) -> str:
-        ."""
+        """
         Generate a 6-digit OTP and send it via email.
 
         Args:
@@ -106,7 +108,8 @@ class OTPService:
                 pass
             else:
                 print(error)
-        """if not email or not code:.
+        """
+        if not email or not code:
             return False, "Email and code are required"
 
         otp_data = self.otp_store.get(email)
@@ -162,7 +165,8 @@ class OTPService:
 
         Example:
             otp_service._send_otp_email("admin@example.com", "123456")
-        """# TODO: Integrate with Flask-Mail.
+        """
+        # TODO: Integrate with Flask-Mail
         # from flask_mail import Message, mail
         #
         # msg = Message(
@@ -185,8 +189,11 @@ class OTPService:
         Example:
             removed = otp_service.cleanup_expired()
             print(f"Removed {removed} expired OTPs")
-        """now = datetime.now().
-        expired_emails = [email for email, data in self.otp_store.items() if now > data["expiry"]]
+        """
+        now = datetime.now()
+        expired_emails = [
+            email for email, data in self.otp_store.items() if now > data["expiry"]
+        ]
 
         for email in expired_emails:
             del self.otp_store[email]
@@ -207,7 +214,8 @@ class OTPService:
         Example:
             status = otp_service.get_otp_status("admin@example.com")
             print(status)
-        """otp_data = self.otp_store.get(email).
+        """
+        otp_data = self.otp_store.get(email)
         if not otp_data:
             return None
 

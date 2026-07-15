@@ -166,12 +166,18 @@ async def get_bc3_stats_v2(
 
         total = len(all_products)
         con_descripcion_corta = sum(1 for p in all_products if p.bc3_descripcion_corta)
-        con_descripcion_larga = sum(1 for p in all_products if p.bc3_descripcion_completa)
+        con_descripcion_larga = sum(
+            1 for p in all_products if p.bc3_descripcion_completa
+        )
         con_tipo_producto = sum(1 for p in all_products if p.bc3_product_type)
 
         # Calculate percentages
-        porcentaje_desc_corta = (con_descripcion_corta / total * 100) if total > 0 else 0
-        porcentaje_desc_larga = (con_descripcion_larga / total * 100) if total > 0 else 0
+        porcentaje_desc_corta = (
+            (con_descripcion_corta / total * 100) if total > 0 else 0
+        )
+        porcentaje_desc_larga = (
+            (con_descripcion_larga / total * 100) if total > 0 else 0
+        )
         porcentaje_tipo = (con_tipo_producto / total * 100) if total > 0 else 0
 
         # Count by product type
@@ -216,7 +222,9 @@ async def get_bc3_stats(
 
         total = len(all_products)
         con_descripcion_corta = sum(1 for p in all_products if p.bc3_descripcion_corta)
-        con_descripcion_larga = sum(1 for p in all_products if p.bc3_descripcion_completa)
+        con_descripcion_larga = sum(
+            1 for p in all_products if p.bc3_descripcion_completa
+        )
         con_tipo_producto = sum(1 for p in all_products if p.bc3_product_type)
 
         return {

@@ -38,9 +38,13 @@ class ProductoEntity(BaseModel):
     pvp: Optional[float] = Field(None, ge=0, description="Public sales price")
 
     # BC3 Suite integration fields
-    bc3_descripcion_corta: Optional[str] = Field(None, description="BC3 Suite short description")
+    bc3_descripcion_corta: Optional[str] = Field(
+        None, description="BC3 Suite short description"
+    )
     bc3_product_type: Optional[str] = Field(None, description="BC3 Suite product type")
-    bc3_descripcion_completa: Optional[str] = Field(None, description="BC3 Suite full description")
+    bc3_descripcion_completa: Optional[str] = Field(
+        None, description="BC3 Suite full description"
+    )
 
     # Audit fields
     created_at: Optional[datetime] = Field(None, description="Creation timestamp")

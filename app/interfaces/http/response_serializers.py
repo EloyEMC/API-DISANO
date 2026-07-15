@@ -83,7 +83,10 @@ class ResponseSerializer:
         Returns:
             List of serialized entities as dictionaries
         """
-        return [cls.serialize_entity(entity, entity_type, exclude_fields) for entity in entities]
+        return [
+            cls.serialize_entity(entity, entity_type, exclude_fields)
+            for entity in entities
+        ]
 
     @classmethod
     def serialize_pagination_metadata(cls, metadata: Any) -> Dict[str, Any]:
@@ -127,7 +130,9 @@ class ResponseSerializer:
 
         # Serialize pagination metadata
         if hasattr(paginated_response, "pagination"):
-            pagination = cls.serialize_pagination_metadata(paginated_response.pagination)
+            pagination = cls.serialize_pagination_metadata(
+                paginated_response.pagination
+            )
         else:
             pagination = {}
 
@@ -308,7 +313,9 @@ class ProductoResponseSerializer(ResponseSerializer):
     ]
 
     @classmethod
-    def serialize_producto(cls, producto: Any, detailed: bool = False) -> Dict[str, Any]:
+    def serialize_producto(
+        cls, producto: Any, detailed: bool = False
+    ) -> Dict[str, Any]:
         """
         Serialize a producto entity with field ordering
 

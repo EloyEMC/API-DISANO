@@ -79,7 +79,9 @@ class APIKeyMiddleware(BaseHTTPMiddleware):
         if not api_key and not admin_api_key:
             return JSONResponse(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                content={"detail": "API Key is required. Use X-API-Key or X-Admin-API-Key header."},
+                content={
+                    "detail": "API Key is required. Use X-API-Key or X-Admin-API-Key header."
+                },
             )
 
         # Validate regular API key if provided
@@ -96,7 +98,8 @@ class APIKeyMiddleware(BaseHTTPMiddleware):
 
         # If we get here, neither key was valid
         return JSONResponse(
-            status_code=status.HTTP_401_UNAUTHORIZED, content={"detail": "Invalid API Key"}
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={"detail": "Invalid API Key"},
         )
 
 
@@ -122,7 +125,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
         # Filter out old requests
         rate_limit_store[client_id] = [
-            req_time for req_time in rate_limit_store[client_id] if req_time > minute_ago
+            req_time
+            for req_time in rate_limit_store[client_id]
+            if req_time > minute_ago
         ]
 
         # Check rate limit
@@ -183,7 +188,9 @@ class UserAgentMiddleware(BaseHTTPMiddleware):
             if blocked in user_agent:
                 return JSONResponse(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    content={"detail": "Access denied. Suspicious User-Agent detected."},
+                    content={
+                        "detail": "Access denied. Suspicious User-Agent detected."
+                    },
                 )
 
         return await call_next(request)
@@ -209,6 +216,8 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
         # HSTS (only in production with HTTPS)
         if get_environment() == "production":
-            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+            response.headers[
+                "Strict-Transport-Security"
+            ] = "max-age=31536000; includeSubDomains"
 
         return response

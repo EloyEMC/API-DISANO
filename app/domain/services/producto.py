@@ -82,7 +82,9 @@ class ProductoService:
         # 4. Persist through repository
         return self.repository.save(producto)
 
-    def actualizar_producto(self, codigo: str, dto: ProductoUpdateDTO) -> ProductoEntity:
+    def actualizar_producto(
+        self, codigo: str, dto: ProductoUpdateDTO
+    ) -> ProductoEntity:
         """
         Update existing product.
 
@@ -166,7 +168,9 @@ class ProductoService:
         # 2. Delete
         return self.repository.delete(codigo)
 
-    def get_all_productos(self, skip: int = 0, limit: int = 100) -> list[ProductoEntity]:
+    def get_all_productos(
+        self, skip: int = 0, limit: int = 100
+    ) -> list[ProductoEntity]:
         """
         Get all products with pagination.
 
@@ -188,7 +192,9 @@ class ProductoService:
         """
         return self.repository.count_total()
 
-    def buscar_productos_paginado(self, request_dto: PaginationRequestDTO) -> PaginatedResponseDTO:
+    def buscar_productos_paginado(
+        self, request_dto: PaginationRequestDTO
+    ) -> PaginatedResponseDTO:
         """Search products with pagination, sorting, and filtering.
 
         Args:

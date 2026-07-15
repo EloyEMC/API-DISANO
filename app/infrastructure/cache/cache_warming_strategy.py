@@ -60,7 +60,9 @@ class CacheWarmingStrategy:
                         }
                     )
 
-            warmed = self.pagination_cache.warm_pagination_cache("productos", warming_queries)
+            warmed = self.pagination_cache.warm_pagination_cache(
+                "productos", warming_queries
+            )
             results["warmed_queries"] = warmed
 
         except Exception as e:
@@ -104,7 +106,9 @@ class CacheWarmingStrategy:
                         }
                     )
 
-            warmed = self.pagination_cache.warm_pagination_cache("familias", warming_queries)
+            warmed = self.pagination_cache.warm_pagination_cache(
+                "familias", warming_queries
+            )
             results["warmed_queries"] = warmed
 
         except Exception as e:
@@ -144,7 +148,9 @@ class CacheWarmingStrategy:
                     }
                 )
 
-            warmed = self.pagination_cache.warm_pagination_cache(entity_type, warming_queries)
+            warmed = self.pagination_cache.warm_pagination_cache(
+                entity_type, warming_queries
+            )
             results["warmed_filters"] = warmed
 
         except Exception as e:
@@ -191,7 +197,9 @@ class CacheWarmingStrategy:
 
         return results
 
-    def warm_price_ranges(self, price_ranges: Optional[List[tuple]] = None) -> Dict[str, Any]:
+    def warm_price_ranges(
+        self, price_ranges: Optional[List[tuple]] = None
+    ) -> Dict[str, Any]:
         """
         Warm cache for common price range filters.
 

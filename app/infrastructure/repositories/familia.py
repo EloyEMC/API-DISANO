@@ -37,12 +37,12 @@ class SQLAlchemyFamiliaRepository(FamiliaRepositoryInterface):
             self.session.query(
                 ProductoModel.familia,
                 func.count(ProductoModel.codigo).label("total_productos"),
-                func.sum(case((ProductoModel.bc3_descripcion_corta.isnot(None), 1), else_=0)).label(
-                    "con_bc3"
-                ),
-                func.sum(case((ProductoModel.descripcion_corta.isnot(None), 1), else_=0)).label(
-                    "con_imagen"
-                ),
+                func.sum(
+                    case((ProductoModel.bc3_descripcion_corta.isnot(None), 1), else_=0)
+                ).label("con_bc3"),
+                func.sum(
+                    case((ProductoModel.descripcion_corta.isnot(None), 1), else_=0)
+                ).label("con_imagen"),
             )
             .filter(ProductoModel.familia.isnot(None))
             .group_by(ProductoModel.familia)
@@ -80,12 +80,12 @@ class SQLAlchemyFamiliaRepository(FamiliaRepositoryInterface):
             self.session.query(
                 ProductoModel.familia,
                 func.count(ProductoModel.codigo).label("total_productos"),
-                func.sum(case((ProductoModel.bc3_descripcion_corta.isnot(None), 1), else_=0)).label(
-                    "con_bc3"
-                ),
-                func.sum(case((ProductoModel.descripcion_corta.isnot(None), 1), else_=0)).label(
-                    "con_imagen"
-                ),
+                func.sum(
+                    case((ProductoModel.bc3_descripcion_corta.isnot(None), 1), else_=0)
+                ).label("con_bc3"),
+                func.sum(
+                    case((ProductoModel.descripcion_corta.isnot(None), 1), else_=0)
+                ).label("con_imagen"),
             )
             .filter(ProductoModel.familia == nombre)
             .group_by(ProductoModel.familia)
@@ -118,14 +118,16 @@ class SQLAlchemyFamiliaRepository(FamiliaRepositoryInterface):
         total_familias = total_familias_query.scalar() or 0
 
         # Total products
-        total_productos = self.session.query(func.count(ProductoModel.codigo)).scalar() or 0
+        total_productos = (
+            self.session.query(func.count(ProductoModel.codigo)).scalar() or 0
+        )
 
         # BC3 coverage
         bc3_coverage_query = self.session.query(
             func.count(ProductoModel.codigo).label("total"),
-            func.sum(case((ProductoModel.bc3_descripcion_corta.isnot(None), 1), else_=0)).label(
-                "con_bc3"
-            ),
+            func.sum(
+                case((ProductoModel.bc3_descripcion_corta.isnot(None), 1), else_=0)
+            ).label("con_bc3"),
         )
         result = bc3_coverage_query.first()
 
@@ -202,12 +204,12 @@ class SQLAlchemyFamiliaRepository(FamiliaRepositoryInterface):
             self.session.query(
                 ProductoModel.familia,
                 func.count(ProductoModel.codigo).label("total_productos"),
-                func.sum(case((ProductoModel.bc3_descripcion_corta.isnot(None), 1), else_=0)).label(
-                    "con_bc3"
-                ),
-                func.sum(case((ProductoModel.descripcion_corta.isnot(None), 1), else_=0)).label(
-                    "con_imagen"
-                ),
+                func.sum(
+                    case((ProductoModel.bc3_descripcion_corta.isnot(None), 1), else_=0)
+                ).label("con_bc3"),
+                func.sum(
+                    case((ProductoModel.descripcion_corta.isnot(None), 1), else_=0)
+                ).label("con_imagen"),
             )
             .filter(ProductoModel.familia.isnot(None))
             .group_by(ProductoModel.familia)
@@ -217,7 +219,9 @@ class SQLAlchemyFamiliaRepository(FamiliaRepositoryInterface):
         filters = dto.get("filters", {})
         if filters.get("buscar"):
             search_pattern = f"%{filters['buscar']}%"
-            base_query = base_query.filter(or_(ProductoModel.familia.ilike(search_pattern)))
+            base_query = base_query.filter(
+                or_(ProductoModel.familia.ilike(search_pattern))
+            )
 
         # Get total count BEFORE pagination
         total_count = base_query.count()

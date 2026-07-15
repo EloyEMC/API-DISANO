@@ -173,7 +173,9 @@ class CacheManager:
             # Try Redis first if available
             if self.redis_client:
                 try:
-                    self.redis_client.setex(key, ttl or self.get_ttl("default"), json.dumps(value))
+                    self.redis_client.setex(
+                        key, ttl or self.get_ttl("default"), json.dumps(value)
+                    )
                     return True
                 except Exception:
                     # Fall through to memory cache

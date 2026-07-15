@@ -116,7 +116,9 @@ class RedisRateLimitMiddleware(BaseHTTPMiddleware):
 
         # Clean old requests (older than 1 minute)
         self.rate_limit_store[client_id] = [
-            req_time for req_time in self.rate_limit_store[client_id] if req_time > minute_ago
+            req_time
+            for req_time in self.rate_limit_store[client_id]
+            if req_time > minute_ago
         ]
 
         # Check per-client rate limit
@@ -138,7 +140,9 @@ class RedisRateLimitMiddleware(BaseHTTPMiddleware):
         all_requests = sum(len(requests) for requests in self.rate_limit_store.values())
 
         if all_requests >= self.rate_limit_global:
-            logger.warning(f"Global rate limit exceeded: {all_requests}/{self.rate_limit_global}")
+            logger.warning(
+                f"Global rate limit exceeded: {all_requests}/{self.rate_limit_global}"
+            )
             return {
                 "exceeded": True,
                 "message": f"Global rate limit exceeded. Maximum {self.rate_limit_global} requests per minute.",

@@ -40,7 +40,7 @@ settings = get_settings()
 
 
 def is_user_agent_allowed(request: Request) -> bool:
-    ."""
+    """
     Verifica si el User-Agent de la petición está permitido.
 
     Comprueba si el User-Agent coincide con alguno de los patrones bloqueados.
@@ -69,7 +69,7 @@ def is_user_agent_allowed(request: Request) -> bool:
         log_security_event(
             event_type="blocked_user_agent",
             details="No User-Agent provided",
-            api_key="none"
+            api_key="none",
         )
         return False
 
@@ -86,7 +86,7 @@ def is_user_agent_allowed(request: Request) -> bool:
             log_security_event(
                 event_type="blocked_user_agent",
                 details=f"Blocked pattern: {blocked_pattern}",
-                api_key="none"
+                api_key="none",
             )
             return False
 
@@ -123,7 +123,7 @@ def get_user_agent_info(request: Request) -> dict:
         "user_agent": user_agent,
         "is_browser": False,
         "is_bot": False,
-        "type": "unknown"
+        "type": "unknown",
     }
 
     if not user_agent:

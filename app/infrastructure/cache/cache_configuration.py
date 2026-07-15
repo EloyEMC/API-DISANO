@@ -231,7 +231,9 @@ class CacheConfigurationManager:
             DeploymentEnvironment.PRODUCTION: CacheConfigurationManager.get_production_config(),
         }
 
-        return config_map.get(environment, CacheConfigurationManager.get_development_config())
+        return config_map.get(
+            environment, CacheConfigurationManager.get_development_config()
+        )
 
     @staticmethod
     def auto_tune_configuration(
