@@ -12,7 +12,7 @@ import sqlite3
 from pathlib import Path
 
 # IMPORT DIRECTO PARA COVERAGE (pytest_configure no funciona)
-from app.routers.productos import map_row_to_v2
+from app.interfaces.http.productos import map_row_to_v2
 
 
 @pytest.fixture
@@ -30,7 +30,7 @@ def db_connection():
 @pytest.fixture
 def app_with_router():
     """Create FastAPI app with productos router."""
-    from app.routers.productos import router
+    from app.interfaces.http.productos import router
     from app.main import app
 
     app = FastAPI()
@@ -84,7 +84,7 @@ def test_map_row_to_v2_numeric_fields(db_connection):
 
 def test_map_row_to_v2_bool_fields(db_connection):
     """Test boolean fields are handled correctly."""
-    from app.routers.productos import map_row_to_v2
+    from app.interfaces.http.productos import map_row_to_v2
 
     # Necesitamos SELECT * para todas las columnas que map_row_to_v2 espera
     row = db_connection.execute("SELECT * FROM productos LIMIT 1").fetchone()

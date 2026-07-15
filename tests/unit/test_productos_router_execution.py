@@ -9,7 +9,7 @@ Mock de sqlite3.Row para aumentar coverage sin Settings import.
 import pytest
 
 # Force import for coverage measurement
-from app.routers.productos import map_row_to_v2
+from app.interfaces.http.productos import map_row_to_v2
 
 
 class TestMapRowToV2Function:
@@ -21,7 +21,7 @@ class TestMapRowToV2Function:
         """
         # Arrange & Act - Importar función
         try:
-            from app.routers.productos import map_row_to_v2
+            from app.interfaces.http.productos import map_row_to_v2
 
             # Assert - Verificar que es callable
             assert callable(map_row_to_v2)
@@ -111,7 +111,7 @@ class TestProductosRouterResponseStructure:
     def test_v1_response_structure_exists(self):
         """GREEN: Verificar que modelo V1 existe."""
         try:
-            from app.routers.productos import ProductoV1
+            from app.interfaces.http.productos import ProductoV1
 
             assert hasattr(ProductoV1, "__fields__")
         except ImportError as e:
@@ -120,7 +120,7 @@ class TestProductosRouterResponseStructure:
     def test_v2_response_structure_exists(self):
         """GREEN: Verificar que modelo V2 existe."""
         try:
-            from app.routers.productos import ProductoV2
+            from app.interfaces.http.productos import ProductoV2
 
             assert hasattr(ProductoV2, "__fields__")
         except ImportError as e:
@@ -128,7 +128,7 @@ class TestProductosRouterResponseStructure:
 
     def test_v2_response_has_bc3_fields(self):
         """GREEN: Verificar que modelo V2 tiene campos BC3."""
-        from app.routers.productos import ProductoV2
+        from app.interfaces.http.productos import ProductoV2
 
         bc3_fields = [
             "bc3_descripcion_corta",
@@ -142,7 +142,7 @@ class TestProductosRouterResponseStructure:
 
     def test_v2_response_has_dimensions_fields(self):
         """GREEN: Verificar que modelo V2 tiene campos de dimensiones."""
-        from app.routers.productos import ProductoV2
+        from app.interfaces.http.productos import ProductoV2
 
         dimension_fields = [
             "longitud_m",
