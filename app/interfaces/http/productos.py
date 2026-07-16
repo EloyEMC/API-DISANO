@@ -3,8 +3,9 @@
 FastAPI router with dependency injection for product endpoints.
 ."""
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from typing import List
+from fastapi import APIRouter, Depends, HTTPException, Query, Body
+from typing import List, Optional
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.domain.services.producto import ProductoService
@@ -14,6 +15,27 @@ from app.application.dto.pagination import (
     PaginationRequestDTO,
 )
 from app.interfaces.http.response_serializers import ProductoResponseSerializer
+
+
+# ============================================
+# REQUEST MODELS
+# ============================================
+
+
+class BuscarProductosRequest(BaseModel):
+    """Request model for POST /buscar-productos endpoint.
+
+    Compatible with BC3-Suite frontend JSON payload.
+    """
+
+    termino: Optional[str] = None
+    limit: int = 20
+    marca: Optional[str] = None
+    familia: Optional[str] = None
+    con_bc3: bool = False
+
+    class Config:
+        extra = "forbid"  # Reject unexpected fields
 
 
 router = APIRouter(prefix="/productos", tags=["productos"])
@@ -41,6 +63,77 @@ def get_producto_service(session: Session = Depends(get_db_session)) -> Producto
 # ============================================
 # V2 ENDPOINTS (Públicos, sin autenticación)
 # ============================================
+
+
+# POST ENDPOINT FOR FRONTEND COMPATIBILITY
+@router.post("/buscar-productos")
+async def buscar_productos_post(
+    request: BuscarProductosRequest,
+    service: ProductoService = Depends(get_producto_service),
+) -> dict:
+    """
+    POST endpoint for product search (BC3-Suite frontend compatibility).
+
+    Wrapper of /v2/paginated that accepts JSON body.
+    Maps frontend parameters → backend V2 format.
+    Returns response in frontend-expected format.
+
+    **Frontend Compatibility**:
+    - Accepts: {"termino": "toledo", "limit": 20, "marca": "", "familia": ""}
+    - Returns: {"status": "success", "resultados": [...], "count": N, "total": M}
+
+    **Backend Reuse**:
+    - Calls: ProductoService.buscar_productos_paginado()
+    - Uses: ProductoResponseSerializer.serialize_paginated_response()
+    """
+    try:
+        # Map frontend parameters → backend V2 format
+        filters = {}
+        if request.termino:
+            filters["buscar"] = request.termino
+        if request.marca:
+            filters["marca"] = request.marca
+        if request.familia:
+            filters["familia"] = request.familia
+        if request.con_bc3:
+            # Filter by BC3 product types
+            filters["bc3_product_type"] = "luminaria"
+
+        # Build pagination DTO (always page 1 for frontend search)
+        pagination_dto = PaginationRequestDTO(
+            page=1,
+            per_page=min(request.limit, 100),  # Cap at 100
+        )
+
+        # Call service with pagination and filters
+        paginated_response = service.buscar_productos_paginado(
+            pagination_dto, filters
+        )
+
+        # Serialize response using ProductoResponseSerializer
+        response_dict = ProductoResponseSerializer.serialize_paginated_response(
+            paginated_response, "producto"
+        )
+
+        # Map backend response → frontend-expected format
+        frontend_response = {
+            "status": "success",
+            "resultados": response_dict.get("items", []),
+            "count": len(response_dict.get("items", [])),
+            "total": response_dict.get("total", 0),
+        }
+
+        return frontend_response
+
+    except Exception as e:
+        # Return error in frontend-expected format
+        return {
+            "status": "error",
+            "resultados": [],
+            "count": 0,
+            "total": 0,
+            "error": str(e),
+}
 
 
 # PAGINATED ENDPOINT FIRST (to avoid route conflict)
@@ -94,7 +187,7 @@ async def buscar_productos_paginado(
             filters["bc3_has_descripcion_corta"] = bc3_has_descripcion_corta
 
         # Call service method with pagination
-        paginated_response = service.buscar_productos_paginado(pagination_dto)
+        paginated_response = service.buscar_productos_paginado(pagination_dto, filters)
 
         # Serialize response using ProductoResponseSerializer
         response_dict = ProductoResponseSerializer.serialize_paginated_response(
@@ -158,7 +251,7 @@ async def buscar_productos_list_v2(
         if bc3_has_descripcion_corta is not None:
             filters["bc3_has_descripcion_corta"] = bc3_has_descripcion_corta
 
-        paginated_response = service.buscar_productos_paginado(pagination_dto)
+        paginated_response = service.buscar_productos_paginado(pagination_dto, filters)
         response_dict = ProductoResponseSerializer.serialize_paginated_response(
             paginated_response, "producto"
         )
