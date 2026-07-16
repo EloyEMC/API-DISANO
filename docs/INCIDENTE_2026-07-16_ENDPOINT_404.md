@@ -201,19 +201,6 @@ curl -X POST https://api.eloymartinezcuesta.com/api/productos/buscar-productos \
 
 ### Commits
 
-**BC3-Suite (5a901a6e):**
-```
-fix: actualizar endpoint búsqueda de productos a /api/productos/buscar-productos
-
-- Cambiar endpoint de /api/buscar-productos a /api/productos/buscar-productos
-- Eliminar warning deprecated de buscarProductos
-- Mapeo directo a ApiDisanoEnhanced.buscarProductos sin console.warn
-- Compatible con API DISANO producción (endpoint POST funcional)
-
-Resuelve: 404 Not Found al buscar productos en frontend
-Validado: Toledo devuelve 20 resultados con imágenes
-```
-
 **API-DISANO (4139a54):**
 ```
 feat: agregar endpoint POST /api/productos/buscar-productos y modelo con campos de imagen
@@ -228,15 +215,28 @@ Resuelve: Frontend BC3-Suite muestra 0 resultados
 Validado: Toledo devuelve 20 productos con imágenes en producción
 ```
 
-### Archivos modificados
+**BC3-Suite (5a901a6e):**
+```
+fix: actualizar endpoint búsqueda de productos a /api/productos/buscar-productos
 
-**BC3-Suite:**
-- `app/static/js/api-disano-helper.js` (581 insertions, 534 deletions)
+- Cambiar endpoint de /api/buscar-productos a /api/productos/buscar-productos
+- Eliminar warning deprecated de buscarProductos
+- Mapeo directo a ApiDisanoEnhanced.buscarProductos sin console.warn
+- Compatible con API DISANO producción (endpoint POST funcional)
+
+Resuelve: 404 Not Found al buscar productos en frontend
+Validado: Toledo devuelve 20 resultados con imágenes
+```
+
+### Archivos modificados
 
 **API-DISANO:**
 - `app/interfaces/http/productos.py` (endpoint POST)
 - `app/infrastructure/models/producto_clean.py` (campos imagen)
 - `database/tarifa_disano.db` (vista productos_clean)
+
+**BC3-Suite:**
+- `app/static/js/api-disano-helper.js` (endpoint + warning fix)
 
 ---
 
@@ -269,8 +269,12 @@ Validado: Toledo devuelve 20 productos con imágenes en producción
 ## 📚 REFERENCIAS
 
 **GitHub:**
-- BC3-Suite commit: https://github.com/EloyEMC/BC3-Suite/commit/5a901a6e
 - API-DISANO commit: https://github.com/EloyEMC/API-DISANO/commit/4139a54
+- BC3-Suite commit: https://github.com/EloyEMC/BC3-Suite/commit/5a901a6e
+
+**Issues:**
+- API-DISANO Issue #2: https://github.com/EloyEMC/API-DISANO/issues/2
+- BC3-Suite Issue #8: https://github.com/EloyEMC/BC3-Suite/issues/8
 
 **Documentación relacionada:**
 - `README.md` - API documentation
@@ -284,7 +288,7 @@ Validado: Toledo devuelve 20 productos con imágenes en producción
 ---
 
 **Creado:** 2026-07-16 12:00 UTC  
-**Última actualización:** 2026-07-16 12:00 UTC  
+**Última actualización:** 2026-07-16 12:40 UTC  
 **Responsable:** Eloy Martínez Cuesta  
-**Estado:** 🟢 RESOLTO Y VALIDADO EN PRODUCCIÓN
+**Estado:** 🟢 RESUELTO Y VALIDADO EN PRODUCCIÓN
 
