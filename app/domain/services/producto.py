@@ -193,7 +193,7 @@ class ProductoService:
         return self.repository.count_total()
 
     def buscar_productos_paginado(
-        self, request_dto: PaginationRequestDTO
+        self, request_dto: PaginationRequestDTO, filters: dict | None = None
     ) -> PaginatedResponseDTO:
         """Search products with pagination, sorting, and filtering.
 
@@ -209,7 +209,7 @@ class ProductoService:
             "per_page": request_dto.per_page,
             "offset": request_dto.offset,
             "sort": request_dto.sort,
-            "filters": {},
+            "filters": filters if filters else {},
         }
 
         # Call repository pagination method

@@ -308,8 +308,16 @@ class ProductoResponseSerializer(ResponseSerializer):
         "familia",
         "pvp",
         "bc3_descripcion_corta",
+        "bc3_descripcion_completa",
+        "bc3_descripcion_larga",
         "bc3_product_type",
-        "imagen_url",
+        "bc3_processed_at",
+        "codigo_web",
+        "referencia",
+        "ean_13",
+        "imagen",
+        "img_url",
+        "descontinuado",
     ]
 
     @classmethod
@@ -336,8 +344,21 @@ class ProductoResponseSerializer(ResponseSerializer):
                 "marca": data.get("marca"),
                 "familia": data.get("familia"),
                 "pvp": data.get("pvp"),
+                "bc3_descripcion_corta": data.get("bc3_descripcion_corta"),
+                "bc3_descripcion_completa": data.get("bc3_descripcion_completa"),
+                "bc3_descripcion_larga": data.get("bc3_descripcion_larga"),
                 "bc3_product_type": data.get("bc3_product_type"),
-                "imagen_url": data.get("imagen_url"),
+                "bc3_processed_at": data.get("bc3_processed_at"),
+                "codigo_web": data.get("codigo_web"),
+                "referencia": data.get("referencia"),
+                "ean_13": data.get("ean_13"),
+                "imagen": data.get("imagen"),
+                "img_url": data.get("img_url"),
+                "imagen_url": data.get("img_url") or data.get("imagen"),  # COMPATIBILIDAD FRONTEND
+                "descontinuado": data.get("descontinuado"),
+                "raee_a": data.get("RAEE_A") or data.get("raee_a"),
+                "raee_l": data.get("RAEE_L") or data.get("raee_l"),
+                "raee_t": data.get("RAEE_T") or data.get("raee_t"),
             }
             return {k: v for k, v in essential_fields.items() if v is not None}
 

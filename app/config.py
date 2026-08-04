@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     # Security - API Keys (accept string or list, normalize to list)
     api_keys: Union[str, List[str]] = Field(default_factory=list)
     api_key_header: str = "X-API-Key"
-    admin_api_keys: List[str] = []
+    admin_api_keys: Union[str, List[str]] = Field(default_factory=list)
 
     # Security - Rate Limiting
     rate_limit_enabled: bool = True
@@ -91,6 +91,14 @@ class Settings(BaseSettings):
             return [key.strip() for key in v.split(",") if key.strip()]
         return v if isinstance(v, list) else []
 
+    @field_validator("admin_api_keys", mode="before")
+    @classmethod
+    def parse_admin_api_keys(cls, v: Union[str, List[str]]) -> List[str]:
+        """Parse admin_api_keys from string or list."""
+        if isinstance(v, str):
+            return [key.strip() for key in v.split(",") if key.strip()]
+        return v if isinstance(v, list) else []
+
     @field_validator("cors_origins", mode="before")
     @classmethod
     def parse_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:
@@ -123,5 +131,6 @@ def get_settings() -> Settings:
     """
     Retorna instancia caché de Settings.
     Usa lru_cache para solo cargar una vez.
-    ."""
+    """
     return Settings()
+
