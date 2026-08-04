@@ -54,6 +54,13 @@ class ProductoModelClean(Base):
     bc3_product_type = Column(String, nullable=True)
     bc3_processed_at = Column(DateTime, nullable=True)
 
+    # ============================================
+    # ENERGY EFFICIENCY / RECYCLING FIELDS (RAEE)
+    # ============================================
+    raee_a = Column(Float, nullable=True)  # RAEE aparatos
+    raee_l = Column(Float, nullable=True)  # RAEE lámparas
+    raee_t = Column(Float, nullable=True)  # RAEE total (A + L)
+
     def to_entity(self):
         """
         Convert SQLAlchemy model to Domain Entity.
@@ -78,6 +85,9 @@ class ProductoModelClean(Base):
             ean_13=str(self.ean_13) if self.ean_13 is not None else None,
             imagen=self.imagen,
             img_url=self.img_url,
+            raee_a=self.raee_a,
+            raee_l=self.raee_l,
+            raee_t=self.raee_t,
             created_at=self.bc3_processed_at,
             updated_at=self.bc3_processed_at,
         )

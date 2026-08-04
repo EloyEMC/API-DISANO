@@ -38,13 +38,24 @@ class ProductoEntity(BaseModel):
     pvp: Optional[float] = Field(None, ge=0, description="Public sales price")
 
     # BC3 Suite integration fields
-    bc3_descripcion_corta: Optional[str] = Field(
-        None, description="BC3 Suite short description"
-    )
+    bc3_descripcion_corta: Optional[str] = Field(None, description="BC3 Suite short description")
     bc3_product_type: Optional[str] = Field(None, description="BC3 Suite product type")
-    bc3_descripcion_completa: Optional[str] = Field(
-        None, description="BC3 Suite full description"
+    bc3_descripcion_completa: Optional[str] = Field(None, description="BC3 Suite full description")
+
+    # Additional fields (from productos table)
+    codigo_web: Optional[str] = Field(None, description="Web code")
+    referencia: Optional[str] = Field(None, description="Reference")
+    ean_13: Optional[str] = Field(None, description="EAN-13 barcode")
+    imagen: Optional[str] = Field(None, description="Image filename")
+    img_url: Optional[str] = Field(None, description="Image URL")
+    descontinuado: Optional[int] = Field(None, description="Discontinued flag")
+
+    # Energy efficiency / recycling fields (RAEE)
+    raee_a: Optional[float] = Field(
+        None, description="RAEE aparatos (electrical appliances recycling fee)"
     )
+    raee_l: Optional[float] = Field(None, description="RAEE lámparas (lamps recycling fee)")
+    raee_t: Optional[float] = Field(None, description="RAEE total (aparatos + lámparas)")
 
     # Audit fields
     created_at: Optional[datetime] = Field(None, description="Creation timestamp")
