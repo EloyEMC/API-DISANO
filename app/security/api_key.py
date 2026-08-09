@@ -1,6 +1,4 @@
-"""
-Módulo de autenticación mediante API Keys
-==========================================
+"""Módulo de autenticación mediante API Keys.
 
 Este módulo proporciona funciones para validar API Keys en las peticiones HTTP.
 Implementa el patrón de Dependency Injection de FastAPI para proteger endpoints.
@@ -18,21 +16,31 @@ Funciones:
     verify_api_key: Dependency que valida X-API-Key header
 """
 
-from fastapi import Header, HTTPException, status, Request
+from fastapi import Depends, HTTPException, Request, status
+from fastapi.security import APIKeyHeader
 from typing import Optional
 from app.config import get_settings
-from app.security.logging_config import logger, log_security_event
+
+try:
+    from app.security.logging_config import logger, log_security_event
+except ModuleNotFoundError:  # Optional logging dependency for lightweight API imports.
+    import logging
+
+    logger = logging.getLogger(__name__)
+
+    def log_security_event(**_kwargs):
+        """Fallback when the optional structured logger is unavailable."""
+
 
 settings = get_settings()
+api_key_header = APIKeyHeader(
+    name=settings.api_key_header,
+    description=f"API Key para autenticación. Header: {settings.api_key_header}",
+    auto_error=False,
+)
 
 
-async def verify_api_key(
-    x_api_key: Optional[str] = Header(
-        None,
-        alias=settings.api_key_header,
-        description=f"API Key para autenticación. Header: {settings.api_key_header}",
-    )
-) -> str:
+async def verify_api_key(x_api_key: Optional[str] = Depends(api_key_header)) -> str:
     """
     Dependency que verifica la API Key en el header.
 
@@ -57,9 +65,7 @@ async def verify_api_key(
     # Verificar si se proporcionó API key
     if not x_api_key:
         logger.warning("Intento de acceso sin API key")
-        log_security_event(
-            event_type="auth_failed", details="No API key provided", api_key="none"
-        )
+        log_security_event(event_type="auth_failed", details="No API key provided", api_key="none")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="API Key requerida. Proporciona el header X-API-Key",
@@ -89,7 +95,7 @@ async def verify_api_key(
     return key_preview
 
 
-async def verify_admin_api_key(request) -> bool:
+async def verify_admin_api_key(request: Request) -> bool:
     """Verify if request has a valid admin API key."""
     from app.config import get_settings
 
@@ -102,5 +108,11 @@ async def verify_admin_api_key(request) -> bool:
     if not admin_api_key:
         return False
 
-    valid_admin_keys = settings.api_keys_list
+    valid_admin_keys = settings.admin_api_keys if isinstance(settings.admin_api_keys, list) else []
     return admin_api_key in valid_admin_keys
+
+
+async def require_admin_api_key(request: Request) -> None:
+    """Reject requests that do not carry a valid administrator key."""
+    if not await verify_admin_api_key(request):
+        raise HTTPException(status_code=403, detail="Admin API Key requerida")

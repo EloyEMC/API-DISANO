@@ -1,7 +1,7 @@
+"""Provide API key authentication and rate limiting middleware.
+
+Security middleware for the API-DISANO application.
 """
-Security Module for API DISANO
-Simple API Key authentication and rate limiting
-."""
 from fastapi import Request, status
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
@@ -28,6 +28,14 @@ def get_api_keys():
 def get_environment():
     """Get environment from settings."""
     return os.getenv("ENVIRONMENT", "development")
+
+
+def get_bc3_api_keys():
+    """Get dedicated BC3 API keys from environment."""
+    keys = os.getenv("BC3_API_KEYS", "")
+    if keys:
+        return keys.split(",")
+    return []
 
 
 def get_rate_limit():
@@ -63,6 +71,7 @@ class APIKeyMiddleware(BaseHTTPMiddleware):
     EXEMPT_PATHS = {"/", "/health", "/docs", "/redoc", "/openapi.json"}
 
     async def dispatch(self, request: Request, call_next):
+        """Validate request credentials before dispatching the request."""
         # In development, skip API key check
         if get_environment() == "development":
             return await call_next(request)
@@ -79,14 +88,16 @@ class APIKeyMiddleware(BaseHTTPMiddleware):
         if not api_key and not admin_api_key:
             return JSONResponse(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                content={
-                    "detail": "API Key is required. Use X-API-Key or X-Admin-API-Key header."
-                },
+                content={"detail": "API Key is required. Use X-API-Key or X-Admin-API-Key header."},
             )
 
-        # Validate regular API key if provided
+        # Validate regular API key against the route-specific key set.
         if api_key:
-            valid_keys = get_api_keys()
+            bc3_prefix = "/api/productos/bc3/v1"
+            is_bc3_route = request.url.path == bc3_prefix or request.url.path.startswith(
+                bc3_prefix + "/"
+            )
+            valid_keys = get_bc3_api_keys() if is_bc3_route else get_api_keys()
             if api_key in valid_keys:
                 return await call_next(request)
 
@@ -110,6 +121,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     EXEMPT_PATHS = {"/", "/health"}
 
     async def dispatch(self, request: Request, call_next):
+        """Apply per-client rate limiting before dispatching the request."""
         path = request.url.path
 
         # Skip rate limiting for exempt paths
@@ -125,9 +137,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
         # Filter out old requests
         rate_limit_store[client_id] = [
-            req_time
-            for req_time in rate_limit_store[client_id]
-            if req_time > minute_ago
+            req_time for req_time in rate_limit_store[client_id] if req_time > minute_ago
         ]
 
         # Check rate limit
@@ -142,7 +152,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 },
                 headers={
                     "Retry-After": "60",
-                    "X-RateLimit-Limit": str(RATE_LIMIT),
+                    "X-RateLimit-Limit": str(rate_limit),
                     "X-RateLimit-Remaining": "0",
                     "X-RateLimit-Reset": str(int(current_time + 60)),
                 },
@@ -181,6 +191,7 @@ class UserAgentMiddleware(BaseHTTPMiddleware):
     ]
 
     async def dispatch(self, request: Request, call_next):
+        """Reject requests with suspicious user-agent headers."""
         user_agent = request.headers.get("user-agent", "").lower()
 
         # Check if user agent contains blocked patterns
@@ -188,9 +199,7 @@ class UserAgentMiddleware(BaseHTTPMiddleware):
             if blocked in user_agent:
                 return JSONResponse(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    content={
-                        "detail": "Access denied. Suspicious User-Agent detected."
-                    },
+                    content={"detail": "Access denied. Suspicious User-Agent detected."},
                 )
 
         return await call_next(request)
@@ -200,6 +209,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     """Add security headers."""
 
     async def dispatch(self, request: Request, call_next):
+        """Add security headers to the downstream response."""
         response = await call_next(request)
 
         # Remove server header
@@ -216,8 +226,6 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
         # HSTS (only in production with HTTPS)
         if get_environment() == "production":
-            response.headers[
-                "Strict-Transport-Security"
-            ] = "max-age=31536000; includeSubDomains"
+            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
 
         return response

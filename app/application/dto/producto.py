@@ -1,10 +1,12 @@
-"""Application DTOs module
+"""Application DTOs module.
 
 Data Transfer Objects for input/output validation in application layer.
-."""
+"""
+
+from datetime import datetime
+from typing import Optional
 
 from pydantic import BaseModel, Field
-from typing import Optional
 
 from app.domain.entities.producto import ProductoEntity
 
@@ -18,22 +20,17 @@ class ProductoSearchDTOV1(BaseModel):
     familia: Optional[str] = Field(None, max_length=50, description="Filter by family")
 
 
-# ============================================
-# INPUT DTOs (Create/Update operations)
-# ============================================
-
-
 class ProductoCreateDTO(BaseModel):
     """DTO for creating a new product."""
 
     codigo: str = Field(..., min_length=1, max_length=50)
     descripcion: str = Field(..., min_length=2)
     marca: str = Field(..., min_length=1)
-    familia: Optional[str] = Field(None)
+    familia: Optional[str] = None
     pvp: Optional[float] = Field(None, ge=0)
-    bc3_descripcion_corta: Optional[str] = Field(None)
-    bc3_product_type: Optional[str] = Field(None)
-    bc3_descripcion_completa: Optional[str] = Field(None)
+    bc3_descripcion_corta: Optional[str] = None
+    bc3_product_type: Optional[str] = None
+    bc3_descripcion_completa: Optional[str] = None
 
     def to_entity(self) -> ProductoEntity:
         """Convert DTO to Domain Entity."""
@@ -56,11 +53,11 @@ class ProductoUpdateDTO(BaseModel):
 
     descripcion: Optional[str] = Field(None, min_length=2)
     marca: Optional[str] = Field(None, min_length=1)
-    familia: Optional[str] = Field(None)
+    familia: Optional[str] = None
     pvp: Optional[float] = Field(None, ge=0)
-    bc3_descripcion_corta: Optional[str] = Field(None)
-    bc3_product_type: Optional[str] = Field(None)
-    bc3_descripcion_completa: Optional[str] = Field(None)
+    bc3_descripcion_corta: Optional[str] = None
+    bc3_product_type: Optional[str] = None
+    bc3_descripcion_completa: Optional[str] = None
 
 
 class ProductoSearchDTO(BaseModel):
@@ -78,9 +75,75 @@ class ProductoPrecioUpdateDTO(BaseModel):
     pvp: float = Field(..., ge=0)
 
 
-# ============================================
-# OUTPUT DTOs (Response formatting)
-# ============================================
+class ProductoExternalResponse(BaseModel):
+    """Stable public product contract (discounts and logistics excluded)."""
+
+    model_config = {"extra": "ignore"}
+
+    codigo: str
+    descripcion: str
+    marca: str
+    familia: Optional[str] = None
+    pvp: Optional[float] = None
+    descripcion_corta: Optional[str] = None
+    familia_web: Optional[str] = None
+    serie_familia_1: Optional[str] = None
+    familia_catalogo: Optional[str] = None
+    familia_catalogo_ptl: Optional[str] = None
+    url_ficha_tec: Optional[str] = None
+    codigo_web: Optional[str] = None
+    referencia: Optional[str] = None
+    ean_13: Optional[str] = None
+    imagen: Optional[str] = None
+    img_url: Optional[str] = None
+    descontinuado: Optional[int] = None
+    bc3_descripcion_corta: Optional[str] = None
+    bc3_descripcion_completa: Optional[str] = None
+    bc3_descripcion_larga: Optional[str] = None
+    bc3_product_type: Optional[str] = None
+    raee_a: Optional[float] = None
+    raee_l: Optional[float] = None
+    raee_t: Optional[float] = None
+    bc3_processed_at: Optional[datetime] = None
+
+
+class ProductoBC3Response(ProductoExternalResponse):
+    """Private BC3 contract including legacy discount and logistics data."""
+
+    dto: Optional[str] = None
+    up_log: Optional[float] = None
+    u_caja: Optional[int] = None
+    clase_etim: Optional[str] = None
+    peso_bruto_kg: Optional[float] = None
+    peso_bruto_gr: Optional[float] = None
+    peso_neto_kg: Optional[float] = None
+    peso_neto_gr: Optional[float] = None
+    longitud_m: Optional[float] = None
+    longitud_mm: Optional[float] = None
+    ancho_m: Optional[float] = None
+    ancho_mm: Optional[float] = None
+    alto_m: Optional[float] = None
+    altura_mm: Optional[float] = None
+    volumen_dm3: Optional[float] = None
+    cm3: Optional[float] = None
+
+
+class ProductoExternalPage(BaseModel):
+    """Versioned public paginated response."""
+
+    items: list[ProductoExternalResponse]
+    pagination: dict
+    filters_applied: dict | None = None
+    sorting_applied: dict | None = None
+
+
+class ProductoBC3Page(BaseModel):
+    """Versioned private BC3 paginated response."""
+
+    items: list[ProductoBC3Response]
+    pagination: dict
+    filters_applied: dict | None = None
+    sorting_applied: dict | None = None
 
 
 class ProductoResponseDTO(BaseModel):

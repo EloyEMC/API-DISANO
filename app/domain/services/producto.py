@@ -1,7 +1,10 @@
-"""Domain service for Producto
+"""Domain service for Producto.
 
 Business logic layer that coordinates repositories and applies domain rules.
-."""
+.
+"""
+
+from typing import cast
 
 from app.domain.entities.producto import ProductoEntity
 from app.domain.exceptions.not_found import (
@@ -23,8 +26,7 @@ from app.application.dto.pagination import (
 
 
 class ProductoService:
-    """
-    Business logic service for Producto.
+    """Business logic service for Producto.
 
     This service contains business rules and validation logic.
     It uses the repository interface for data access, maintaining
@@ -32,17 +34,16 @@ class ProductoService:
     """
 
     def __init__(self, repository: ProductoRepositoryInterface):
-        """
-        Initialize service with repository.
+        """Initialize service with repository.
 
         Args:
             repository: Producto repository implementation
+
         """
         self.repository = repository
 
     def crear_producto(self, dto: ProductoCreateDTO) -> ProductoEntity:
-        """
-        Create new product with business rules.
+        """Create new product with business rules.
 
         Business rules:
         1. Validate input fields (DTO validation + business rules)
@@ -58,7 +59,9 @@ class ProductoService:
         Raises:
             ValidationException: If validation fails
             ProductoYaExisteException: If code already exists
-        ."""
+        .
+
+        """
         # 1. Validations
         if len(dto.descripcion) < 2:
             raise ValidationException("descripcion", "Mínimo 2 caracteres")
@@ -82,11 +85,8 @@ class ProductoService:
         # 4. Persist through repository
         return self.repository.save(producto)
 
-    def actualizar_producto(
-        self, codigo: str, dto: ProductoUpdateDTO
-    ) -> ProductoEntity:
-        """
-        Update existing product.
+    def actualizar_producto(self, codigo: str, dto: ProductoUpdateDTO) -> ProductoEntity:
+        """Update existing product.
 
         Args:
             codigo: Product identifier
@@ -98,7 +98,9 @@ class ProductoService:
         Raises:
             ProductoNotFoundException: If product doesn't exist
             ValidationException: If validation fails
-        ."""
+        .
+
+        """
         # 1. Get existing
         existing = self.repository.get_by_codigo(codigo)
 
@@ -118,15 +120,16 @@ class ProductoService:
         return self.repository.save(updated_producto)
 
     def buscar_productos(self, dto: ProductoSearchDTO) -> list[ProductoEntity]:
-        """
-        Search products with filters.
+        """Search products with filters.
 
         Args:
             dto: Search parameters with filters
 
         Returns:
             list[ProductoEntity]: Matching products
-        ."""
+        .
+
+        """
         return self.repository.buscar_productos(
             termino=dto.buscar or "",
             limit=dto.limit,
@@ -135,8 +138,7 @@ class ProductoService:
         )
 
     def obtener_producto(self, codigo: str) -> ProductoEntity:
-        """
-        Get product by code.
+        """Get product by code.
 
         Args:
             codigo: Product identifier
@@ -146,18 +148,19 @@ class ProductoService:
 
         Raises:
             ProductoNotFoundException: If not found
+
         """
         return self.repository.get_by_codigo(codigo)
 
     def eliminar_producto(self, codigo: str) -> bool:
-        """
-        Delete product by code.
+        """Delete product by code.
 
         Args:
             codigo: Product identifier
 
         Returns:
             bool: True if deleted, False if not found
+
         """
         # 1. Verify exists
         try:
@@ -168,11 +171,8 @@ class ProductoService:
         # 2. Delete
         return self.repository.delete(codigo)
 
-    def get_all_productos(
-        self, skip: int = 0, limit: int = 100
-    ) -> list[ProductoEntity]:
-        """
-        Get all products with pagination.
+    def get_all_productos(self, skip: int = 0, limit: int = 100) -> list[ProductoEntity]:
+        """Get all products with pagination.
 
         Args:
             skip: Number to skip
@@ -180,15 +180,16 @@ class ProductoService:
 
         Returns:
             list[ProductoEntity]: Products in range
+
         """
         return self.repository.get_all(skip=skip, limit=limit)
 
     def count_productos(self) -> int:
-        """
-        Get total product count.
+        """Get total product count.
 
         Returns:
             int: Total number of products
+
         """
         return self.repository.count_total()
 
@@ -199,10 +200,13 @@ class ProductoService:
 
         Args:
             request_dto: Pagination request with filters and sorting
+            filters: Optional product filters.
 
         Returns:
             PaginatedResponseDTO: Products with pagination metadata
-        ."""
+        .
+
+        """
         # Convert DTO to dict format for repository
         dto_dict: dict = {
             "page": request_dto.page,
@@ -237,4 +241,82 @@ class ProductoService:
             }
             if request_dto.sort
             else None,
+        )
+
+    def preview_bc3_enrichment(self, items: list[dict]) -> tuple[list[dict], list[str]]:
+        """Build a read-only preview from the private BC3 table projection."""
+        codes = [item["codigo"] for item in items]
+        current_by_code = getattr(self.repository, "preview_bc3_enrichment")(codes)
+        missing_codes = [code for code in codes if code not in current_by_code]
+        preview_items = [
+            {
+                "codigo": item["codigo"],
+                "changes": [
+                    {
+                        "field": field,
+                        "current_value": current_by_code[item["codigo"]][field],
+                        "proposed_value": item[field],
+                    }
+                    for field in (
+                        "bc3_descripcion_corta",
+                        "bc3_descripcion_larga",
+                        "bc3_descripcion_completa",
+                        "bc3_product_type",
+                    )
+                    if item.get(field) is not None
+                    and item[field] != current_by_code[item["codigo"]][field]
+                ],
+            }
+            for item in items
+            if item["codigo"] in current_by_code
+        ]
+        return preview_items, missing_codes
+
+    def apply_bc3_enrichment(
+        self, items: list[dict], idempotency_key: str, request_hash: str
+    ) -> dict:
+        """Apply a validated BC3 batch through the durable raw-product repository."""
+        return cast(
+            dict[str, object],
+            getattr(self.repository, "apply_bc3_enrichment")(
+                items, idempotency_key=idempotency_key, request_hash=request_hash
+            ),
+        )
+
+    def obtener_producto_privado(self, codigo: str) -> ProductoEntity:
+        """Get a BC3 product from the raw-product repository projection."""
+        return cast(
+            ProductoEntity,
+            getattr(self.repository, "get_private_by_codigo")(codigo),
+        )
+
+    def obtener_estado_enriquecimiento_bc3(self, job_id: str) -> dict | None:
+        """Return the safe durable status projection for a BC3 job."""
+        return cast(
+            dict | None,
+            getattr(self.repository, "get_bc3_enrichment_job_status")(job_id),
+        )
+
+    def buscar_productos_privado(
+        self, request_dto: PaginationRequestDTO, filters: dict | None = None
+    ) -> PaginatedResponseDTO:
+        """Search BC3 products using the raw-product repository projection."""
+        dto_dict = {
+            "offset": request_dto.offset,
+            "per_page": request_dto.per_page,
+            "filters": filters or {},
+        }
+        entities, total = cast(
+            tuple[list[ProductoEntity], int],
+            getattr(self.repository, "buscar_productos_privado")(dto_dict),
+        )
+        return PaginatedResponseDTO(
+            items=entities,
+            pagination=PaginationMetadata.from_query(
+                total_items=total,
+                current_page=request_dto.page,
+                per_page=request_dto.per_page,
+            ),
+            filters_applied=filters or {},
+            sorting_applied=None,
         )

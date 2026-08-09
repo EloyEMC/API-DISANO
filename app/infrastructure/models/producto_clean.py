@@ -1,24 +1,23 @@
-"""SQLAlchemy model using clean view
+"""SQLAlchemy model using clean view.
 
 Uses productos_clean view with standard column names for
 SQLAlchemy ORM compatibility.
-."""
+.
+"""
 
 from sqlalchemy import Column, DateTime, Float, String
 from sqlalchemy.orm import declarative_base
-from sqlalchemy.types import TypeDecorator, VARCHAR
-import json
 
 Base = declarative_base()
 
 
 class ProductoModelClean(Base):
-    """
-    SQLAlchemy ORM model for productos_clean view.
+    """SQLAlchemy ORM model for productos_clean view.
 
     Uses clean column names (no brackets, no spaces) for
     SQLAlchemy compatibility. Based on view in SQLite database.
-    ."""
+    .
+    """
 
     __tablename__ = "productos_clean"
 
@@ -62,12 +61,13 @@ class ProductoModelClean(Base):
     raee_t = Column(Float, nullable=True)  # RAEE total (A + L)
 
     def to_entity(self):
-        """
-        Convert SQLAlchemy model to Domain Entity.
+        """Convert SQLAlchemy model to Domain Entity.
 
         Returns:
             ProductoEntity: Domain entity with clean naming
-        ."""
+        .
+
+        """
         from app.domain.entities.producto import ProductoEntity
 
         return ProductoEntity(
@@ -79,6 +79,29 @@ class ProductoModelClean(Base):
             bc3_descripcion_corta=self.bc3_descripcion_corta or self.descripcion_corta,
             bc3_product_type=self.bc3_product_type,
             bc3_descripcion_completa=self.bc3_descripcion_completa,
+            descontinuado=getattr(self, "descontinuado", None),
+            descripcion_corta=self.descripcion_corta,
+            familia_web=getattr(self, "familia_web", self.familia),
+            serie_familia_1=getattr(self, "serie_familia_1", None),
+            familia_catalogo=getattr(self, "familia_catalogo", None),
+            familia_catalogo_ptl=getattr(self, "familia_catalogo_ptl", None),
+            url_ficha_tec=getattr(self, "url_ficha_tec", None),
+            dto=getattr(self, "dto", None),
+            up_log=getattr(self, "up_log", None),
+            u_caja=getattr(self, "u_caja", None),
+            clase_etim=getattr(self, "clase_etim", None),
+            peso_bruto_kg=getattr(self, "peso_bruto_kg", None),
+            peso_bruto_gr=getattr(self, "peso_bruto_gr", None),
+            peso_neto_kg=getattr(self, "peso_neto_kg", None),
+            peso_neto_gr=getattr(self, "peso_neto_gr", None),
+            longitud_m=getattr(self, "longitud_m", None),
+            longitud_mm=getattr(self, "longitud_mm", None),
+            ancho_m=getattr(self, "ancho_m", None),
+            ancho_mm=getattr(self, "ancho_mm", None),
+            alto_m=getattr(self, "alto_m", None),
+            altura_mm=getattr(self, "altura_mm", None),
+            volumen_dm3=getattr(self, "volumen_dm3", None),
+            cm3=getattr(self, "cm3", None),
             # Nuevos campos de productos
             codigo_web=self.codigo_web,
             referencia=self.referencia,
@@ -94,14 +117,14 @@ class ProductoModelClean(Base):
 
     @classmethod
     def from_entity(cls, entity):
-        """
-        Create SQLAlchemy model from Domain Entity.
+        """Create SQLAlchemy model from Domain Entity.
 
         Args:
             entity: ProductoEntity to convert
 
         Returns:
             ProductoModelClean: SQLAlchemy model with clean column names
+
         """
         return cls(
             codigo=entity.codigo,
@@ -122,5 +145,5 @@ class ProductoModelClean(Base):
         )
 
     def __repr__(self) -> str:
-        """String representation for debugging."""
+        """Return a string representation for debugging."""
         return f"<ProductoModelClean(codigo='{self.codigo}', descripcion='{self.descripcion[:20]}...')>"

@@ -1,4 +1,11 @@
-from typing import List, Tuple
+"""API-DISANO release module.
+
+This module is part of the reviewed BC3/PostgreSQL release.
+"""
+
+from datetime import datetime, timezone
+import uuid
+from typing import Any, List, Tuple, cast
 
 from sqlalchemy import asc, desc, or_
 from sqlalchemy.orm import Session
@@ -7,12 +14,16 @@ from app.domain.entities.producto import ProductoEntity
 from app.domain.exceptions.not_found import ProductoNotFoundException
 from app.domain.repositories.producto import ProductoRepositoryInterface
 from app.infrastructure.models.producto_clean import ProductoModelClean as ProductoModel
+from app.infrastructure.models.producto import ProductoRawModel
+from app.infrastructure.models.enrichment import (
+    BC3EnrichmentJobItemModel,
+    BC3EnrichmentJobModel,
+)
 from app.infrastructure.cache.pagination_cache import get_pagination_cache
 
 
 class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
-    """
-    SQLAlchemy implementation of Producto repository.
+    """SQLAlchemy implementation of Producto repository.
 
     This class implements the ProductoRepositoryInterface contract
     using SQLAlchemy ORM for database operations. It maps between
@@ -20,17 +31,16 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
     """
 
     def __init__(self, session: Session):
-        """
-        Initialize repository with database session.
+        """Initialize repository with database session.
 
         Args:
             session: SQLAlchemy session for database operations
+
         """
         self.session = session
 
     def get_by_codigo(self, codigo: str) -> ProductoEntity:
-        """
-        Get product by code.
+        """Get product by code.
 
         Args:
             codigo: Unique product identifier
@@ -40,12 +50,10 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
 
         Raises:
             ProductoNotFoundException: If product doesn't exist
-        ."""
-        model = (
-            self.session.query(ProductoModel)
-            .filter(ProductoModel.codigo == codigo)
-            .first()
-        )
+        .
+
+        """
+        model = self.session.query(ProductoModel).filter(ProductoModel.codigo == codigo).first()
 
         if not model:
             raise ProductoNotFoundException(codigo)
@@ -59,8 +67,7 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
         marca: str = "",
         familia: str = "",
     ) -> List[ProductoEntity]:
-        """
-        Search products with text search and filters.
+        """Search products with text search and filters.
 
         Args:
             termino: Search term (searches in description, code, BC3 fields)
@@ -70,7 +77,9 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
 
         Returns:
             List[ProductoEntity]: Matching products
-        ."""
+        .
+
+        """
         query = self.session.query(ProductoModel)
 
         # Apply text search if term provided
@@ -104,8 +113,7 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
         return [model.to_entity() for model in query.all()]
 
     def get_all(self, skip: int = 0, limit: int = 100) -> List[ProductoEntity]:
-        """
-        Get all products with pagination.
+        """Get all products with pagination.
 
         Args:
             skip: Number of products to skip
@@ -113,19 +121,20 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
 
         Returns:
             List[ProductoEntity]: Products in specified range
+
         """
         query = self.session.query(ProductoModel).offset(skip).limit(limit)
         return [model.to_entity() for model in query.all()]
 
     def save(self, producto: ProductoEntity) -> ProductoEntity:
-        """
-        Save product (create or update).
+        """Save product (create or update).
 
         Args:
             producto: Product entity to save
 
         Returns:
             ProductoEntity: Saved product with any DB-generated fields
+
         """
         # Create model from entity
         model = ProductoModel.from_entity(producto)
@@ -137,20 +146,16 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
         return model.to_entity()
 
     def delete(self, codigo: str) -> bool:
-        """
-        Delete product by code.
+        """Delete product by code.
 
         Args:
             codigo: Product identifier to delete
 
         Returns:
             bool: True if deleted, False if not found
+
         """
-        model = (
-            self.session.query(ProductoModel)
-            .filter(ProductoModel.codigo == codigo)
-            .first()
-        )
+        model = self.session.query(ProductoModel).filter(ProductoModel.codigo == codigo).first()
 
         if not model:
             return False
@@ -161,11 +166,11 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
         return True
 
     def count_total(self) -> int:
-        """
-        Get total count of products.
+        """Get total count of products.
 
         Returns:
             int: Total number of products in database
+
         """
         return self.session.query(ProductoModel).count()
 
@@ -182,7 +187,9 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
             Tuple[list[ProductoEntity], int]:
                 - List of entities for current page
                 - Total count of matching items
-        ."""
+        .
+
+        """
         # Get pagination cache wrapper
         cache = get_pagination_cache()
 
@@ -226,7 +233,9 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
             Tuple[list[ProductoEntity], int]:
                 - List of entities for current page
                 - Total count of matching items
-        ."""
+        .
+
+        """
         # Base query
         query = self.session.query(ProductoModel)
 
@@ -245,9 +254,7 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
             query = query.filter(ProductoModel.pvp <= filters["pvp_max"])
 
         if filters.get("bc3_product_type"):
-            query = query.filter(
-                ProductoModel.bc3_product_type == filters["bc3_product_type"]
-            )
+            query = query.filter(ProductoModel.bc3_product_type == filters["bc3_product_type"])
 
         if filters.get("bc3_has_descripcion_corta") is not None:
             if filters["bc3_has_descripcion_corta"]:
@@ -311,3 +318,215 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
                 ProductoModel.bc3_descripcion_completa.ilike(pattern),
             )
         )
+
+    def get_private_by_codigo(self, codigo: str) -> ProductoEntity:
+        """Read a private BC3 product directly from the raw table."""
+        model = (
+            self.session.query(ProductoRawModel).filter(ProductoRawModel.codigo == codigo).first()
+        )
+        if not model:
+            raise ProductoNotFoundException(codigo)
+        return model.to_entity()
+
+    def preview_bc3_enrichment(self, codes: list[str]) -> dict[str, dict[str, str | None]]:
+        """Read BC3 enrichment fields from the writable ``productos`` table."""
+        models = (
+            self.session.query(ProductoRawModel).filter(ProductoRawModel.codigo.in_(codes)).all()
+        )
+        return {
+            cast(str, model.codigo): {
+                "bc3_descripcion_corta": cast(str | None, model.bc3_descripcion_corta),
+                "bc3_descripcion_larga": cast(str | None, model.bc3_descripcion_larga),
+                "bc3_descripcion_completa": cast(str | None, model.bc3_descripcion_completa),
+                "bc3_product_type": cast(str | None, model.bc3_product_type),
+            }
+            for model in models
+        }
+
+    def apply_bc3_enrichment(
+        self, items: list[dict], idempotency_key: str, request_hash: str
+    ) -> dict[str, object]:
+        """Apply BC3 fields and its durable audit record in one session transaction."""
+        existing = (
+            self.session.query(BC3EnrichmentJobModel)
+            .filter(BC3EnrichmentJobModel.idempotency_key == idempotency_key)
+            .first()
+        )
+        if existing is not None:
+            existing_request_hash = cast(str, existing.request_hash)
+            existing_status = cast(str, existing.status)
+            existing_job_id = cast(str, existing.job_id)
+            if existing_request_hash != request_hash:
+                return {"status": "idempotency_conflict", "job_id": existing_job_id}
+            if existing_status == "completed":
+                return self._completed_enrichment_result(existing)
+            return {"status": "job_in_progress", "job_id": existing_job_id}
+
+        job = BC3EnrichmentJobModel(
+            job_id=str(uuid.uuid4()),
+            idempotency_key=idempotency_key,
+            request_hash=request_hash,
+            status="pending",
+            total_items=len(items),
+        )
+        self.session.add(job)
+        self.session.flush()
+        job_id = cast(str, job.job_id)
+        job_items = [
+            BC3EnrichmentJobItemModel(
+                job_id=job_id,
+                codigo=item["codigo"],
+                bc3_descripcion_corta=item.get("bc3_descripcion_corta"),
+                bc3_descripcion_larga=item.get("bc3_descripcion_larga"),
+                bc3_descripcion_completa=item.get("bc3_descripcion_completa"),
+                bc3_product_type=item.get("bc3_product_type"),
+                result_status="pending",
+            )
+            for item in items
+        ]
+        self.session.add_all(job_items)
+        self.session.flush()
+
+        codes = [item["codigo"] for item in items]
+        models = (
+            self.session.query(ProductoRawModel).filter(ProductoRawModel.codigo.in_(codes)).all()
+        )
+        models_by_code = {cast(str, model.codigo): model for model in models}
+        missing_codes = [code for code in codes if code not in models_by_code]
+        if missing_codes:
+            for item in job_items:
+                if cast(str, item.codigo) in missing_codes:
+                    item_record = cast(Any, item)
+                    item_record.result_status = "missing"
+                    item_record.error_message = "Product code not found"
+            job_record = cast(Any, job)
+            job_record.status = "failed"
+            job_record.missing_items = len(missing_codes)
+            self.session.commit()
+            raise ProductoNotFoundException(f"Missing product codes: {', '.join(missing_codes)}")
+
+        updated_codes: list[str] = []
+        unchanged_codes: list[str] = []
+        fields = (
+            "bc3_descripcion_corta",
+            "bc3_descripcion_larga",
+            "bc3_descripcion_completa",
+            "bc3_product_type",
+        )
+        for item, job_item in zip(items, job_items):
+            model = models_by_code[item["codigo"]]
+            changes = {
+                field: item[field]
+                for field in fields
+                if item.get(field) is not None and getattr(model, field) != item[field]
+            }
+            if not changes:
+                unchanged_codes.append(item["codigo"])
+                cast(Any, job_item).result_status = "unchanged"
+                continue
+
+            for field, value in changes.items():
+                setattr(model, field, value)
+            cast(Any, model).bc3_processed_at = datetime.now(timezone.utc)
+            updated_codes.append(item["codigo"])
+            cast(Any, job_item).result_status = "updated"
+
+        job_record = cast(Any, job)
+        job_record.status = "completed"
+        job_record.updated_items = len(updated_codes)
+        job_record.unchanged_items = len(unchanged_codes)
+        job_record.completed_at = datetime.now(timezone.utc)
+        self.session.flush()
+        return {
+            "job_id": cast(str, job.job_id),
+            "status": cast(str, job.status),
+            "updated_codes": updated_codes,
+            "unchanged_codes": unchanged_codes,
+            "missing_codes": [],
+        }
+
+    def _completed_enrichment_result(self, job: BC3EnrichmentJobModel) -> dict[str, object]:
+        """Reconstruct a completed response without touching product rows."""
+        items = (
+            self.session.query(BC3EnrichmentJobItemModel)
+            .filter(BC3EnrichmentJobItemModel.job_id == job.job_id)
+            .order_by(BC3EnrichmentJobItemModel.id)
+            .all()
+        )
+        return {
+            "job_id": cast(str, job.job_id),
+            "status": cast(str, job.status),
+            "updated_codes": [
+                cast(str, item.codigo)
+                for item in items
+                if cast(str, item.result_status) == "updated"
+            ],
+            "unchanged_codes": [
+                cast(str, item.codigo)
+                for item in items
+                if cast(str, item.result_status) == "unchanged"
+            ],
+            "missing_codes": [
+                cast(str, item.codigo)
+                for item in items
+                if cast(str, item.result_status) == "missing"
+            ],
+        }
+
+    def get_bc3_enrichment_job_status(self, job_id: str) -> dict[str, object] | None:
+        """Return only non-sensitive durable status fields for an enrichment job."""
+        job = (
+            self.session.query(BC3EnrichmentJobModel)
+            .filter(BC3EnrichmentJobModel.job_id == job_id)
+            .first()
+        )
+        if job is None:
+            return None
+        items = (
+            self.session.query(BC3EnrichmentJobItemModel)
+            .filter(BC3EnrichmentJobItemModel.job_id == job_id)
+            .order_by(BC3EnrichmentJobItemModel.id)
+            .all()
+        )
+        return {
+            "job_id": cast(str, job.job_id),
+            "status": cast(str, job.status),
+            "total_items": cast(int, job.total_items),
+            "updated_items": cast(int, job.updated_items),
+            "unchanged_items": cast(int, job.unchanged_items),
+            "missing_items": cast(int, job.missing_items),
+            "created_at": cast(datetime, job.created_at),
+            "completed_at": cast(datetime | None, job.completed_at),
+            "items": [
+                {
+                    "codigo": cast(str, item.codigo),
+                    "result_status": cast(str, item.result_status),
+                    "error_message": cast(str | None, item.error_message),
+                }
+                for item in items
+            ],
+        }
+
+    def buscar_productos_privado(self, dto: dict) -> Tuple[List[ProductoEntity], int]:
+        """Paginate private BC3 products from the raw ``productos`` table."""
+        query = self.session.query(ProductoRawModel)
+        filters = dto.get("filters", {})
+        if filters.get("marca"):
+            query = query.filter(ProductoRawModel.marca == filters["marca"])
+        if filters.get("familia"):
+            query = query.filter(ProductoRawModel.familia_web == filters["familia"])
+        if filters.get("buscar"):
+            pattern = f"%{filters['buscar']}%"
+            query = query.filter(
+                or_(
+                    ProductoRawModel.codigo.ilike(pattern),
+                    ProductoRawModel.descripcion.ilike(pattern),
+                    ProductoRawModel.marca.ilike(pattern),
+                    ProductoRawModel.familia_web.ilike(pattern),
+                    ProductoRawModel.bc3_descripcion_corta.ilike(pattern),
+                )
+            )
+
+        total_count = query.count()
+        models = query.offset(dto["offset"]).limit(dto["per_page"]).all()
+        return [model.to_entity() for model in models], total_count

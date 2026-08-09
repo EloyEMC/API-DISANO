@@ -261,5 +261,125 @@ class TestMiddlewareRateLimitStore:
         assert rate_limit_store[ip][-1] > 0
 
 
+class TestMiddlewareApiKeyScopes:
+    """Tests for route-specific regular API key authentication."""
+
+    @staticmethod
+    def _request(path: str, headers: dict[str, str]) -> Request:
+        return Request(
+            {
+                "type": "http",
+                "method": "GET",
+                "path": path,
+                "headers": [
+                    (name.lower().encode(), value.encode()) for name, value in headers.items()
+                ],
+            }
+        )
+
+    @staticmethod
+    async def _call_next(request):
+        from starlette.responses import PlainTextResponse
+
+        return PlainTextResponse("ok")
+
+    def test_bc3_routes_accept_dedicated_key_for_descendants(self, monkeypatch):
+        """BC3 exact and descendant paths use BC3_API_KEYS."""
+        import asyncio
+
+        monkeypatch.setenv("ENVIRONMENT", "production")
+        monkeypatch.setenv("API_KEYS", "general-key")
+        monkeypatch.setenv("BC3_API_KEYS", "bc3-key")
+
+        from app.middleware import APIKeyMiddleware
+
+        middleware = APIKeyMiddleware(None)
+        for path in ("/api/productos/bc3/v1", "/api/productos/bc3/v1/items"):
+            response = asyncio.run(
+                middleware.dispatch(
+                    self._request(path, {"X-API-Key": "bc3-key"}),
+                    self._call_next,
+                )
+            )
+            assert response.status_code == 200
+
+    def test_bc3_routes_reject_general_key(self, monkeypatch):
+        """BC3 routes do not accept a general API_KEYS credential."""
+        import asyncio
+
+        monkeypatch.setenv("ENVIRONMENT", "production")
+        monkeypatch.setenv("API_KEYS", "general-key")
+        monkeypatch.setenv("BC3_API_KEYS", "bc3-key")
+
+        from app.middleware import APIKeyMiddleware
+
+        response = asyncio.run(
+            APIKeyMiddleware(None).dispatch(
+                self._request("/api/productos/bc3/v1/items", {"X-API-Key": "general-key"}),
+                self._call_next,
+            )
+        )
+
+        assert response.status_code == 401
+
+    def test_non_bc3_routes_keep_general_key_behavior(self, monkeypatch):
+        """Non-BC3 routes continue to use API_KEYS."""
+        import asyncio
+
+        monkeypatch.setenv("ENVIRONMENT", "production")
+        monkeypatch.setenv("API_KEYS", "general-key")
+        monkeypatch.setenv("BC3_API_KEYS", "bc3-key")
+
+        from app.middleware import APIKeyMiddleware
+
+        response = asyncio.run(
+            APIKeyMiddleware(None).dispatch(
+                self._request("/api/productos/v2/list", {"X-API-Key": "general-key"}),
+                self._call_next,
+            )
+        )
+
+        assert response.status_code == 200
+
+    def test_bc3_prefix_lookalike_remains_on_general_key_scope(self, monkeypatch):
+        """Paths outside the BC3 route prefix keep API_KEYS behavior."""
+        import asyncio
+
+        monkeypatch.setenv("ENVIRONMENT", "production")
+        monkeypatch.setenv("API_KEYS", "general-key")
+        monkeypatch.setenv("BC3_API_KEYS", "bc3-key")
+
+        from app.middleware import APIKeyMiddleware
+
+        response = asyncio.run(
+            APIKeyMiddleware(None).dispatch(
+                self._request("/api/productos/bc3/v10", {"X-API-Key": "general-key"}),
+                self._call_next,
+            )
+        )
+
+        assert response.status_code == 200
+
+    def test_admin_key_remains_valid_on_bc3_routes(self, monkeypatch):
+        """Admin authentication remains independent of regular key scope."""
+        import asyncio
+
+        monkeypatch.setenv("ENVIRONMENT", "production")
+        monkeypatch.setenv("API_KEYS", "general-key")
+        monkeypatch.setenv("BC3_API_KEYS", "bc3-key")
+        monkeypatch.setenv("ADMIN_API_KEYS", "admin-key")
+
+        from app.middleware import APIKeyMiddleware
+
+        response = asyncio.run(
+            APIKeyMiddleware(None).dispatch(
+                self._request("/api/productos/bc3/v1/items", {"X-Admin-API-Key": "admin-key"}),
+                self._call_next,
+            )
+        )
+
+        assert response.status_code == 200
+
+
 if __name__ == "__main__":
     pytest.main([__file__])
