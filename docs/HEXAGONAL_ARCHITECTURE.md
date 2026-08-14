@@ -94,7 +94,7 @@ async def buscar_productos_v2(
 class ProductoService:
     def __init__(self, repository: ProductoRepositoryInterface):  # DI
         self.repository = repository
-    
+
     def buscar_productos(self, dto: ProductoSearchDTO):
         # Business logic
         # Uses repository interface (not concrete implementation)
@@ -104,7 +104,7 @@ class ProductoService:
 class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
     def __init__(self, session: Session):  # DI
         self.session = session
-    
+
     def buscar_productos(self, ...):
         # Database access
         return self.session.query(...).all()
@@ -119,7 +119,7 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
 def test_producto_service_validation():
     mock_repo = Mock(spec=ProductoRepositoryInterface)
     service = ProductoService(mock_repo)
-    
+
     # Test business logic
     result = service.buscar_productos(dto)
     assert result is not None
