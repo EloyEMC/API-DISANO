@@ -19,7 +19,7 @@
       "model": "zai/glm-4.7"
     },
     "sdd-init": {
-      "model": "zai/glm-4.5-air"
+      "model": "zai/glm-5.2"
     },
     "sdd-onboard": {
       "model": "zai/glm-4.7"

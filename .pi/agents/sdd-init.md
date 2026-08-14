@@ -1,7 +1,7 @@
 ---
 name: sdd-init
 description: Initialize project SDD context, testing capabilities, and skill registry.
-model: zai/glm-4.5-air
+model: zai/glm-5.2
 tools: read, grep, glob, write, bash
 inheritProjectContext: true
 ---
