@@ -175,13 +175,13 @@ class ProductoEntity(BaseModel):
 ```python
 class ProductoService:
     def __init__(self, repository: ProductoRepositoryInterface)
-    
+
     # CRUD operations
     def crear_producto(self, dto: ProductoCreateDTO) -> ProductoEntity
     def actualizar_producto(self, codigo: str, dto: ProductoUpdateDTO) -> ProductoEntity
     def obtener_producto(self, codigo: str) -> ProductoEntity
     def eliminar_producto(self, codigo: str) -> bool
-    
+
     # Query operations
     def buscar_productos(self, dto: ProductoSearchDTO) -> list[ProductoEntity]
     def get_all_productos(self, skip: int, limit: int) -> list[ProductoEntity]
@@ -212,25 +212,25 @@ class ProductoRepositoryInterface(ABC):
     @abstractmethod
     def save(self, entity: ProductoEntity) -> ProductoEntity:
         pass
-    
+
     @abstractmethod
     def get_by_codigo(self, codigo: str) -> ProductoEntity:
         pass
-    
+
     @abstractmethod
     def buscar_productos(
         self, termino: str, limit: int, marca: str, familia: str
     ) -> list[ProductoEntity]:
         pass
-    
+
     @abstractmethod
     def delete(self, codigo: str) -> bool:
         pass
-    
+
     @abstractmethod
     def get_all(self, skip: int, limit: int) -> list[ProductoEntity]:
         pass
-    
+
     @abstractmethod
     def count_total(self) -> int:
         pass
@@ -319,50 +319,50 @@ def get_db_session() -> Session:
 class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
     def __init__(self, session: Session):
         self.session = session
-    
+
     def save(self, entity: ProductoEntity) -> ProductoEntity:
         # Convert entity to model
         model = ProductoModelClean.from_entity(entity)
-        
+
         # Database operation
         self.session.add(model)
         self.session.commit()
         self.session.refresh(model)
-        
+
         # Convert back to entity
         return model.to_entity()
-    
+
     def get_by_codigo(self, codigo: str) -> ProductoEntity:
         model = self.session.query(ProductoModelClean)\
                     .filter(ProductoModelClean.codigo == codigo)\
                     .first()
-        
+
         if not model:
             raise ProductoNotFoundException(codigo)
-        
+
         return model.to_entity()
-    
+
     def buscar_productos(
         self, termino: str, limit: int, marca: str, familia: str
     ) -> list[ProductoEntity]:
         query = self.session.query(ProductoModelClean)
-        
+
         # Apply filters
         if termino:
             query = query.filter(
                 (ProductoModelClean.codigo.ilike(f"%{termino}%")) |
                 (ProductoModelClean.descripcion.ilike(f"%{termino}%"))
             )
-        
+
         if marca:
             query = query.filter(ProductoModelClean.marca == marca)
-        
+
         if familia:
             query = query.filter(ProductoModelClean.familia == familia)
-        
+
         # Apply limit
         models = query.limit(limit).all()
-        
+
         return [model.to_entity() for model in models]
 ```
 
@@ -387,23 +387,23 @@ Base = declarative_base()
 
 class ProductoModelClean(Base):
     __tablename__ = "productos_clean"
-    
+
     # Primary fields
     codigo = Column(String(50), primary_key=True)
     descripcion = Column(String(200), nullable=False)
     marca = Column(String(100), nullable=False)
     familia = Column(String(100))
     pvp = Column(Float)
-    
+
     # BC3 Suite fields
     bc3_descripcion_corta = Column(String(100))
     bc3_product_type = Column(String(50))
     bc3_descripcion_completa = Column(String(500))
-    
+
     # Audit fields
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
-    
+
     @classmethod
     def from_entity(cls, entity: ProductoEntity) -> "ProductoModelClean":
         """Convert ProductoEntity to ORM Model"""
@@ -419,7 +419,7 @@ class ProductoModelClean(Base):
             created_at=entity.created_at,
             updated_at=entity.updated_at,
         )
-    
+
     def to_entity(self) -> ProductoEntity:
         """Convert ORM Model to ProductoEntity"""
         return ProductoEntity(
@@ -460,7 +460,7 @@ class ProductoCreateDTO(BaseModel):
     bc3_descripcion_corta: Optional[str] = Field(None)
     bc3_product_type: Optional[str] = Field(None)
     bc3_descripcion_completa: Optional[str] = Field(None)
-    
+
     def to_entity(self) -> ProductoEntity:
         """Convert DTO to Domain Entity"""
         return ProductoEntity(
@@ -499,7 +499,7 @@ class ProductoResponseDTO(BaseModel):
     bc3_descripcion_corta: Optional[str] = None
     bc3_product_type: Optional[str] = None
     bc3_descripcion_completa: Optional[str] = None
-    
+
     @classmethod
     def from_entity(cls, entity: ProductoEntity) -> "ProductoResponseDTO":
         """Create response DTO from Domain Entity"""
@@ -1003,10 +1003,10 @@ except ProductoNotFoundException:
 def test_buscar_productos():
     mock_repo = Mock(spec=ProductoRepositoryInterface)
     mock_repo.buscar_productos.return_value = [entity]
-    
+
     service = ProductoService(mock_repo)
     result = service.buscar_productos(dto)
-    
+
     assert len(result) == 1
     mock_repo.buscar_productos.assert_called_once()
 ```
@@ -1180,10 +1180,10 @@ def service(mock_repository):
 def test_obtener_producto_success(service, mock_repository):
     # Arrange
     mock_repository.get_by_codigo.return_value = entity
-    
+
     # Act
     result = service.obtener_producto("TEST001")
-    
+
     # Assert
     assert result.codigo == "TEST001"
     mock_repository.get_by_codigo.assert_called_once_with("TEST001")
@@ -1210,7 +1210,7 @@ def db_session():
 def test_buscar_productos_endpoint(client, db_session):
     # Act
     response = client.get("/api/productos/v2/list?buscar=test&limit=10")
-    
+
     # Assert
     assert response.status_code == 200
     data = response.json()
