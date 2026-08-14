@@ -46,11 +46,12 @@ class TestOTPServiceGeneration:
         otp_service = OTPService()
         email = "admin@example.com"
 
-        otp_service.generate_otp(email)
+        otp = otp_service.generate_otp(email)
 
         otp_data = otp_service.otp_store.get(email)
         assert otp_data is not None
-        assert otp_data["code"] in otp_service.otp_store[email]
+        assert "code" in otp_data
+        assert otp_data["code"] == otp
         assert otp_data["attempts"] == 0
         assert otp_data["verified"] is False
         assert otp_data["expiry"] > datetime.now()
@@ -167,8 +168,8 @@ class TestOTPServiceCleanup:
         otp_service.generate_otp("admin3@example.com")
 
         # Expirar uno manualmente
-        otp_service.otp_store["admin2@example.com"]["expiry"] = (
-            datetime.now() - timedelta(minutes=1)
+        otp_service.otp_store["admin2@example.com"]["expiry"] = datetime.now() - timedelta(
+            minutes=1
         )
 
         # Limpiar expirados

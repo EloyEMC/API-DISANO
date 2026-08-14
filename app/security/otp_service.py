@@ -1,5 +1,5 @@
 """
-Two-Factor Authentication (2FA) Service
+Two-Factor Authentication (2FA) Service.
 ========================================
 
 OTP-based 2FA for admin endpoints following BC3-Suite security patterns.
@@ -25,22 +25,40 @@ Usage:
 """
 
 import secrets
-from datetime import datetime, timedelta
-from typing import Optional, Tuple
 from collections import defaultdict
+from dataclasses import dataclass
+from datetime import datetime, timedelta
 
-from loguru import logger
+try:
+    from loguru import logger
+except ModuleNotFoundError:
+    import logging
+
+    logger = logging.getLogger("api-disano.security.otp")
+
 from app.config import get_settings
 
 settings = get_settings()
 
 
+@dataclass(frozen=True)
+class OTPCompatibility:
+    """Represent an OTP using the legacy module-level API."""
+
+    code: str
+    email: str
+    created_at: datetime
+    expires_at: datetime
+    max_attempts: int
+
+
 class OTPService:
-    """Service for OTP generation, delivery, and verification"""
+    """Service for OTP generation, delivery, and verification."""
 
     def __init__(self):
-        """Initialize OTP service with in-memory store"""
+        """Initialize OTP service with an in-memory store."""
         self.otp_store: dict[str, dict] = defaultdict(dict)
+        self._verified_emails: set[str] = set()
         self.otp_expiry_minutes = 10
         self.max_attempts = 3
         self.otp_length = 6
@@ -66,6 +84,8 @@ class OTPService:
         if not email or "@" not in email:
             raise ValueError("Invalid email address")
 
+        self._verified_emails.discard(email)
+
         # Generate 6-digit OTP
         otp = "".join([str(secrets.randbelow(10)) for _ in range(self.otp_length)])
 
@@ -87,7 +107,7 @@ class OTPService:
 
         return otp
 
-    def verify_otp(self, email: str, code: str) -> Tuple[bool, Optional[str]]:
+    def verify_otp(self, email: str, code: str) -> tuple[bool, str | None]:
         """
         Verify an OTP code.
 
@@ -111,6 +131,9 @@ class OTPService:
         """
         if not email or not code:
             return False, "Email and code are required"
+
+        if email in self._verified_emails:
+            return False, "OTP already verified"
 
         otp_data = self.otp_store.get(email)
 
@@ -141,7 +164,7 @@ class OTPService:
             otp_data["verified"] = True
             logger.info(f"OTP verified successfully for {email}")
 
-            # Clean up after successful verification
+            self._verified_emails.add(email)
             del self.otp_store[email]
 
             return True, None
@@ -191,9 +214,7 @@ class OTPService:
             print(f"Removed {removed} expired OTPs")
         """
         now = datetime.now()
-        expired_emails = [
-            email for email, data in self.otp_store.items() if now > data["expiry"]
-        ]
+        expired_emails = [email for email, data in self.otp_store.items() if now > data["expiry"]]
 
         for email in expired_emails:
             del self.otp_store[email]
@@ -201,7 +222,7 @@ class OTPService:
 
         return len(expired_emails)
 
-    def get_otp_status(self, email: str) -> Optional[dict]:
+    def get_otp_status(self, email: str) -> dict | None:
         """
         Get status of an OTP (for monitoring/debugging).
 
@@ -232,3 +253,21 @@ class OTPService:
 
 # Singleton instance
 otp_service = OTPService()
+
+
+def generate_otp(email: str) -> OTPCompatibility:
+    """Generate an OTP through the shared service compatibility API."""
+    code = otp_service.generate_otp(email)
+    data = otp_service.otp_store[email]
+    return OTPCompatibility(
+        code=code,
+        email=email,
+        created_at=data["created_at"],
+        expires_at=data["expiry"],
+        max_attempts=otp_service.max_attempts,
+    )
+
+
+def verify_otp(email: str, code: str) -> tuple[bool, str | None]:
+    """Verify an OTP through the shared service compatibility API."""
+    return otp_service.verify_otp(email, code)

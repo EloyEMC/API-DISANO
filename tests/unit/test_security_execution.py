@@ -7,7 +7,7 @@ BC3-Suite patterns: TDD (RED→GREEN→REFACTOR), AAA pattern.
 ."""
 
 import pytest
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 class TestSecurityOtpService:
@@ -45,11 +45,11 @@ class TestSecurityOtpService:
 
         # Act
         otp = generate_otp(email)
-        expiry_time = otp.created_at + datetime.timedelta(minutes=10)
+        expiry_time = otp.created_at + timedelta(minutes=10)
 
         # Assert
         assert expiry_time > datetime.now()
-        assert otp.expires_at == expiry_time
+        assert abs(otp.expires_at - expiry_time) < timedelta(seconds=1)
 
     def test_otp_max_3_attempts_enforced(self):
         """

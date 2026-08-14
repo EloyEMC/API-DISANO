@@ -1,5 +1,5 @@
 """
-Sistema de Rate Limiting usando slowapi
+Sistema de Rate Limiting usando slowapi.
 =======================================
 
 Este módulo implementa limitación de tasa de peticiones para prevenir:
@@ -29,9 +29,40 @@ Uso:
 """
 
 from fastapi import Request
-from slowapi import Limiter
-from slowapi.util import get_remote_address
-from slowapi.errors import RateLimitExceeded
+
+RATE_LIMIT_PER_CLIENT = 30
+RATE_LIMIT_GLOBAL = 1000
+RATE_LIMIT_BURST = 10
+RATE_LIMIT_LISTINGS = 10
+
+try:
+    from slowapi import Limiter
+    from slowapi.errors import RateLimitExceeded
+    from slowapi.util import get_remote_address
+except ModuleNotFoundError:  # Optional dependency; custom middleware remains active.
+
+    class RateLimitExceeded(RuntimeError):
+        """Raised when slowapi is requested but not installed."""
+
+    class Limiter:
+        """Fail-closed placeholder when slowapi is absent."""
+
+        def __init__(self, *args, **kwargs):
+            self._missing_dependency = True
+
+        def limit(self, *_args, **_kwargs):
+            """Reject decorated endpoints when slowapi is unavailable."""
+
+            def decorator(_endpoint):
+                raise RuntimeError("slowapi is required for decorated rate-limited endpoints")
+
+            return decorator
+
+    def get_remote_address(request: Request) -> str:
+        """Return the client address without requiring slowapi."""
+        return request.client.host if request.client else "unknown"
+
+
 from app.config import get_settings
 from app.security.logging_config import logger, log_security_event
 
@@ -116,8 +147,7 @@ async def rate_limit_exceeded_handler(request: Request, exc: RateLimitExceeded):
     """
     identifier = get_api_key_identifier(request)
     logger.warning(
-        f"Rate limit excedido por {identifier}. "
-        f"Límite: {settings.rate_limit_per_client}/minute"
+        f"Rate limit excedido por {identifier}. " f"Límite: {settings.rate_limit_per_client}/minute"
     )
     log_security_event(
         event_type="rate_limit",
