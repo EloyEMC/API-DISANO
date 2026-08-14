@@ -12,5 +12,5 @@ class PaginationRequestDTO(BaseModel):
 
     @property
     def offset(self) -> int:
-        """Calculate offset from page and per_page."""
+        """Return the zero-based pagination offset."""
         return (self.page - 1) * self.per_page
