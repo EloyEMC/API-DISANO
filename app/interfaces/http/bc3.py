@@ -1,12 +1,13 @@
-"""HTTP interface for BC3 using hexagonal architecture
+"""HTTP interface for BC3 using hexagonal architecture.
 
 FastAPI router with dependency injection for BC3 endpoints.
 Uses existing ProductoService since BC3 data is in ProductoEntity.
-."""
+"""
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
+from app.domain.exceptions.not_found import ProductoNotFoundException
 from app.domain.services.producto import ProductoService
 from app.infrastructure.repositories.producto import SQLAlchemyProductoRepository
 from app.infrastructure.database.connection import SessionLocal
@@ -68,7 +69,7 @@ async def buscar_bc3_paginado(
 
     Endpoint público con soporte completo de paginación, ordenamiento y filtros BC3.
     Proporciona metadatos de paginación y caché integrado.
-    ."""
+    """
     try:
         # Build pagination request DTO
         pagination_dto = PaginationRequestDTO(
@@ -159,25 +160,19 @@ async def get_bc3_stats_v2(
     Obtener estadísticas BC3 mejoradas V2.
 
     **V2 New Feature** - Estadísticas BC3 mejoradas con métricas adicionales
-    ."""
+    """
     try:
         # Get all products to calculate BC3 statistics
         all_products = service.get_all_productos(skip=0, limit=10000)
 
         total = len(all_products)
         con_descripcion_corta = sum(1 for p in all_products if p.bc3_descripcion_corta)
-        con_descripcion_larga = sum(
-            1 for p in all_products if p.bc3_descripcion_completa
-        )
+        con_descripcion_larga = sum(1 for p in all_products if p.bc3_descripcion_completa)
         con_tipo_producto = sum(1 for p in all_products if p.bc3_product_type)
 
         # Calculate percentages
-        porcentaje_desc_corta = (
-            (con_descripcion_corta / total * 100) if total > 0 else 0
-        )
-        porcentaje_desc_larga = (
-            (con_descripcion_larga / total * 100) if total > 0 else 0
-        )
+        porcentaje_desc_corta = (con_descripcion_corta / total * 100) if total > 0 else 0
+        porcentaje_desc_larga = (con_descripcion_larga / total * 100) if total > 0 else 0
         porcentaje_tipo = (con_tipo_producto / total * 100) if total > 0 else 0
 
         # Count by product type
@@ -212,19 +207,17 @@ async def get_bc3_stats(
     service: ProductoService = Depends(get_producto_service),
 ) -> dict:
     """
-    Get BC3 statistics across all products
+    Get BC3 statistics across all products.
 
     **V1 Backward Compatible** - Returns same format as legacy router
-    ."""
+    """
     try:
         # Get all products to calculate BC3 statistics
         all_products = service.get_all_productos(skip=0, limit=10000)
 
         total = len(all_products)
         con_descripcion_corta = sum(1 for p in all_products if p.bc3_descripcion_corta)
-        con_descripcion_larga = sum(
-            1 for p in all_products if p.bc3_descripcion_completa
-        )
+        con_descripcion_larga = sum(1 for p in all_products if p.bc3_descripcion_completa)
         con_tipo_producto = sum(1 for p in all_products if p.bc3_product_type)
 
         return {
@@ -244,10 +237,10 @@ async def get_productos_por_tipo_bc3(
     service: ProductoService = Depends(get_producto_service),
 ) -> dict:
     """
-    Get products by BC3 type (columna or articulacion)
+    Get products by BC3 type (columna or articulacion).
 
     **V1 Backward Compatible** - Returns same format as legacy router
-    ."""
+    """
     try:
         # Use bc3_product_type as search term to filter by type
         dto = ProductoSearchDTO(
@@ -273,10 +266,10 @@ async def get_columnas(
     service: ProductoService = Depends(get_producto_service),
 ) -> dict:
     """
-    Get all products with bc3_product_type='columna'
+    Get all products with bc3_product_type='columna'.
 
     **V1 Backward Compatible** - Returns same format as legacy router
-    ."""
+    """
     try:
         # Use bc3_product_type='columna' as search term
         dto = ProductoSearchDTO(
@@ -301,10 +294,10 @@ async def get_articulaciones(
     service: ProductoService = Depends(get_producto_service),
 ) -> dict:
     """
-    Get all products with bc3_product_type='articulacion'
+    Get all products with bc3_product_type='articulacion'.
 
     **V1 Backward Compatible** - Returns same format as legacy router
-    ."""
+    """
     try:
         # Use bc3_product_type='articulacion' as search term
         dto = ProductoSearchDTO(
@@ -332,10 +325,10 @@ async def get_bc3_descripcion(
     service: ProductoService = Depends(get_producto_service),
 ) -> dict:
     """
-    Get BC3 description for a specific product
+    Get BC3 description for a specific product.
 
     **V1 Backward Compatible** - Returns same format as legacy router
-    ."""
+    """
     try:
         producto = service.obtener_producto(codigo)
 
@@ -352,7 +345,9 @@ async def get_bc3_descripcion(
             "descripcion_larga": producto.bc3_descripcion_completa,
             "product_type": producto.bc3_product_type,
         }
-    except ValueError:
+    except (ValueError, ProductoNotFoundException):
         raise HTTPException(status_code=404, detail=f"Producto {codigo} no encontrado")
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}") from None
