@@ -1,12 +1,12 @@
-"""
-Configuración centralizada de la aplicación
-Usa pydantic-settings para validación y type safety
-."""
+"""Centralized application configuration.
 
-from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import field_validator, Field
-from typing import List, Union
+Uses pydantic-settings for validation and type safety.
+"""
+
 from functools import lru_cache
+
+from pydantic import Field, field_validator, model_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -25,11 +25,13 @@ class Settings(BaseSettings):
 
     # Environment
     environment: str = "development"
+    secret_key: str = ""
 
     # Security - API Keys (accept string or list, normalize to list)
-    api_keys: Union[str, List[str]] = Field(default_factory=list)
+    api_keys: str | list[str] = Field(default_factory=list)
     api_key_header: str = "X-API-Key"
-    admin_api_keys: Union[str, List[str]] = Field(default_factory=list)
+    admin_api_keys: str | list[str] = Field(default_factory=list)
+    bc3_api_keys: str | list[str] = Field(default_factory=list)
 
     # Security - Rate Limiting
     rate_limit_enabled: bool = True
@@ -39,7 +41,7 @@ class Settings(BaseSettings):
     rate_limit_listings: int = 10
 
     # Security - User-Agent Filtering
-    blocked_user_agents: List[str] = [
+    blocked_user_agents: list[str] = [
         "python-requests",
         "curl",
         "wget",
@@ -53,10 +55,10 @@ class Settings(BaseSettings):
     ]
 
     # Security - CORS (accept string or list, normalize to list)
-    cors_origins: Union[str, List[str]] = ["*"]
+    cors_origins: str | list[str] = ["*"]
     cors_allow_credentials: bool = True
-    cors_allow_methods: List[str] = ["*"]
-    cors_allow_headers: List[str] = ["*"]
+    cors_allow_methods: list[str] = ["*"]
+    cors_allow_headers: list[str] = ["*"]
 
     # Security - HTTPS
     https_enabled: bool = True
@@ -65,7 +67,7 @@ class Settings(BaseSettings):
     https_hsts_preload: bool = True
 
     # Security - Documentation
-    docs_enabled: bool = False
+    docs_enabled: bool | None = None
 
     # Security - Scraping Detection
     scraping_detection_enabled: bool = True
@@ -81,11 +83,19 @@ class Settings(BaseSettings):
     security_log_enabled: bool = True
 
     # Database
+    database_url: str | None = None
     database_path: str = "database/tarifa_disano.db"
+
+    @model_validator(mode="after")
+    def set_docs_default(self) -> "Settings":
+        """Keep local documentation convenient but disable it by default in production."""
+        if self.docs_enabled is None:
+            self.docs_enabled = not self.is_production()
+        return self
 
     @field_validator("api_keys", mode="before")
     @classmethod
-    def parse_api_keys(cls, v: Union[str, List[str]]) -> List[str]:
+    def parse_api_keys(cls, v: str | list[str]) -> list[str]:
         """Parse api_keys from string or list."""
         if isinstance(v, str):
             return [key.strip() for key in v.split(",") if key.strip()]
@@ -93,29 +103,44 @@ class Settings(BaseSettings):
 
     @field_validator("admin_api_keys", mode="before")
     @classmethod
-    def parse_admin_api_keys(cls, v: Union[str, List[str]]) -> List[str]:
+    def parse_admin_api_keys(cls, v: str | list[str]) -> list[str]:
         """Parse admin_api_keys from string or list."""
+        if isinstance(v, str):
+            return [key.strip() for key in v.split(",") if key.strip()]
+        return v if isinstance(v, list) else []
+
+    @field_validator("bc3_api_keys", mode="before")
+    @classmethod
+    def parse_bc3_api_keys(cls, v: str | list[str]) -> list[str]:
+        """Parse bc3_api_keys from string or list."""
         if isinstance(v, str):
             return [key.strip() for key in v.split(",") if key.strip()]
         return v if isinstance(v, list) else []
 
     @field_validator("cors_origins", mode="before")
     @classmethod
-    def parse_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:
+    def parse_cors_origins(cls, v: str | list[str]) -> list[str]:
         """Parse cors_origins from string or list."""
         if isinstance(v, str):
             return [origin.strip() for origin in v.split(",") if origin.strip()]
         return v if isinstance(v, list) else ["*"]
 
     @property
-    def api_keys_list(self) -> List[str]:
+    def api_keys_list(self) -> list[str]:
         """Return api_keys as a list for compatibility."""
         if isinstance(self.api_keys, list):
             return self.api_keys
         return [self.api_keys] if self.api_keys else []
 
     @property
-    def cors_origins_list(self) -> List[str]:
+    def bc3_api_keys_list(self) -> list[str]:
+        """Return bc3_api_keys as a list for private BC3 authentication."""
+        if isinstance(self.bc3_api_keys, list):
+            return self.bc3_api_keys
+        return [self.bc3_api_keys] if self.bc3_api_keys else []
+
+    @property
+    def cors_origins_list(self) -> list[str]:
         """Return cors_origins as a list for compatibility."""
         if isinstance(self.cors_origins, list):
             return self.cors_origins
@@ -125,12 +150,23 @@ class Settings(BaseSettings):
         """Verifica si estamos en producción."""
         return self.environment.lower() == "production"
 
+    def validate_required(self) -> None:
+        """Validate settings that are mandatory in production."""
+        if not self.is_production():
+            return
+        missing = []
+        if not self.secret_key or len(self.secret_key) < 32:
+            missing.append("SECRET_KEY")
+        if not self.api_keys_list:
+            missing.append("API_KEYS")
+        if missing:
+            raise ValueError("Missing required production settings: " + ", ".join(missing))
 
-@lru_cache()
+
+@lru_cache
 def get_settings() -> Settings:
     """
     Retorna instancia caché de Settings.
     Usa lru_cache para solo cargar una vez.
     """
     return Settings()
-

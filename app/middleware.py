@@ -1,7 +1,8 @@
+"""Security middleware for the API DISANO application.
+
+Provides API key authentication and rate limiting.
 """
-Security Module for API DISANO
-Simple API Key authentication and rate limiting
-."""
+
 from fastapi import Request, status
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
@@ -9,6 +10,8 @@ import os
 import time
 from collections import defaultdict
 from typing import Dict
+
+from app.config import get_settings
 
 # Note: Don't use load_dotenv() - systemd passes env vars directly
 # from dotenv import load_dotenv
@@ -31,8 +34,8 @@ def get_environment():
 
 
 def get_rate_limit():
-    """Get rate limit from settings."""
-    return int(os.getenv("RATE_LIMIT_PER_MINUTE", "30"))
+    """Get the per-client rate limit from the central Settings contract."""
+    return get_settings().rate_limit_per_client
 
 
 def get_admin_keys():
@@ -63,6 +66,7 @@ class APIKeyMiddleware(BaseHTTPMiddleware):
     EXEMPT_PATHS = {"/", "/health", "/docs", "/redoc", "/openapi.json"}
 
     async def dispatch(self, request: Request, call_next):
+        """Validate the API key before forwarding the request."""
         # In development, skip API key check
         if get_environment() == "development":
             return await call_next(request)
@@ -79,9 +83,7 @@ class APIKeyMiddleware(BaseHTTPMiddleware):
         if not api_key and not admin_api_key:
             return JSONResponse(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                content={
-                    "detail": "API Key is required. Use X-API-Key or X-Admin-API-Key header."
-                },
+                content={"detail": "API Key is required. Use X-API-Key or X-Admin-API-Key header."},
             )
 
         # Validate regular API key if provided
@@ -110,6 +112,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     EXEMPT_PATHS = {"/", "/health"}
 
     async def dispatch(self, request: Request, call_next):
+        """Enforce the configured per-client request rate limit."""
         path = request.url.path
 
         # Skip rate limiting for exempt paths
@@ -117,7 +120,12 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         # Get API key (or use IP if no API key in development)
-        client_id = request.headers.get("X-API-Key", request.client.host)
+        api_key = request.headers.get("X-API-Key")
+        client_id = (
+            api_key
+            if api_key is not None
+            else (request.client.host if request.client else "unknown-client")
+        )
 
         # Clean old requests (older than 1 minute)
         current_time = time.time()
@@ -125,9 +133,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
         # Filter out old requests
         rate_limit_store[client_id] = [
-            req_time
-            for req_time in rate_limit_store[client_id]
-            if req_time > minute_ago
+            req_time for req_time in rate_limit_store[client_id] if req_time > minute_ago
         ]
 
         # Check rate limit
@@ -142,7 +148,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 },
                 headers={
                     "Retry-After": "60",
-                    "X-RateLimit-Limit": str(RATE_LIMIT),
+                    "X-RateLimit-Limit": str(rate_limit),
                     "X-RateLimit-Remaining": "0",
                     "X-RateLimit-Reset": str(int(current_time + 60)),
                 },
@@ -181,6 +187,7 @@ class UserAgentMiddleware(BaseHTTPMiddleware):
     ]
 
     async def dispatch(self, request: Request, call_next):
+        """Reject requests with suspicious user-agent values."""
         user_agent = request.headers.get("user-agent", "").lower()
 
         # Check if user agent contains blocked patterns
@@ -188,9 +195,7 @@ class UserAgentMiddleware(BaseHTTPMiddleware):
             if blocked in user_agent:
                 return JSONResponse(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    content={
-                        "detail": "Access denied. Suspicious User-Agent detected."
-                    },
+                    content={"detail": "Access denied. Suspicious User-Agent detected."},
                 )
 
         return await call_next(request)
@@ -200,6 +205,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     """Add security headers."""
 
     async def dispatch(self, request: Request, call_next):
+        """Add security headers to the downstream response."""
         response = await call_next(request)
 
         # Remove server header
@@ -213,11 +219,10 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["X-XSS-Protection"] = "1; mode=block"
         response.headers["Referrer-Policy"] = "no-referrer"
+        response.headers["Content-Security-Policy"] = "default-src 'self'"
 
         # HSTS (only in production with HTTPS)
         if get_environment() == "production":
-            response.headers[
-                "Strict-Transport-Security"
-            ] = "max-age=31536000; includeSubDomains"
+            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
 
         return response

@@ -12,7 +12,7 @@ import pytest
 class TestConfigSettingsRequiredFields:
     """Tests de campos obligatorios en Settings (TDD + AAA)."""
 
-    def test_settings_secret_key_required_validation(self):
+    def test_settings_secret_key_required_validation(self) -> None:
         """
         RED: Settings debe fallar sin SECRET_KEY válido.
 
@@ -24,31 +24,35 @@ class TestConfigSettingsRequiredFields:
         # Arrange
         from app.config import Settings
 
-        # Act & Assert - SECRET_KEY vacío debe lanzar ValueError
-        with pytest.raises(ValueError):
-            Settings(secret_key="")
+        # Act & Assert - la validación ocurre explícitamente en producción
+        settings = Settings(secret_key="", environment="production")
+        with pytest.raises(ValueError, match="SECRET_KEY"):
+            settings.validate_required()
 
-    def test_settings_api_keys_required_validation(self):
+    def test_settings_api_keys_required_validation(self) -> None:
         """
         GREEN: Settings debe fallar sin API_KEYS válidos.
         """
         # Arrange
         from app.config import Settings
 
-        # Act & Assert - API_KEYS vacío debe lanzar ValueError
-        with pytest.raises(ValueError):
-            Settings(api_keys=[])
+        # Act & Assert - la validación ocurre explícitamente en producción
+        settings = Settings(
+            secret_key="test-secret-key-32-chars-safe-testing",
+            api_keys=[],
+            environment="production",
+        )
+        with pytest.raises(ValueError, match="API_KEYS"):
+            settings.validate_required()
 
-    def test_settings_valid_configuration(self):
+    def test_settings_valid_configuration(self) -> None:
         """
         GREEN: Settings válidos funcionan.
         ."""
         # Arrange & Act
         from app.config import Settings
 
-        settings = Settings(
-            secret_key="test-secret-key-32-chars-safe", api_keys=["key1", "key2"]
-        )
+        settings = Settings(secret_key="test-secret-key-32-chars-safe", api_keys=["key1", "key2"])
 
         # Assert
         assert settings.secret_key == "test-secret-key-32-chars-safe"
@@ -58,7 +62,7 @@ class TestConfigSettingsRequiredFields:
 class TestConfigFieldValidators:
     """Tests de field validators en Settings (TDD + AAA)."""
 
-    def test_api_keys_parser_from_string(self):
+    def test_api_keys_parser_from_string(self) -> None:
         """
         RED: Field validator parsea API_KEYS de string a lista.
 
@@ -79,7 +83,7 @@ class TestConfigFieldValidators:
         assert "key2" in settings.api_keys_list
         assert "key3" in settings.api_keys_list
 
-    def test_api_keys_parser_from_list(self):
+    def test_api_keys_parser_from_list(self) -> None:
         """
         GREEN: Field validator acepta API_KEYS como lista.
         ."""
@@ -92,7 +96,7 @@ class TestConfigFieldValidators:
         assert isinstance(settings.api_keys_list, list)
         assert len(settings.api_keys_list) == 2
 
-    def test_admin_api_keys_parser_from_string(self):
+    def test_admin_api_keys_parser_from_string(self) -> None:
         """
         GREEN: Field validator parsea ADMIN_API_KEYS de string a lista.
         ."""
@@ -116,7 +120,7 @@ class TestConfigFieldValidators:
         assert "admin-key-1" in admin_keys
         assert "admin-key-2" in admin_keys
 
-    def test_cors_origins_parser_from_string(self):
+    def test_cors_origins_parser_from_string(self) -> None:
         """
         GREEN: Field validator parsea CORS_ORIGINS de string a lista.
         ."""
@@ -137,35 +141,31 @@ class TestConfigFieldValidators:
 class TestConfigProperties:
     """Tests de properties en Settings (TDD + AAA)."""
 
-    def test_is_production_returns_false_in_development(self):
+    def test_is_production_returns_false_in_development(self) -> None:
         """
         RED: is_production() retorna False en development.
         ."""
         # Arrange & Act
         from app.config import Settings
 
-        settings = Settings(
-            secret_key="test", api_keys=["key"], environment="development"
-        )
+        settings = Settings(secret_key="test", api_keys=["key"], environment="development")
 
         # Assert
         assert settings.is_production() is False
 
-    def test_is_production_returns_true_in_production(self):
+    def test_is_production_returns_true_in_production(self) -> None:
         """
         GREEN: is_production() retorna True en production.
         ."""
         # Arrange & Act
         from app.config import Settings
 
-        settings = Settings(
-            secret_key="test-prod", api_keys=["key"], environment="production"
-        )
+        settings = Settings(secret_key="test-prod", api_keys=["key"], environment="production")
 
         # Assert
         assert settings.is_production() is True
 
-    def test_api_keys_list_property_returns_list(self):
+    def test_api_keys_list_property_returns_list(self) -> None:
         """
         GREEN: api_keys_list property retorna lista correctamente.
         ."""
@@ -178,7 +178,7 @@ class TestConfigProperties:
         assert isinstance(settings.api_keys_list, list)
         assert len(settings.api_keys_list) == 2
 
-    def test_validate_required_passes_with_valid_config(self):
+    def test_validate_required_passes_with_valid_config(self) -> None:
         """
         GREEN: validate_required() pasa con configuración válida en producción.
         ."""
@@ -186,7 +186,7 @@ class TestConfigProperties:
         from app.config import Settings
 
         settings = Settings(
-            secret_key="test-prod-secret-key-32",
+            secret_key="test-prod-secret-key-32-chars-safe",
             api_keys=["key1", "key2"],
             environment="production",
         )
@@ -194,26 +194,24 @@ class TestConfigProperties:
         # Act & Assert - validate_required() NO debe lanzar ValueError
         settings.validate_required()  # No exception = PASS
 
-    def test_validate_required_fails_without_secret_key_in_production(self):
+    def test_validate_required_fails_without_secret_key_in_production(self) -> None:
         """
         RED: validate_required() falla sin SECRET_KEY en producción.
         ."""
         # Arrange
         from app.config import Settings
 
-        settings = Settings(
-            secret_key="", api_keys=["key1", "key2"], environment="production"
-        )
+        settings = Settings(secret_key="", api_keys=["key1", "key2"], environment="production")
 
         # Act & Assert - validate_required() debe lanzar ValueError
-        with pytest.raises(ValueError, match="SECRET_KEY es obligatorio"):
+        with pytest.raises(ValueError, match="SECRET_KEY"):
             settings.validate_required()
 
 
 class TestConfigDefaultValues:
     """Tests de valores default en Settings (TDD + AAA)."""
 
-    def test_default_api_title(self):
+    def test_default_api_title(self) -> None:
         """
         GREEN: api_title tiene default razonable.
         ."""
@@ -225,7 +223,7 @@ class TestConfigDefaultValues:
         # Assert
         assert settings.api_title == "API Disano"
 
-    def test_default_api_version(self):
+    def test_default_api_version(self) -> None:
         """
         GREEN: api_version tiene default razonable.
         ."""
@@ -237,7 +235,7 @@ class TestConfigDefaultValues:
         # Assert
         assert settings.api_version == "1.0.0"
 
-    def test_default_rate_limit_values(self):
+    def test_default_rate_limit_values(self) -> None:
         """
         GREEN: rate_limit tiene defaults razonables.
         ."""
@@ -251,7 +249,7 @@ class TestConfigDefaultValues:
         assert settings.rate_limit_per_client == 30
         assert settings.rate_limit_global == 1000
 
-    def test_default_cors_configuration(self):
+    def test_default_cors_configuration(self) -> None:
         """
         GREEN: CORS tiene defaults razonables.
         ."""

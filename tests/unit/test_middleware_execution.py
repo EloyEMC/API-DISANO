@@ -128,7 +128,7 @@ class TestMiddlewareGetRateLimit:
         # Arrange
         import os
 
-        os.environ["RATE_LIMIT_PER_MINUTE"] = "60"
+        os.environ["RATE_LIMIT_PER_CLIENT"] = "60"
 
         # Act
         from app.middleware import get_rate_limit
@@ -185,7 +185,7 @@ class TestMiddlewareGetAdminKeys:
 class TestMiddlewareVerifyAdminApiKey:
     """Tests de verify_admin_api_key() en app/middleware.py (TDD + AAA)."""
 
-    def test_verify_admin_api_key_always_true_in_development(self):
+    def test_verify_admin_api_key_always_true_in_development(self) -> None:
         """
         RED: verify_admin_api_key() retorna True siempre en development.
         ."""
@@ -206,7 +206,7 @@ class TestMiddlewareVerifyAdminApiKey:
         # Assert
         assert result is True
 
-    def test_verify_admin_api_key_checks_in_production(self):
+    def test_verify_admin_api_key_checks_in_production(self) -> None:
         """
         GREEN: verify_admin_api_key() verifica headers en production.
         ."""
@@ -230,10 +230,38 @@ class TestMiddlewareVerifyAdminApiKey:
         assert isinstance(result, bool)
 
 
+@pytest.mark.asyncio
+async def test_rate_limit_dispatch_handles_missing_client():
+    """Rate limiting uses a deterministic fallback without a client address."""
+    from unittest.mock import Mock
+
+    from starlette.responses import Response
+
+    from app import middleware as module
+
+    async def asgi_app(scope: object, receive: object, send: object) -> None:
+        return None
+
+    middleware = module.RateLimitMiddleware(asgi_app)
+    request = Mock(spec=Request)
+    request.url.path = "/protected"
+    request.headers.get.side_effect = lambda key, default=None: (
+        None if key == "X-API-Key" else default
+    )
+    request.client = None
+
+    async def call_next(_request: Request) -> Response:
+        return Response("ok")
+
+    await middleware.dispatch(request, call_next)
+
+    assert "unknown-client" in module.rate_limit_store
+
+
 class TestMiddlewareRateLimitStore:
     """Tests de rate_limit_store en app/middleware.py (TDD + AAA)."""
 
-    def test_rate_limit_store_is_dict_of_lists(self):
+    def test_rate_limit_store_is_dict_of_lists(self) -> None:
         """
         GREEN: rate_limit_store es un dict de listas.
         """
@@ -244,13 +272,14 @@ class TestMiddlewareRateLimitStore:
         assert isinstance(rate_limit_store, dict)
         assert all(isinstance(v, list) for v in rate_limit_store.values())
 
-    def test_rate_limit_store_allows_adding_timestamps(self):
+    def test_rate_limit_store_allows_adding_timestamps(self) -> None:
         """
         GREEN: rate_limit_store permite agregar timestamps.
         ."""
         # Arrange
-        from app.middleware import rate_limit_store
         import time
+
+        from app.middleware import rate_limit_store
 
         # Act - Agregar timestamp para IP
         ip = "192.168.1.100"
