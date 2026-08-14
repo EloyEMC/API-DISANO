@@ -1,7 +1,7 @@
+"""API REST de Disano - Productos y Tarifas.
+
+FastAPI service with secure runtime configuration.
 """
-API REST de Disano - Productos y Tarifas
-FastAPI con SQLite - CON SEGURIDAD
-."""
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -16,37 +16,50 @@ from app.middleware import (
     UserAgentMiddleware,
     SecurityHeadersMiddleware,
 )
-import os
 from app.interfaces.http.error_handlers import register_exception_handlers
+from app.security.logging_config import setup_logging
+from app.config import get_settings
+
+settings = get_settings()
+setup_logging()
 
 # Load environment
-ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
+ENVIRONMENT = settings.environment
+
+
+def validate_startup_configuration() -> None:
+    """Fail closed for invalid production secrets without restricting local modes."""
+    get_settings().validate_required()
+
+
+validate_startup_configuration()
+
+DOCS_ENABLED = bool(settings.docs_enabled)
 
 # Crear aplicación FastAPI
-# Documentation is DISABLED in production
 app = FastAPI(
     title="API Disano",
     description="API REST para consultar productos y tarifas de Disano",
     version="1.0.0",
-    docs_url="/docs" if ENVIRONMENT == "development" else None,
-    redoc_url="/redoc" if ENVIRONMENT == "development" else None,
-    openapi_url="/openapi.json" if ENVIRONMENT == "development" else None,
+    docs_url="/docs" if DOCS_ENABLED else None,
+    redoc_url="/redoc" if DOCS_ENABLED else None,
+    openapi_url="/openapi.json" if DOCS_ENABLED else None,
 )
 
 # Configure CORS based on environment
 if ENVIRONMENT == "production":
     # In production: restrict CORS to specific domains
-    allowed_origins = os.getenv("CORS_ORIGINS", "").split(",")
+    allowed_origins = settings.cors_origins_list
     if not allowed_origins or allowed_origins == [""]:
         allowed_origins = ["https://eloymartinezcuesta.com"]
 else:
-    # In development: allow all origins
-    allowed_origins = ["*"]
+    # In development: allow configured origins, defaulting to all origins.
+    allowed_origins = settings.cors_origins_list
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
-    allow_credentials=True,
+    allow_credentials=settings.cors_allow_credentials and "*" not in allowed_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -79,8 +92,7 @@ async def root():
         "bc3": "/api/bc3",
     }
 
-    # Only show docs in development
-    if ENVIRONMENT == "development":
+    if DOCS_ENABLED:
         endpoints["documentacion"] = "/docs"
 
     return {
