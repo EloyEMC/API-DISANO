@@ -1,7 +1,7 @@
-"""SQLAlchemy implementation of FamiliaRepository
+"""Provide the SQLAlchemy implementation of the family repository.
 
 Repository implementation using SQLAlchemy ORM for data access.
-."""
+"""
 
 from typing import List, Dict, Any, Tuple
 from sqlalchemy import func, case, asc, desc, or_
@@ -17,32 +17,30 @@ class SQLAlchemyFamiliaRepository(FamiliaRepositoryInterface):
     """SQLAlchemy implementation for FamiliaRepository."""
 
     def __init__(self, session: Session):
-        """
-        Initialize repository with database session
+        """Initialize the repository with a database session.
 
         Args:
-            session: SQLAlchemy database session
+            session: SQLAlchemy database session.
         """
         self.session = session
 
     def get_all(self) -> List[FamiliaEntity]:
-        """
-        Get all families with BC3 statistics from productos_clean view
+        """Get all families with BC3 statistics from productos_clean view.
 
         Returns:
-            List[FamiliaEntity]: All families with BC3 statistics
-        ."""
+            List[FamiliaEntity]: All families with BC3 statistics.
+        """
         # Group by familia and calculate statistics
         query = (
             self.session.query(
                 ProductoModel.familia,
                 func.count(ProductoModel.codigo).label("total_productos"),
-                func.sum(
-                    case((ProductoModel.bc3_descripcion_corta.isnot(None), 1), else_=0)
-                ).label("con_bc3"),
-                func.sum(
-                    case((ProductoModel.descripcion_corta.isnot(None), 1), else_=0)
-                ).label("con_imagen"),
+                func.sum(case((ProductoModel.bc3_descripcion_corta.isnot(None), 1), else_=0)).label(
+                    "con_bc3"
+                ),
+                func.sum(case((ProductoModel.descripcion_corta.isnot(None), 1), else_=0)).label(
+                    "con_imagen"
+                ),
             )
             .filter(ProductoModel.familia.isnot(None))
             .group_by(ProductoModel.familia)
@@ -64,28 +62,27 @@ class SQLAlchemyFamiliaRepository(FamiliaRepositoryInterface):
         ]
 
     def get_by_nombre(self, nombre: str) -> FamiliaEntity:
-        """
-        Get family by name with statistics
+        """Get a family by name with statistics.
 
         Args:
-            nombre: Family name
+            nombre: Family name.
 
         Returns:
-            FamiliaEntity: Family with statistics
+            FamiliaEntity: Family with statistics.
 
         Raises:
-            ValueError: If family not found
-        ."""
+            ValueError: If the family is not found.
+        """
         query = (
             self.session.query(
                 ProductoModel.familia,
                 func.count(ProductoModel.codigo).label("total_productos"),
-                func.sum(
-                    case((ProductoModel.bc3_descripcion_corta.isnot(None), 1), else_=0)
-                ).label("con_bc3"),
-                func.sum(
-                    case((ProductoModel.descripcion_corta.isnot(None), 1), else_=0)
-                ).label("con_imagen"),
+                func.sum(case((ProductoModel.bc3_descripcion_corta.isnot(None), 1), else_=0)).label(
+                    "con_bc3"
+                ),
+                func.sum(case((ProductoModel.descripcion_corta.isnot(None), 1), else_=0)).label(
+                    "con_imagen"
+                ),
             )
             .filter(ProductoModel.familia == nombre)
             .group_by(ProductoModel.familia)
@@ -105,12 +102,11 @@ class SQLAlchemyFamiliaRepository(FamiliaRepositoryInterface):
         )
 
     def get_statistics(self) -> Dict:
-        """
-        Get aggregate statistics across all families
+        """Get aggregate statistics across all families.
 
         Returns:
-            Dict: Aggregate statistics including total families, products, BC3 coverage
-        ."""
+            Dict: Aggregate family, product, and BC3 coverage statistics.
+        """
         # Total families
         total_familias_query = self.session.query(
             func.count(func.distinct(ProductoModel.familia))
@@ -118,16 +114,14 @@ class SQLAlchemyFamiliaRepository(FamiliaRepositoryInterface):
         total_familias = total_familias_query.scalar() or 0
 
         # Total products
-        total_productos = (
-            self.session.query(func.count(ProductoModel.codigo)).scalar() or 0
-        )
+        total_productos = self.session.query(func.count(ProductoModel.codigo)).scalar() or 0
 
         # BC3 coverage
         bc3_coverage_query = self.session.query(
             func.count(ProductoModel.codigo).label("total"),
-            func.sum(
-                case((ProductoModel.bc3_descripcion_corta.isnot(None), 1), else_=0)
-            ).label("con_bc3"),
+            func.sum(case((ProductoModel.bc3_descripcion_corta.isnot(None), 1), else_=0)).label(
+                "con_bc3"
+            ),
         )
         result = bc3_coverage_query.first()
 
@@ -135,11 +129,11 @@ class SQLAlchemyFamiliaRepository(FamiliaRepositoryInterface):
         if result and result.total > 0:
             bc3_coverage = (result.con_bc3 / result.total) * 100
 
-            return {
-                "total_familias": total_familias,
-                "total_productos": total_productos,
-                "bc3_coverage": round(bc3_coverage, 2),
-            }
+        return {
+            "total_familias": total_familias,
+            "total_productos": total_productos,
+            "bc3_coverage": round(bc3_coverage, 2),
+        }
 
     def buscar_familias_paginado(self, dto: dict) -> Tuple[List[FamiliaEntity], int]:
         """Search families with pagination, sorting, and filtering.
@@ -154,7 +148,7 @@ class SQLAlchemyFamiliaRepository(FamiliaRepositoryInterface):
             tuple[list[FamiliaEntity], int]:
                 - List of entities for current page
                 - Total count of matching items
-        ."""
+        """
         # Get pagination cache wrapper
         cache = get_pagination_cache()
 
@@ -198,18 +192,18 @@ class SQLAlchemyFamiliaRepository(FamiliaRepositoryInterface):
             tuple[list[FamiliaEntity], int]:
                 - List of entities for current page
                 - Total count of matching items
-        ."""
+        """
         # Build base query with grouping
         base_query = (
             self.session.query(
                 ProductoModel.familia,
                 func.count(ProductoModel.codigo).label("total_productos"),
-                func.sum(
-                    case((ProductoModel.bc3_descripcion_corta.isnot(None), 1), else_=0)
-                ).label("con_bc3"),
-                func.sum(
-                    case((ProductoModel.descripcion_corta.isnot(None), 1), else_=0)
-                ).label("con_imagen"),
+                func.sum(case((ProductoModel.bc3_descripcion_corta.isnot(None), 1), else_=0)).label(
+                    "con_bc3"
+                ),
+                func.sum(case((ProductoModel.descripcion_corta.isnot(None), 1), else_=0)).label(
+                    "con_imagen"
+                ),
             )
             .filter(ProductoModel.familia.isnot(None))
             .group_by(ProductoModel.familia)
@@ -219,9 +213,7 @@ class SQLAlchemyFamiliaRepository(FamiliaRepositoryInterface):
         filters = dto.get("filters", {})
         if filters.get("buscar"):
             search_pattern = f"%{filters['buscar']}%"
-            base_query = base_query.filter(
-                or_(ProductoModel.familia.ilike(search_pattern))
-            )
+            base_query = base_query.filter(or_(ProductoModel.familia.ilike(search_pattern)))
 
         # Get total count BEFORE pagination
         total_count = base_query.count()
