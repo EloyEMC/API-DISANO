@@ -196,10 +196,10 @@ async def buscar_productos_v2(
 def test_buscar_productos():
     mock_repo = Mock(spec=ProductoRepositoryInterface)
     mock_repo.buscar_productos.return_value = [entity]
-    
+
     service = ProductoService(mock_repo)
     result = service.buscar_productos(dto)
-    
+
     assert len(result) == 1
     mock_repo.buscar_productos.assert_called_once()
 ```
