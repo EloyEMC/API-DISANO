@@ -36,17 +36,17 @@ if [ "$respuesta" = "s" ]; then
     tests/unit/repositories/test_presupuesto_estado_history_repository.py \
     tests/unit/schemas/test_funnel_schemas.py \
     tests/unit/services/test_funnel_service.py
-  
+
   echo "Staged files:"
   git status --short
-  
+
   echo ""
   echo "Commit message sugerido:"
   echo "feat: add sales funnel visual endpoint with RBAC"
   echo ""
   echo "¿Hacer commit con este mensaje? (s/n)"
   read -r confirmar
-  
+
   if [ "$confirmar" = "s" ]; then
     git commit -m "feat: add sales funnel visual endpoint with RBAC
 
@@ -71,12 +71,12 @@ Files:
 - tests/unit/repositories/test_presupuesto_repository_funnel.py
 - tests/unit/services/test_funnel_service.py
 - tests/integration/blueprints/test_funnel_routes.py"
-    
+
     echo "✅ Commit realizado"
     echo ""
     echo "¿Quieres hacer push a origin/main? (s/n)"
     read -r push
-    
+
     if [ "$push" = "s" ]; then
       git push origin main
       echo "✅ Push realizado"
