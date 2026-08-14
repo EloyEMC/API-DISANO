@@ -26,8 +26,7 @@ for var in problematic_vars:
     os.environ.pop(var, None)
 print("🔧 Entorno configurado para testing:")
 print(f"  ENVIRONMENT: {os.environ['ENVIRONMENT']}")
-print(f"  API_KEYS: {os.environ['API_KEYS']}")
-print(f"  ADMIN_API_KEYS: {os.environ['ADMIN_API_KEYS']}")
+print("  Test credentials: configured")
 print()
 # Paso 3: Ejecutar pytest con arguments
 pytest_args = (

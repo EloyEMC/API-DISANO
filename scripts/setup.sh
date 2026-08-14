@@ -20,10 +20,10 @@ echo ""
 # 1. Crear virtual environment
 echo "1. Creando virtual environment..."
 if [ ! -d "venv" ]; then
-    python3 -m venv venv
-    echo "   ✅ Virtual environment creado"
+	python3 -m venv venv
+	echo "   ✅ Virtual environment creado"
 else
-    echo "   ℹ️  Virtual environment ya existe"
+	echo "   ℹ️  Virtual environment ya existe"
 fi
 
 # 2. Activar virtual environment
@@ -49,13 +49,13 @@ echo "   ✅ Directorio logs/ creado"
 echo ""
 echo "5. Verificando configuración..."
 if [ ! -f ".env" ]; then
-    echo "   ⚠️  Archivo .env no encontrado"
-    echo "   Creando .env con valores por defecto..."
+	echo "   ⚠️  Archivo .env no encontrado"
+	echo "   Creando .env con valores por defecto..."
 
-    # Generar API key
-    API_KEY=$(python -c "import secrets; print(secrets.token_urlsafe(32))")
+	# Generar API key
+	API_KEY=$(python -c "import secrets; print(secrets.token_urlsafe(32))")
 
-    cat > .env << EOF
+	cat >.env <<EOF
 # Configuración generada automáticamente
 ENVIRONMENT=development
 API_HOST=127.0.0.1
@@ -66,10 +66,10 @@ LOG_LEVEL=INFO
 DATABASE_PATH=database/tarifa_disano.db
 EOF
 
-    echo "   ✅ Archivo .env creado"
-    echo "   📝 API Key generada: $API_KEY"
+	echo "   ✅ Archivo .env creado"
+	echo "   🔐 API Key generada y guardada en el archivo .env protegido"
 else
-    echo "   ✅ Archivo .env ya existe"
+	echo "   ✅ Archivo .env ya existe"
 fi
 
 # 6. Verificar sintaxis
@@ -77,10 +77,10 @@ echo ""
 echo "6. Verificando sintaxis de Python..."
 python -m py_compile app/main.py app/config.py app/security/*.py
 if [ $? -eq 0 ]; then
-    echo "   ✅ Sintaxis correcta"
+	echo "   ✅ Sintaxis correcta"
 else
-    echo "   ❌ Error de sintaxis"
-    exit 1
+	echo "   ❌ Error de sintaxis"
+	exit 1
 fi
 
 # 7. Resumen

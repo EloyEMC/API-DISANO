@@ -31,10 +31,14 @@ print(f"🚀 Ejecutando pytest con entorno configurado...")
 print(f"📋 Comando: pytest {' '.join(pytest_args)}")
 print()
 
+python_executable = os.path.join(".venv", "bin", "python3")
+if not os.path.isfile(python_executable):
+    python_executable = sys.executable
+
 result = subprocess.run(
-    ["source", ".venv/bin/activate", "&&", "python3", "-m", "pytest"] + pytest_args,
-    shell=True,
-    capture_output=False
+    [python_executable, "-m", "pytest"] + pytest_args,
+    capture_output=False,
+    check=False,
 )
 
 sys.exit(result.returncode)
