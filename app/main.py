@@ -5,6 +5,8 @@ FastAPI service with secure runtime configuration.
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from sqlalchemy import text
 from app.interfaces.http import (
     productos as productos_http,
     familias as familias_http,
@@ -18,6 +20,7 @@ from app.middleware import (
 )
 from app.interfaces.http.error_handlers import register_exception_handlers
 from app.security.logging_config import setup_logging
+from app.infrastructure.database.connection import engine
 from app.config import get_settings
 
 settings = get_settings()
@@ -107,7 +110,16 @@ async def root():
 # Health check
 @app.get("/health")
 async def health_check():
-    """Health check endpoint."""
+    """Return service health only when the configured database is reachable."""
+    try:
+        with engine.connect() as connection:
+            connection.execute(text("SELECT 1"))
+    except Exception:
+        return JSONResponse(
+            status_code=503,
+            content={"status": "unavailable", "service": "api-disano"},
+        )
+
     return {"status": "ok", "service": "api-disano"}
 
 

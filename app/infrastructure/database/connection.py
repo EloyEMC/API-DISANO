@@ -1,54 +1,58 @@
-"""Database connection management."
+"""Database connection management.
 
-SQLAlchemy engine and session management for infrastructure layer.
-."""
+SQLAlchemy engine and session management for the infrastructure layer.
+"""
 
 from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 
-from sqlalchemy import create_engine, Engine
+from sqlalchemy import Engine, create_engine
+from sqlalchemy.engine import make_url
 from sqlalchemy.orm import Session, scoped_session, sessionmaker
-from sqlalchemy.pool import StaticPool, QueuePool
+from sqlalchemy.pool import QueuePool, StaticPool
 
 from app.config import get_settings
 
 
 def get_database_path() -> Path:
-    """
-    Get the database path from settings or fallback to testing DB.
-
-    Returns:
-        Path: Path to the SQLite database file
-    ."""
-    try:
-        settings = get_settings()
-        db_path = Path(settings.database_path)
-    except Exception:
-        # Fallback to testing database
-        db_path = Path(__file__).parent.parent.parent / "testing" / "testing.db"
-
-    # Create directory if it doesn't exist
+    """Return the configured SQLite path used by test and migration tooling."""
+    settings = get_settings()
+    db_path = Path(settings.database_path)
     db_path.parent.mkdir(parents=True, exist_ok=True)
-
     return db_path
 
 
-# SQLAlchemy Engine
-# Using StaticPool for SQLite to avoid connection issues
-engine = create_engine(
-    f"sqlite:///{get_database_path()}",
-    connect_args={"check_same_thread": False},  # SQLite specific
-    poolclass=StaticPool,  # Single connection for SQLite
-    echo=False,  # Set to True for SQL query logging
-)
+def _validate_database_url(database_url: str | None, *, allow_sqlite: bool) -> str:
+    """Validate the official runtime database URL before creating an engine."""
+    if not database_url or not database_url.strip():
+        raise RuntimeError(
+            "DATABASE_URL is required for the official runtime. "
+            "Set it to a PostgreSQL URL such as "
+            "postgresql://user:password@host:5432/database."
+        )
 
-# Session factory
-# expire_on_commit=False prevents detached instance errors
-SessionFactory = sessionmaker(bind=engine, expire_on_commit=False)
+    try:
+        parsed_url = make_url(database_url)
+    except Exception as exc:
+        raise ValueError(
+            "DATABASE_URL is invalid. Provide a PostgreSQL URL in the form "
+            "postgresql://user:password@host:5432/database."
+        ) from exc
 
-# Thread-safe session using scoped_session
-SessionLocal = scoped_session(SessionFactory)
+    if parsed_url.drivername == "sqlite" and allow_sqlite:
+        return database_url
+
+    if parsed_url.drivername == "postgresql":
+        return parsed_url.set(drivername="postgresql+psycopg").render_as_string(hide_password=False)
+
+    if not parsed_url.drivername.startswith("postgresql+"):
+        raise ValueError(
+            "DATABASE_URL must use PostgreSQL for the official runtime "
+            "(postgresql:// or postgresql+driver://)."
+        )
+
+    return database_url
 
 
 @contextmanager
@@ -76,7 +80,7 @@ def get_db_session() -> Generator[Session, None, None]:
 
 def get_db_dependency():
     """
-    FastAPI dependency for database sessions.
+    Database dependency provider for FastAPI sessions.
 
     Usage in FastAPI routers:
         @router.get("/productos/{codigo}")
@@ -99,7 +103,7 @@ def get_pool_config(environment: str = "development") -> dict[str, int | str]:
 
     Returns:
         Dictionary with pool configuration settings
-    ."""
+    """
     configs = {
         "development": {
             "pool_size": 5,
@@ -136,21 +140,15 @@ def get_pool_stats() -> dict[str, int | str]:
 
     Returns:
         Dictionary with pool statistics
-    ."""
+    """
     pool = engine.pool
 
     # StaticPool doesn't have all attributes, so we need to handle it
     stats = {
-        "size": 1
-        if isinstance(pool, StaticPool)
-        else (pool.size() if hasattr(pool, "size") else 1),
-        "checked_in": 1
-        if isinstance(pool, StaticPool)
-        else (pool.checkedout() if hasattr(pool, "checkedout") else 1),
-        "checked_out": 0 if isinstance(pool, StaticPool) else 0,
-        "overflow": 0
-        if isinstance(pool, StaticPool)
-        else (pool.overflow() if hasattr(pool, "overflow") else 0),
+        "size": pool.size() if isinstance(pool, QueuePool) else 1,
+        "checked_in": pool.checkedin() if isinstance(pool, QueuePool) else 1,
+        "checked_out": 0,
+        "overflow": pool.overflow() if isinstance(pool, QueuePool) else 0,
         "pool_type": type(pool).__name__,
     }
 
@@ -166,7 +164,7 @@ def check_pool_exhaustion(stats: dict[str, int | str]) -> bool:
 
     Returns:
         True if pool is exhausted or approaching exhaustion
-    ."""
+    """
     # For StaticPool, exhaustion is not applicable
     if stats.get("pool_type") == "StaticPool":
         return False
@@ -191,7 +189,7 @@ def get_pool_logging_config() -> dict[str, bool | int]:
 
     Returns:
         Dictionary with logging configuration
-    ."""
+    """
     return {
         "enabled": True,
         "log_pool_stats": True,
@@ -207,7 +205,7 @@ def get_pool_optimization_recommendations() -> list[str]:
 
     Returns:
         List of optimization recommendations
-    ."""
+    """
     recommendations = []
     stats = get_pool_stats()
 
@@ -219,9 +217,7 @@ def get_pool_optimization_recommendations() -> list[str]:
             "StaticPool is optimal for SQLite development. "
             "For production with PostgreSQL/MySQL, use QueuePool."
         )
-        recommendations.append(
-            "Consider increasing pool_size for production: 10-20 connections."
-        )
+        recommendations.append("Consider increasing pool_size for production: 10-20 connections.")
         recommendations.append("Set max_overflow to 5-10 for burst traffic handling.")
         recommendations.append(
             "Configure pool_recycle to 1800 seconds (30 minutes) for production."
@@ -244,15 +240,12 @@ def get_pool_optimization_recommendations() -> list[str]:
 
         if pool_size < 10:
             recommendations.append(
-                "Pool size is relatively small. "
-                "Consider increasing to 10-20 for production."
+                "Pool size is relatively small. " "Consider increasing to 10-20 for production."
             )
 
     # General recommendations
     recommendations.append("Enable pool_pre_ping for connection health checks.")
-    recommendations.append(
-        "Set reasonable pool_timeout (30 seconds) to prevent hanging."
-    )
+    recommendations.append("Set reasonable pool_timeout (30 seconds) to prevent hanging.")
 
     return recommendations
 
@@ -266,19 +259,17 @@ def create_production_engine(database_url: str | None = None) -> Engine:
 
     Returns:
         SQLAlchemy engine with production-optimized pool configuration
-    ."""
-    from app.config import get_settings
-
-    # Get database URL or use settings
+    """
+    # Get database URL from settings when the caller does not provide one.
+    settings = get_settings()
     if database_url is None:
-        settings = get_settings()
-        database_url = getattr(
-            settings, "database_url", f"sqlite:///{get_database_path()}"
-        )
+        database_url = getattr(settings, "database_url", None)
 
-    # Ensure we have a valid database URL
-    if database_url is None:
-        database_url = f"sqlite:///{get_database_path()}"
+    # SQLite remains available only to explicitly configured test tooling.
+    database_url = _validate_database_url(
+        database_url,
+        allow_sqlite=getattr(settings, "environment", "").lower() == "testing",
+    )
 
     # Get production pool configuration
     pool_config = get_pool_config("production")
@@ -306,6 +297,12 @@ def create_production_engine(database_url: str | None = None) -> Engine:
         )
 
 
+# Application engine and sessions use the same backend-aware factory.
+engine = create_production_engine()
+SessionFactory = sessionmaker(bind=engine, expire_on_commit=False)
+SessionLocal = scoped_session(SessionFactory)
+
+
 def log_pool_stats() -> None:
     """Log current pool statistics for monitoring."""
     import logging
@@ -328,7 +325,7 @@ def monitor_pool_health() -> dict[str, bool | list[str]]:
 
     Returns:
         Dictionary with health status and recommendations
-    ."""
+    """
     stats = get_pool_stats()
     recommendations = get_pool_optimization_recommendations()
     exhausted = check_pool_exhaustion(stats)
