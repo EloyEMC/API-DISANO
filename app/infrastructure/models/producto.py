@@ -1,8 +1,8 @@
-"""SQLAlchemy model for Producto
+"""SQLAlchemy model for Producto.
 
 ORM model representing the productos table in SQLite.
 Uses quoted names for columns with special characters (spaces, brackets).
-."""
+"""
 
 from sqlalchemy import (
     Column,
@@ -11,7 +11,7 @@ from sqlalchemy import (
     Integer,
     DateTime,
 )
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import declarative_base, synonym
 
 
 Base = declarative_base()
@@ -25,7 +25,7 @@ class ProductoModel(Base):
     (spaces and brackets from legacy database schema).
 
     Primary key: '[CÓDIGO]' (column with brackets)
-    ."""
+    """
 
     __tablename__ = "productos_clean"
 
@@ -210,13 +210,19 @@ class ProductoModel(Base):
     bc3_product_type = Column(String, nullable=True)
     bc3_processed_at = Column(DateTime, nullable=True)
 
+    codigo = synonym("CÓDIGO")
+    descripcion = synonym("DESCRIPCION")
+    marca = synonym("MARCA")
+    familia = synonym("Familia_WEB")
+    pvp = synonym("PVP_26_01_26")
+
     def to_entity(self):
         """
         Convert SQLAlchemy model to Domain Entity.
 
         Returns:
             ProductoEntity: Domain entity with clean naming
-        ."""
+        """
         from app.domain.entities.producto import ProductoEntity
 
         # Map legacy column names to clean entity fields
@@ -224,12 +230,27 @@ class ProductoModel(Base):
             codigo=self.CÓDIGO,
             descripcion=self.DESCRIPCION or "",
             marca=self.MARCA or "",
+            codigo_web=self.CÓDIGO_WEB,
+            referencia=self.REFERENCIA,
+            descripcion_corta=self.descripcion_corta,
+            familia_web=self.Familia_WEB,
+            serie_familia_1=self.serie_familia_1,
+            familia_catalogo=self.Familia_Catalogo,
+            familia_catalogo_ptl=self.Familia_Catalogo_PTL,
+            url_ficha_tec=self.Url_ficha_tec,
+            ean_13=str(self.EAN_13) if self.EAN_13 is not None else None,
+            imagen=self.imagen,
+            img_url=self.img_url,
+            descontinuado=self.descontinuado,
+            raee_a=self.RAEE_A,
+            raee_l=self.RAEE_L,
+            raee_t=self.RAEE_T,
             familia=self.Familia_WEB or self.Familia_Catalogo,
             pvp=self.PVP_26_01_26,
             bc3_descripcion_corta=self.bc3_descripcion_corta or self.descripcion_corta,
             bc3_product_type=self.bc3_product_type,
-            bc3_descripcion_completa=self.bc3_descripcion_completa
-            or self.bc3_descripcion_larga,
+            bc3_descripcion_completa=self.bc3_descripcion_completa or self.bc3_descripcion_larga,
+            bc3_descripcion_larga=self.bc3_descripcion_larga,
             created_at=self.bc3_processed_at,
             updated_at=self.bc3_processed_at,
         )

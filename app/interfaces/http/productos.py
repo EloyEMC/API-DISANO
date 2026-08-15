@@ -1,10 +1,10 @@
-"""HTTP interface for Productos using hexagonal architecture
+"""HTTP interface for Productos using hexagonal architecture.
 
 FastAPI router with dependency injection for product endpoints.
-."""
+"""
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Body
-from typing import List, Optional
+from typing import Any, List, Optional
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -14,6 +14,11 @@ from app.infrastructure.database.connection import SessionLocal
 from app.application.dto.pagination import (
     PaginationRequestDTO,
 )
+from app.application.dto.producto import (
+    ProductoExternalPage,
+    ProductoExternalResponse,
+)
+from app.domain.exceptions.not_found import ProductoNotFoundException
 from app.interfaces.http.response_serializers import ProductoResponseSerializer
 
 
@@ -35,6 +40,8 @@ class BuscarProductosRequest(BaseModel):
     con_bc3: bool = False
 
     class Config:
+        """Configure request validation."""
+
         extra = "forbid"  # Reject unexpected fields
 
 
@@ -58,6 +65,24 @@ def get_db_session() -> Session:
 def get_producto_service(session: Session = Depends(get_db_session)) -> ProductoService:
     """DI function to create ProductoService with repository."""
     return ProductoService(SQLAlchemyProductoRepository(session))
+
+
+def _contract_item(entity: Any) -> dict:
+    """Project a domain entity into the explicit public contract."""
+    data = entity.model_dump() if hasattr(entity, "model_dump") else dict(entity)
+    return ProductoExternalResponse.model_validate(data).model_dump(exclude_none=True)
+
+
+def _public_filters(buscar: Optional[str], marca: Optional[str], familia: Optional[str]) -> dict:
+    return {
+        key: value
+        for key, value in {
+            "buscar": buscar,
+            "marca": marca,
+            "familia": familia,
+        }.items()
+        if value
+    }
 
 
 # ============================================
@@ -106,9 +131,7 @@ async def buscar_productos_post(
         )
 
         # Call service with pagination and filters
-        paginated_response = service.buscar_productos_paginado(
-            pagination_dto, filters
-        )
+        paginated_response = service.buscar_productos_paginado(pagination_dto, filters)
 
         # Serialize response using ProductoResponseSerializer
         response_dict = ProductoResponseSerializer.serialize_paginated_response(
@@ -133,7 +156,76 @@ async def buscar_productos_post(
             "count": 0,
             "total": 0,
             "error": str(e),
-}
+        }
+
+
+async def _list_public_contract(
+    service: ProductoService,
+    page: int,
+    per_page: int,
+    buscar: Optional[str],
+    marca: Optional[str],
+    familia: Optional[str],
+) -> dict:
+    filters = _public_filters(buscar, marca, familia)
+    response = service.buscar_productos_paginado(
+        PaginationRequestDTO(page=page, per_page=per_page, sort=None), filters
+    )
+    return {
+        "items": [_contract_item(item) for item in response.items],
+        "pagination": response.pagination.model_dump(),
+        "filters_applied": filters,
+        "sorting_applied": response.sorting_applied,
+    }
+
+
+@router.get(
+    "/v1",
+    response_model=ProductoExternalPage,
+    summary="List public products (v1)",
+)
+async def list_products_v1(
+    page: int = Query(1, ge=1),
+    per_page: int = Query(20, ge=1, le=100),
+    buscar: Optional[str] = None,
+    marca: Optional[str] = None,
+    familia: Optional[str] = None,
+    service: ProductoService = Depends(get_producto_service),
+) -> dict:
+    """Return the stable external product contract."""
+    return await _list_public_contract(service, page, per_page, buscar, marca, familia)
+
+
+@router.get(
+    "/v1/{codigo}",
+    response_model=ProductoExternalResponse,
+    summary="Get one public product",
+)
+async def get_product_v1(
+    codigo: str, service: ProductoService = Depends(get_producto_service)
+) -> dict:
+    """Return one product in the external contract."""
+    try:
+        return _contract_item(service.obtener_producto(codigo))
+    except ProductoNotFoundException as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from None
+
+
+@router.get(
+    "/v3",
+    response_model=ProductoExternalPage,
+    summary="List public products",
+)
+async def list_products_v3(
+    page: int = Query(1, ge=1),
+    per_page: int = Query(20, ge=1, le=100),
+    buscar: Optional[str] = None,
+    marca: Optional[str] = None,
+    familia: Optional[str] = None,
+    service: ProductoService = Depends(get_producto_service),
+) -> dict:
+    """Compatibility alias for the stable external product contract."""
+    return await _list_public_contract(service, page, per_page, buscar, marca, familia)
 
 
 # PAGINATED ENDPOINT FIRST (to avoid route conflict)
@@ -141,18 +233,14 @@ async def buscar_productos_post(
 async def buscar_productos_paginado(
     page: int = Query(1, ge=1, description="Número de página"),
     per_page: int = Query(20, ge=1, le=100, description="Resultados por página"),
-    sort: str = Query(
-        None, description="Criterio de ordenamiento (ej: codigo:asc, pvp:desc)"
-    ),
+    sort: str = Query(None, description="Criterio de ordenamiento (ej: codigo:asc, pvp:desc)"),
     buscar: str = Query(None, description="Término de búsqueda"),
     marca: str = Query(None, description="Filtrar por marca"),
     familia: str = Query(None, description="Filtrar por familia"),
     pvp_min: float = Query(None, ge=0, description="Precio mínimo"),
     pvp_max: float = Query(None, ge=0, description="Precio máximo"),
     bc3_product_type: str = Query(None, description="Tipo de producto BC3"),
-    bc3_has_descripcion_corta: bool = Query(
-        None, description="Filtrar por descripción corta BC3"
-    ),
+    bc3_has_descripcion_corta: bool = Query(None, description="Filtrar por descripción corta BC3"),
     service: ProductoService = Depends(get_producto_service),
 ) -> dict:
     """
@@ -160,7 +248,7 @@ async def buscar_productos_paginado(
 
     Endpoint público con soporte completo de paginación, ordenamiento y filtros.
     Proporciona metadatos de paginación y caché integrado.
-    ."""
+    """
     try:
         # Build pagination request DTO
         pagination_dto = PaginationRequestDTO(
@@ -205,21 +293,15 @@ async def buscar_productos_paginado(
 @router.get("/v2/list")
 async def buscar_productos_list_v2(
     page: int = Query(1, ge=1, description="Número de página"),
-    limit: int = Query(
-        20, ge=1, le=100, description="Resultados por página (alias de per_page)"
-    ),
-    sort: str = Query(
-        None, description="Criterio de ordenamiento (ej: codigo:asc, pvp:desc)"
-    ),
+    limit: int = Query(20, ge=1, le=100, description="Resultados por página (alias de per_page)"),
+    sort: str = Query(None, description="Criterio de ordenamiento (ej: codigo:asc, pvp:desc)"),
     buscar: str = Query(None, description="Término de búsqueda"),
     marca: str = Query(None, description="Filtrar por marca"),
     familia: str = Query(None, description="Filtrar por familia"),
     pvp_min: float = Query(None, ge=0, description="Precio mínimo"),
     pvp_max: float = Query(None, ge=0, description="Precio máximo"),
     bc3_product_type: str = Query(None, description="Tipo de producto BC3"),
-    bc3_has_descripcion_corta: bool = Query(
-        None, description="Filtrar por descripción corta BC3"
-    ),
+    bc3_has_descripcion_corta: bool = Query(None, description="Filtrar por descripción corta BC3"),
     service: ProductoService = Depends(get_producto_service),
 ) -> list:
     """
@@ -227,7 +309,7 @@ async def buscar_productos_list_v2(
 
     Alias de /v2/paginated que devuelve solo items (sin metadata).
     Mapea 'limit' → 'per_page' para compatibilidad.
-    ."""
+    """
     try:
         pagination_dto = PaginationRequestDTO(
             page=page,
@@ -258,9 +340,7 @@ async def buscar_productos_list_v2(
 
         return response_dict.get("items", [])
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Error en búsqueda: {str(e)}"
-        ) from None
+        raise HTTPException(status_code=500, detail=f"Error en búsqueda: {str(e)}") from None
 
 
 # ============================================
@@ -274,10 +354,10 @@ async def get_productos(
     service: ProductoService = Depends(get_producto_service),
 ) -> List:
     """
-    Get all products with BC3 statistics
+    Get all products with BC3 statistics.
 
     **V1 Backward Compatible** - Returns same format as legacy router
-    ."""
+    """
     try:
         productos = service.get_all_productos()
         return [producto.model_dump() for producto in productos[:limit]]
@@ -291,10 +371,10 @@ async def get_producto(
     service: ProductoService = Depends(get_producto_service),
 ) -> dict:
     """
-    Get product by code with BC3 details
+    Get product by code with BC3 details.
 
     **V1 Backward Compatible** - Returns same format as legacy router
-    ."""
+    """
     try:
         producto = service.obtener_producto(codigo)
         return producto.model_dump()

@@ -1,8 +1,8 @@
-"""Domain entity for Producto
+"""Domain entity for Producto.
 
 Represents a product in the domain layer - independent of database
 or HTTP concerns. This is the core business object.
-."""
+"""
 
 from pydantic import BaseModel, Field, field_validator
 from typing import Optional
@@ -10,7 +10,7 @@ from datetime import datetime
 
 
 class ProductoEntity(BaseModel):
-    """Domain entity representing a Product
+    """Domain entity representing a Product.
 
     This entity is immutable (frozen=True) to ensure domain rules
     are enforced at creation time.
@@ -26,7 +26,7 @@ class ProductoEntity(BaseModel):
         bc3_descripcion_completa: BC3 Suite full description
         created_at: Creation timestamp
         updated_at: Last update timestamp
-    ."""
+    """
 
     # Core identity fields
     codigo: str = Field(..., min_length=1, description="Unique product code")
@@ -36,11 +36,18 @@ class ProductoEntity(BaseModel):
     # Optional fields
     familia: Optional[str] = Field(None, description="Product family")
     pvp: Optional[float] = Field(None, ge=0, description="Public sales price")
+    descripcion_corta: Optional[str] = None
+    familia_web: Optional[str] = None
+    serie_familia_1: Optional[str] = None
+    familia_catalogo: Optional[str] = None
+    familia_catalogo_ptl: Optional[str] = None
+    url_ficha_tec: Optional[str] = None
 
     # BC3 Suite integration fields
     bc3_descripcion_corta: Optional[str] = Field(None, description="BC3 Suite short description")
     bc3_product_type: Optional[str] = Field(None, description="BC3 Suite product type")
     bc3_descripcion_completa: Optional[str] = Field(None, description="BC3 Suite full description")
+    bc3_descripcion_larga: Optional[str] = Field(None, description="BC3 Suite long description")
 
     # Additional fields (from productos table)
     codigo_web: Optional[str] = Field(None, description="Web code")

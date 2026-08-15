@@ -1,8 +1,8 @@
-"""SQLAlchemy model using clean view
+"""SQLAlchemy model using clean view.
 
 Uses productos_clean view with standard column names for
 SQLAlchemy ORM compatibility.
-."""
+"""
 
 from sqlalchemy import Column, DateTime, Float, String
 from sqlalchemy.orm import declarative_base
@@ -18,7 +18,7 @@ class ProductoModelClean(Base):
 
     Uses clean column names (no brackets, no spaces) for
     SQLAlchemy compatibility. Based on view in SQLite database.
-    ."""
+    """
 
     __tablename__ = "productos_clean"
 
@@ -67,7 +67,7 @@ class ProductoModelClean(Base):
 
         Returns:
             ProductoEntity: Domain entity with clean naming
-        ."""
+        """
         from app.domain.entities.producto import ProductoEntity
 
         return ProductoEntity(
@@ -79,6 +79,14 @@ class ProductoModelClean(Base):
             bc3_descripcion_corta=self.bc3_descripcion_corta or self.descripcion_corta,
             bc3_product_type=self.bc3_product_type,
             bc3_descripcion_completa=self.bc3_descripcion_completa,
+            bc3_descripcion_larga=self.bc3_descripcion_larga,
+            descontinuado=getattr(self, "descontinuado", None),
+            descripcion_corta=self.descripcion_corta,
+            familia_web=getattr(self, "familia_web", self.familia),
+            serie_familia_1=getattr(self, "serie_familia_1", None),
+            familia_catalogo=getattr(self, "familia_catalogo", None),
+            familia_catalogo_ptl=getattr(self, "familia_catalogo_ptl", None),
+            url_ficha_tec=getattr(self, "url_ficha_tec", None),
             # Nuevos campos de productos
             codigo_web=self.codigo_web,
             referencia=self.referencia,

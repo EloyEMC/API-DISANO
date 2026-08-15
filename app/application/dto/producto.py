@@ -1,8 +1,9 @@
-"""Application DTOs module
+"""Application DTOs module.
 
 Data Transfer Objects for input/output validation in application layer.
-."""
+"""
 
+from datetime import datetime
 from pydantic import BaseModel, Field
 from typing import Optional
 
@@ -81,6 +82,47 @@ class ProductoPrecioUpdateDTO(BaseModel):
 # ============================================
 # OUTPUT DTOs (Response formatting)
 # ============================================
+
+
+class ProductoExternalResponse(BaseModel):
+    """Stable public product contract (discounts and logistics excluded)."""
+
+    model_config = {"extra": "ignore"}
+
+    codigo: str
+    descripcion: str
+    marca: str
+    familia: Optional[str] = None
+    pvp: Optional[float] = None
+    descripcion_corta: Optional[str] = None
+    familia_web: Optional[str] = None
+    serie_familia_1: Optional[str] = None
+    familia_catalogo: Optional[str] = None
+    familia_catalogo_ptl: Optional[str] = None
+    url_ficha_tec: Optional[str] = None
+    codigo_web: Optional[str] = None
+    referencia: Optional[str] = None
+    ean_13: Optional[str] = None
+    imagen: Optional[str] = None
+    img_url: Optional[str] = None
+    descontinuado: Optional[int] = None
+    bc3_descripcion_corta: Optional[str] = None
+    bc3_descripcion_completa: Optional[str] = None
+    bc3_descripcion_larga: Optional[str] = None
+    bc3_product_type: Optional[str] = None
+    raee_a: Optional[float] = None
+    raee_l: Optional[float] = None
+    raee_t: Optional[float] = None
+    bc3_processed_at: Optional[datetime] = None
+
+
+class ProductoExternalPage(BaseModel):
+    """Versioned public paginated response."""
+
+    items: list[ProductoExternalResponse]
+    pagination: dict
+    filters_applied: dict | None = None
+    sorting_applied: dict | None = None
 
 
 class ProductoResponseDTO(BaseModel):
