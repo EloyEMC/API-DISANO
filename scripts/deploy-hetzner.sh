@@ -16,7 +16,92 @@
 #
 # ==============================================================================
 
-set -e  # Salir si hay errores
+set -Eeuo pipefail
+
+validate_database_url() {
+	local database_url="${1:-}"
+
+	if [[ -z "$database_url" ]]; then
+		echo "ERROR: DATABASE_URL is required for production deployment." >&2
+		echo "       Provision it through the approved secret mechanism and export it before running this script." >&2
+		return 1
+	fi
+
+	if [[ ! "$database_url" =~ ^postgresql(\+[[:alnum:]_-]+)?://[^[:space:]]+$ ]]; then
+		echo "ERROR: DATABASE_URL must be a PostgreSQL URL (postgresql:// or postgresql+driver://)." >&2
+		echo "       SQLite and other database URLs are not supported in production." >&2
+		return 1
+	fi
+}
+
+DATABASE_URL="${DATABASE_URL:-}"
+validate_database_url "$DATABASE_URL"
+
+validate_domain() {
+	local domain="$1"
+	if [[ ! "$domain" =~ ^[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?(\.[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+$ ]]; then
+		echo "ERROR: DOMAIN must be a valid DNS name." >&2
+		return 1
+	fi
+}
+
+validate_email() {
+	local email="$1"
+	if [[ ! "$email" =~ ^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$ ]]; then
+		echo "ERROR: EMAIL must be a valid email address." >&2
+		return 1
+	fi
+}
+
+validate_environment_value() {
+	local name="$1"
+	local value="$2"
+
+	if [[ "$value" == *$'\r'* || "$value" == *$'\n'* || "$value" == *[[:space:]]* || "$value" == *"\""* || "$value" == *"'"* || "$value" == *"\\"* || "$value" == *"#"* ]]; then
+		echo "ERROR: $name contains CR/LF or unsupported systemd EnvironmentFile characters." >&2
+		return 1
+	fi
+}
+
+write_environment_file() {
+	local env_file="/var/www/API-DISANO/.env"
+	local tmp_file
+	umask 077
+	tmp_file=$(mktemp "${env_file}.tmp.XXXXXX")
+	chmod 600 "$tmp_file"
+	chown root:root "$tmp_file"
+	cat >"$tmp_file" <<EOF
+# Production configuration
+ENVIRONMENT=production
+API_HOST=127.0.0.1
+API_PORT=8000
+API_KEYS=$API_KEY
+SECRET_KEY=$SECRET_KEY
+CORS_ORIGINS=https://$DOMAIN,https://www.$DOMAIN
+RATE_LIMIT_ENABLED=true
+RATE_LIMIT_PER_CLIENT=30
+RATE_LIMIT_GLOBAL=1000
+RATE_LIMIT_BURST=10
+RATE_LIMIT_LISTINGS=10
+BLOCKED_USER_AGENTS=python-requests,curl,wget,scraper,crawler,bot,spider,headless,phantom,selenium
+HTTPS_ENABLED=true
+HTTPS_HSTS_MAX_AGE=31536000
+HTTPS_HSTS_INCLUDE_SUBDOMAINS=true
+HTTPS_HSTS_PRELOAD=true
+DOCS_ENABLED=false
+SCRAPING_DETECTION_ENABLED=true
+BAN_ENABLED=true
+BAN_DURATION_FIRST_OFFENSE=3600
+BAN_DURATION_SECOND_OFFENSE=86400
+LOG_LEVEL=INFO
+LOG_FILE=logs/api.log
+LOG_ROTATION=500MB
+LOG_RETENTION=10days
+SECURITY_LOG_ENABLED=true
+DATABASE_URL=$DATABASE_URL
+EOF
+	mv -f -- "$tmp_file" "$env_file"
+}
 
 echo "╔════════════════════════════════════════════════════════════════════════╗"
 echo "║         🚀 DESPLIEGUE AUTOMÁTICO - API DISANO EN HETZNER VPS          ║"
@@ -35,21 +120,36 @@ NC='\033[0m'
 # Preguntar configuración
 read -p "Dominio (ej: api-disano.com): " DOMAIN
 read -p "Email para Let's Encrypt: " EMAIL
+validate_domain "$DOMAIN"
+validate_email "$EMAIL"
 
 # Generar API key
-API_KEY=$(python3 -c "import secrets; print(secrets.token_urlsafe(32))" 2>/dev/null || echo "genera-una-api-key-segura")
+API_KEY=$(python3 -c "import secrets; print(secrets.token_urlsafe(32))" 2>/dev/null || {
+
+	echo "ERROR: unable to generate API key." >&2
+	exit 1
+})
+SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_urlsafe(32))" 2>/dev/null || {
+	echo "ERROR: unable to generate SECRET_KEY." >&2
+	exit 1
+})
+validate_environment_value "API_KEYS" "$API_KEY"
+validate_environment_value "SECRET_KEY" "$SECRET_KEY"
+validate_environment_value "DATABASE_URL" "$DATABASE_URL"
+
+validate_environment_value "CORS_ORIGINS" "https://$DOMAIN,https://www.$DOMAIN"
 
 echo ""
 echo "📋 Configuración:"
 echo "   Dominio: $DOMAIN"
 echo "   Email: $EMAIL"
-echo "   API Key: $API_KEY"
+echo "   API Key: provisioned through the protected environment file"
 echo ""
 read -p "¿Continuar? (y/n) " -n 1 -r
 echo
 if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo "Cancelado."
-    exit 0
+	echo "Cancelado."
+	exit 0
 fi
 
 # ============================================================================
@@ -77,14 +177,14 @@ echo "📦 2/9 INSTALANDO DEPENDENCIAS"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 apt install -y -qq \
-    python3 \
-    python3-pip \
-    python3-venv \
-    python3-certbot-nginx \
-    nginx \
-    certbot \
-    git \
-    ufw
+	python3 \
+	python3-pip \
+	python3-venv \
+	python3-certbot-nginx \
+	nginx \
+	certbot \
+	git \
+	ufw
 
 echo -e "${GREEN}✅ Dependencias instaladas${NC}"
 
@@ -101,7 +201,7 @@ mkdir -p /var/www
 cd /var/www
 
 if [ -d "API-DISANO" ]; then
-    rm -rf API-DISANO
+	rm -rf API-DISANO
 fi
 
 git clone https://github.com/EloyEMC/API-DISANO.git
@@ -134,53 +234,7 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo "📦 5/9 CONFIGURANDO VARIABLES DE ENTORNO"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-cat > .env << EOF
-# Configuración de producción
-ENVIRONMENT=production
-API_HOST=127.0.0.1
-API_PORT=8000
-
-# API Keys
-API_KEYS=$API_KEY
-
-# CORS (tu dominio)
-CORS_ORIGINS=https://$DOMAIN,https://www.$DOMAIN
-
-# Rate limiting
-RATE_LIMIT_ENABLED=true
-RATE_LIMIT_PER_CLIENT=30
-RATE_LIMIT_GLOBAL=1000
-RATE_LIMIT_BURST=10
-RATE_LIMIT_LISTINGS=10
-
-# User-Agent filtering
-BLOCKED_USER_AGENTS=python-requests,curl,wget,scraper,crawler,bot,spider,headless,phantom,selenium
-
-# HTTPS
-HTTPS_ENABLED=true
-HTTPS_HSTS_MAX_AGE=31536000
-HTTPS_HSTS_INCLUDE_SUBDOMAINS=true
-HTTPS_HSTS_PRELOAD=true
-
-# Documentación
-DOCS_ENABLED=false
-
-# Anti-scraping
-SCRAPING_DETECTION_ENABLED=true
-BAN_ENABLED=true
-BAN_DURATION_FIRST_OFFENSE=3600
-BAN_DURATION_SECOND_OFFENSE=86400
-
-# Logging
-LOG_LEVEL=INFO
-LOG_FILE=logs/api.log
-LOG_ROTATION=500 MB
-LOG_RETENTION=10 days
-SECURITY_LOG_ENABLED=true
-
-# Database
-DATABASE_PATH=database/tarifa_disano.db
-EOF
+write_environment_file
 
 echo -e "${GREEN}✅ Archivo .env creado${NC}"
 
@@ -206,7 +260,7 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo "📦 7/9 CONFIGURANDO NGINX"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-cat > /etc/nginx/sites-available/api-disano << EOF
+cat >/etc/nginx/sites-available/api-disano <<EOF
 server {
     listen 80;
     server_name $DOMAIN www.$DOMAIN;
@@ -243,7 +297,7 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo "📦 8/9 CONFIGURANDO SSL (LET'S ENCRYPT)"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-certbot --nginx -d $DOMAIN -d www.$DOMAIN --non-interactive --agree-tos --email $EMAIL --redirect
+certbot --nginx -d "$DOMAIN" -d "www.$DOMAIN" --non-interactive --agree-tos --email "$EMAIL" --redirect
 
 echo -e "${GREEN}✅ SSL configurado${NC}"
 
@@ -256,10 +310,11 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo "📦 9/9 CREANDO SERVICIO SYSTEMD"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-cat > /etc/systemd/system/api-disano.service << EOF
+cat >/etc/systemd/system/api-disano.service <<EOF
 [Unit]
 Description=API Disano FastAPI
-After=network.target
+After=network-online.target
+Wants=network-online.target
 
 [Service]
 Type=notify
@@ -268,6 +323,7 @@ Group=www-data
 WorkingDirectory=/var/www/API-DISANO
 Environment="PATH=/var/www/API-DISANO/venv/bin"
 EnvironmentFile=/var/www/API-DISANO/.env
+ExecStartPre=+/var/www/API-DISANO/venv/bin/python /var/www/API-DISANO/scripts/preflight-production.py --env-file /var/www/API-DISANO/.env
 ExecStart=/var/www/API-DISANO/venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000
 Restart=always
 RestartSec=10
@@ -314,8 +370,9 @@ echo ""
 echo "  URL: https://$DOMAIN"
 echo "  Health check: https://$DOMAIN/health"
 echo ""
-echo "  API Key: $API_KEY"
-echo "  ⚠️  GUARDA ESTA API KEY - NECESARIA PARA ACCEDER"
+echo "  API Key: provisioned through the protected environment file"
+echo "  ⚠️  Retrieve credentials only through the approved secret mechanism"
+
 echo ""
 echo "  Directorio: /var/www/API-DISANO"
 echo "  Servicio: systemctl status api-disano"
@@ -330,40 +387,16 @@ echo ""
 echo "  1. Health check:"
 echo "     curl https://$DOMAIN/health"
 echo ""
-echo "  2. Con API key:"
-echo "     curl -H \"X-API-Key: $API_KEY\" \\"
-echo "          https://$DOMAIN/v1/internal/products/?limit=5"
+echo "  2. Protected endpoint check: use the approved secret mechanism."
 echo ""
 echo "  3. Ver logs:"
 echo "     tail -f /var/www/API-DISANO/logs/api.log"
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "📝 GUARDAR CREDENCIALES"
+echo "📝 CREDENCIALES"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo ""
-cat > /root/api-disano-credentials.txt << CRED_EOF
-API DISANO - CREDENCIALES
-═════════════════════════
+echo "  Credentials remain only in the protected environment file."
 
-URL: https://$DOMAIN
-API Key: $API_KEY
-
-Endpoint productos:
-  curl -H "X-API-Key: $API_KEY" \\
-       https://$DOMAIN/v1/internal/products/?limit=10
-
-Health check:
-  curl https://$DOMAIN/health
-
-Directorio: /var/www/API-DISANO
-Servicio: systemctl status api-disano
-Logs: journalctl -u api-disano -f
-
-Generado: $(date)
-CRED_EOF
-
-chmod 600 /root/api-disano-credentials.txt
-echo "  ✅ Credenciales guardadas en: /root/api-disano-credentials.txt"
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""

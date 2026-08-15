@@ -8,69 +8,74 @@
 #
 # =============================================================================
 
-set -e
+set -Eeuo pipefail
+
+validate_database_url() {
+	local database_url="${1:-}"
+
+	if [[ -z "$database_url" ]]; then
+		echo "ERROR: DATABASE_URL is required for production configuration." >&2
+		echo "       Provision it through the approved secret mechanism and export it before running this script." >&2
+		return 1
+	fi
+
+	if [[ ! "$database_url" =~ ^postgresql(\+[[:alnum:]_-]+)?://[^[:space:]]+$ ]]; then
+		echo "ERROR: DATABASE_URL must be a PostgreSQL URL (postgresql:// or postgresql+driver://)." >&2
+		echo "       SQLite and other database URLs are not supported in production." >&2
+		return 1
+	fi
+}
+
+DATABASE_URL="${DATABASE_URL:-}"
+validate_database_url "$DATABASE_URL"
+
+validate_environment_value() {
+	local name="$1"
+	local value="$2"
+
+	if [[ "$value" == *$'\r'* || "$value" == *$'\n'* || "$value" == *[[:space:]]* || "$value" == *"\""* || "$value" == *"'"* || "$value" == *"\\"* || "$value" == *"#"* ]]; then
+		echo "ERROR: $name contains CR/LF or unsupported systemd EnvironmentFile characters." >&2
+		return 1
+	fi
+}
+
+write_environment_file() {
+	local env_file="/var/www/API-DISANO/.env"
+	local tmp_file
+	umask 077
+	tmp_file=$(mktemp "${env_file}.tmp.XXXXXX")
+	chmod 600 "$tmp_file"
+	chown root:root "$tmp_file"
+	cat >"$tmp_file" <<EOF
+# Production configuration
+ENVIRONMENT=production
+API_HOST=127.0.0.1
+API_PORT=8000
+API_KEYS=$API_KEY
+SECRET_KEY=$SECRET_KEY
+RATE_LIMIT_PER_CLIENT=30
+CORS_ORIGINS=https://eloymartinezcuesta.com,https://disano.eloymartinezcuesta.com
+DATABASE_URL=$DATABASE_URL
+EOF
+	mv -f -- "$tmp_file" "$env_file"
+}
 
 echo "╔════════════════════════════════════════════════════════════════════════╗"
 echo "║       🔐 CONFIGURACIÓN DE SEGURIDAD - API DISANO PRODUCCIÓN            ║"
 echo "╚════════════════════════════════════════════════════════════════════════╝"
 echo ""
 
-# Generate API Key
+# Generate independent secrets without exposing them in output.
 API_KEY=$(python3 -c "import secrets; print(secrets.token_urlsafe(32))")
+SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_urlsafe(32))")
+validate_environment_value "API_KEYS" "$API_KEY"
+validate_environment_value "SECRET_KEY" "$SECRET_KEY"
+validate_environment_value "DATABASE_URL" "$DATABASE_URL"
 
-echo "🔑 API Key generada: $API_KEY"
+echo "🔑 API Key generated and stored in the protected environment file."
 echo ""
-
-# Create .env file
-cat > /var/www/API-DISANO/.env << EOF
-# Production Configuration
-ENVIRONMENT=production
-API_HOST=127.0.0.1
-API_PORT=8000
-
-# API Keys (separadas por comas si hay múltiples)
-API_KEYS=$API_KEY
-
-# Rate Limiting
-RATE_LIMIT_PER_MINUTE=30
-
-# CORS (solo dominios autorizados)
-CORS_ORIGINS=https://eloymartinezcuesta.com,https://disano.eloymartinezcuesta.com
-
-# Database
-DATABASE_PATH=database/tarifa_disano.db
-EOF
-
+write_environment_file
 echo "✅ Archivo .env creado"
-echo ""
-
-# Save credentials
-cat > /root/api-disano-api-key.txt << CREDS_EOF
-API DISANO - CREDENCIALES
-═════════════════════════
-
-URL: https://api.eloymartinezcuesta.com
-Environment: production
-
-API Key: $API_KEY
-
-⚠️  GUARDAR ESTA API KEY - NECESARIA PARA ACCEDER
-
-Ejemplo de uso:
-  curl -H "X-API-Key: $API_KEY" \\
-       https://api.eloymartinezcuesta.com/api/productos/?limit=10
-
-Para usar desde Python:
-  import requests
-  headers = {"X-API-Key": "$API_KEY"}
-  response = requests.get("https://api.eloymartinezcuesta.com/api/productos/", headers=headers)
-
-Generado: $(date)
-CREDS_EOF
-
-chmod 600 /root/api-disano-api-key.txt
-
-echo "✅ Credenciales guardadas en: /root/api-disano-api-key.txt"
 echo ""
 
 # Restart service
@@ -78,7 +83,6 @@ echo "🔄 Reiniciando servicio..."
 systemctl restart api-disano
 sleep 3
 
-# Verify
 echo "🧪 Verificando servicio..."
 systemctl status api-disano --no-pager -n 15
 
@@ -89,11 +93,9 @@ echo "╚═══════════════════════�
 echo ""
 echo "📝 Resumen:"
 echo "   Environment: production"
-echo "   API Key: $API_KEY"
+echo "   API Key: provisioned through the protected environment file"
 echo "   Rate limiting: 30 req/min"
 echo "   CORS: https://eloymartinezcuesta.com"
 echo ""
-echo "🧪 Prueba la API:"
-echo "   curl -H \"X-API-Key: $API_KEY\" \\"
-echo "        https://api.eloymartinezcuesta.com/api/productos/?limit=5"
+echo "🧪 Prueba la API usando el mecanismo aprobado de secretos."
 echo ""
