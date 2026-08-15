@@ -21,7 +21,7 @@ def test_identify_frequent_queries():
     """Test that frequent queries are properly identified"""
     # Analyze query patterns
     frequent_queries = analyze_query_patterns()
-    
+
     # Verify most frequent queries identified
     assert len(frequent_queries) >= 5
     assert all('query' in q for q in frequent_queries)
@@ -51,12 +51,12 @@ def test_indexes_exist_on_frequently_queried_fields():
     """Test that indexes exist on frequently queried fields"""
     from app.infrastructure.database.connection import SessionLocal
     from sqlalchemy import text
-    
+
     session = SessionLocal()
     result = session.execute(text("SELECT name FROM sqlite_master WHERE type='index'"))
     indexes = [row[0] for row in result.fetchall()]
     session.close()
-    
+
     # Verify indexes exist
     assert any('idx_codigo' in idx for idx in indexes)
     assert any('idx_marca' in idx for idx in indexes)
@@ -86,13 +86,13 @@ def test_analyze_updates_query_statistics():
     """Test that ANALYZE updates query statistics"""
     from app.infrastructure.database.connection import SessionLocal
     from sqlalchemy import text
-    
+
     session = SessionLocal()
     # Run ANALYZE
     session.execute(text("ANALYZE productos_clean"))
     session.commit()
     session.close()
-    
+
     # Verify statistics updated
     result = session.execute(text("SELECT stat FROM sqlite_stat1 WHERE tbl='productos_clean'"))
     stats = result.fetchall()
@@ -125,14 +125,14 @@ def test_no_n_plus_one_queries_in_product_search():
     from app.domain.services.producto import ProductoService
     from app.infrastructure.repositories.producto import SQLAlchemyProductoRepository
     from app.infrastructure.database.connection import SessionLocal
-    
+
     session = SessionLocal()
     repository = SQLAlchemyProductoRepository(session)
     service = ProductoService(repository)
-    
+
     # Monitor queries
     query_count = count_queries(lambda: service.buscar_productos(dto))
-    
+
     # Should use single query (or minimal number)
     assert query_count <= 2  # Allow 1-2 queries, not N+1
 ```
@@ -160,14 +160,14 @@ def test_optimized_queries_reduced_count():
     """Test that optimized queries reduce database calls"""
     from fastapi.testclient import TestClient
     from app.main import app
-    
+
     client = TestClient(app)
-    
+
     # Monitor query count
     initial_queries = count_database_queries()
     response = client.get("/api/productos/v2/list?buscar=test&limit=10")
     final_queries = count_database_queries()
-    
+
     queries_used = final_queries - initial_queries
     assert queries_used <= 2  # Should use 1-2 queries maximum
 ```
@@ -196,14 +196,14 @@ def test_bc3_stats_performance_optimized():
     import time
     from fastapi.testclient import TestClient
     from app.main import app
-    
+
     client = TestClient(app)
-    
+
     # Measure response time
     start = time.time()
     response = client.get("/api/bc3/stats")
     elapsed = time.time() - start
-    
+
     assert response.status_code == 200
     assert elapsed < 0.05  # < 50ms
 ```
@@ -232,11 +232,11 @@ def test_bc3_stats_performance_optimized():
 def test_cache_key_generation_consistent():
     """Test that cache keys are generated consistently"""
     from app.infrastructure.cache.cache_manager import CacheManager
-    
+
     manager = CacheManager()
     key1 = manager.generate_key("product", "TEST001")
     key2 = manager.generate_key("product", "TEST001")
-    
+
     assert key1 == key2  # Consistent key generation
 ```
 
@@ -263,19 +263,19 @@ def test_redis_cache_hit_improves_performance():
     """Test that cache hit improves performance"""
     import time
     from app.infrastructure.cache.cache_manager import CacheManager
-    
+
     cache = CacheManager()
-    
+
     # First call (cache miss)
     start = time.time()
     result = cache.get_or_compute("key", lambda: expensive_operation())
     miss_time = time.time() - start
-    
+
     # Second call (cache hit)
     start = time.time()
     result = cache.get_or_compute("key", lambda: expensive_operation())
     hit_time = time.time() - start
-    
+
     # Cache hit should be faster
     assert hit_time < miss_time
 ```
@@ -304,19 +304,19 @@ def test_product_search_cache_improves_performance():
     import time
     from fastapi.testclient import TestClient
     from app.main import app
-    
+
     client = TestClient(app)
-    
+
     # First request (cache miss)
     start = time.time()
     response1 = client.get("/api/productos/v2/list?buscar=test&limit=10")
     miss_time = time.time() - start
-    
+
     # Second request (cache hit)
     start = time.time()
     response2 = client.get("/api/productos/v2/list?buscar=test&limit=10")
     hit_time = time.time() - start
-    
+
     assert response1.json() == response2.json()  # Same results
     assert hit_time < miss_time  # Cache hit faster
 ```
@@ -345,7 +345,7 @@ def test_product_search_cache_improves_performance():
 def test_connection_pool_configured():
     """Test that connection pool is properly configured"""
     from app.infrastructure.database.connection import engine
-    
+
     # Verify pool settings
     assert engine.pool.size() > 0  # Pool has configured size
     assert engine.pool.max_overflow > 0  # Overflow handling configured
@@ -373,9 +373,9 @@ def test_connection_pool_configured():
 def test_connection_pool_usage_monitored():
     """Test that connection pool usage is monitored"""
     from app.infrastructure.database.connection import get_pool_stats
-    
+
     stats = get_pool_stats()
-    
+
     assert "size" in stats
     assert "checked_in" in stats
     assert "overflow" in stats
@@ -406,12 +406,12 @@ def test_connection_pool_usage_monitored():
 def test_performance_metrics_collected():
     """Test that performance metrics are collected"""
     from app.monitoring.metrics import MetricsCollector
-    
+
     collector = MetricsCollector()
-    
+
     # Record metric
     collector.record("response_time", 0.050, tags={"endpoint": "/api/productos/v2/list"})
-    
+
     # Verify metric collected
     metrics = collector.get_metrics("response_time")
     assert len(metrics) > 0
@@ -440,9 +440,9 @@ def test_performance_metrics_collected():
 def test_performance_dashboard_generated():
     """Test that performance dashboard is generated"""
     from app.monitoring.dashboard import generate_dashboard
-    
+
     dashboard = generate_dashboard()
-    
+
     assert "response_times" in dashboard
     assert "cache_performance" in dashboard
     assert "database_queries" in dashboard
