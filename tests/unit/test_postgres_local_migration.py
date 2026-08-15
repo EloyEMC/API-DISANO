@@ -272,6 +272,20 @@ def test_verify_source_target_rows_detects_content_digest_mismatch() -> None:
     assert result.extra_target_keys == 0
 
 
+def test_verify_source_target_rows_does_not_mark_source_duplicate_when_target_advances() -> None:
+    result = verify_source_target_rows([("a",), ("c",)], [("a",), ("b",), ("c",)])
+
+    assert result.extra_target_keys == 1
+    assert result.duplicate_source_keys == 0
+
+
+def test_verify_source_target_rows_does_not_mark_target_duplicate_when_source_advances() -> None:
+    result = verify_source_target_rows([("a",), ("b",), ("c",)], [("a",), ("c",)])
+
+    assert result.missing_target_keys == 1
+    assert result.duplicate_target_keys == 0
+
+
 def test_verify_source_target_rows_classifies_duplicate_source_after_target_exhaustion() -> None:
     result = verify_source_target_rows([("a",), ("a",)], [("a",)])
 

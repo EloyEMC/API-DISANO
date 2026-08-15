@@ -168,20 +168,26 @@ def compare_sorted_keys(
             result = _count(result, "null_source_keys")
             source_key = next(source, end)
             continue
-        if source_key == previous_source:
-            result = _count(result, "duplicate_source_keys")
-        if target_key == previous_target:
-            result = _count(result, "duplicate_target_keys")
-        previous_source, previous_target = source_key, target_key
         if source_key == target_key:
+            if source_key == previous_source:
+                result = _count(result, "duplicate_source_keys")
+            if target_key == previous_target:
+                result = _count(result, "duplicate_target_keys")
+            previous_source, previous_target = source_key, target_key
             source_key, target_key = next(source, end), next(target, end)
         else:
             source_value = cast(Any, source_key)
             target_value = cast(Any, target_key)
             if source_value < target_value:
+                if source_key == previous_source:
+                    result = _count(result, "duplicate_source_keys")
+                previous_source = source_key
                 result = _count(result, "missing_target_keys")
                 source_key = next(source, end)
             else:
+                if target_key == previous_target:
+                    result = _count(result, "duplicate_target_keys")
+                previous_target = target_key
                 result = _count(result, "extra_target_keys")
                 target_key = next(target, end)
 
@@ -237,12 +243,12 @@ def verify_source_target_rows(
         target_key, target_row = target_item
         if source_key is None:
             result = _count(result, "null_source_keys")
-        if source_key == previous_source:
-            result = _count(result, "duplicate_source_keys")
-        if target_key == previous_target:
-            result = _count(result, "duplicate_target_keys")
-        previous_source, previous_target = source_key, target_key
         if source_key == target_key:
+            if source_key == previous_source:
+                result = _count(result, "duplicate_source_keys")
+            if target_key == previous_target:
+                result = _count(result, "duplicate_target_keys")
+            previous_source, previous_target = source_key, target_key
             if not _rows_equal(source_row, target_row):
                 result = _count(result, "content_digest_mismatches")
             source_item, target_item = (
@@ -250,9 +256,15 @@ def verify_source_target_rows(
                 _next_row(target, key_index),
             )
         elif source_key is None or source_key < target_key:
+            if source_key == previous_source:
+                result = _count(result, "duplicate_source_keys")
+            previous_source = source_key
             result = _count(result, "missing_target_keys")
             source_item = _next_row(source, key_index)
         else:
+            if target_key == previous_target:
+                result = _count(result, "duplicate_target_keys")
+            previous_target = target_key
             result = _count(result, "extra_target_keys")
             target_item = _next_row(target, key_index)
     return result
