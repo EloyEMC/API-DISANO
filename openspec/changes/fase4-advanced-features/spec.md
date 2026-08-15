@@ -33,7 +33,7 @@ Detailed technical specifications for implementing pagination, sorting, and adva
 class PaginationRequestDTO(BaseModel):
     page: int = Field(1, ge=1, description="Page number (1-based)")
     per_page: int = Field(20, ge=1, le=100, description="Items per page")
-    
+
     @property
     def offset(self) -> int:
         return (self.page - 1) * self.per_page
@@ -71,7 +71,7 @@ class PaginationMetadata(BaseModel):
     per_page: int
     has_next: bool
     has_previous: bool
-    
+
     @classmethod
     def from_query(cls, total_items: int, current_page: int, per_page: int) -> "PaginationMetadata":
         total_pages = (total_items + per_page - 1) // per_page
@@ -144,17 +144,17 @@ class PaginatedResponseDTO(BaseModel):
 class SortCriteria(BaseModel):
     field: str
     order: str = "asc"
-    
+
     @field_validator("order")
     @classmethod
     def normalize_order(cls, v: str) -> str:
         return v.lower()
-    
+
     @field_validator("field")
     @classmethod
     def validate_field(cls, v: str) -> str:
         allowed_fields = [
-            "codigo", "descripcion", "marca", "familia", 
+            "codigo", "descripcion", "marca", "familia",
             "pvp", "bc3_descripcion_corta", "bc3_product_type"
         ]
         if v not in allowed_fields:
@@ -188,14 +188,14 @@ def parse_multi_sort(sort_string: str) -> List[SortCriteria]:
     """Parse multi-sort string into list of SortCriteria"""
     if not sort_string:
         return []
-    
+
     criteria_list = []
     for part in sort_string.split(","):
         parts = part.strip().split(":")
         field = parts[0].strip()
         order = parts[1].strip().lower() if len(parts) > 1 else "asc"
         criteria_list.append(SortCriteria(field=field, order=order))
-    
+
     return criteria_list
 ```
 
@@ -233,7 +233,7 @@ class FilterCriteria(BaseModel):
     bc3_product_type: Optional[str] = Field(None)
     bc3_has_descripcion_corta: Optional[bool] = Field(None)
     buscar: Optional[str] = Field(None, min_length=1)
-    
+
     @model_validator(mode="after")
     def validate_price_range(self) -> "FilterCriteria":
         if self.pvp_min is not None and self.pvp_max is not None:
@@ -318,13 +318,13 @@ class V1ToV2Adapter:
             familia=familia,
             buscar=buscar
         )
-        
+
         return PaginationRequestDTO(
             page=1,
             per_page=min(limit, 100),
             filters=filters
         )
-    
+
     @staticmethod
     def adapt_response(response: PaginatedResponseDTO) -> List:
         """Convert V2 paginated response to V1 array format"""
@@ -426,12 +426,12 @@ def buscar_productos_paginado(
     dto: PaginationRequestDTO
 ) -> tuple[list[ProductoEntity], int]:
     """Search products with pagination, sorting, and filtering
-    
+
     Args:
         dto: Complete pagination request DTO with filters and sorting
-        
+
     Returns:
-        tuple[list[ProductoEntity], int]: 
+        tuple[list[ProductoEntity], int]:
             - List of entities for current page
             - Total count of matching items
     """
@@ -458,12 +458,12 @@ def buscar_familias_paginado(
     dto: PaginationRequestDTO
 ) -> tuple[list[FamiliaEntity], int]:
     """Search families with pagination, sorting, and filtering
-    
+
     Args:
         dto: Complete pagination request DTO with filters and sorting
-        
+
     Returns:
-        tuple[list[FamiliaEntity], int]: 
+        tuple[list[FamiliaEntity], int]:
             - List of entities for current page
             - Total count of matching items
     """
@@ -497,25 +497,25 @@ from pydantic import BaseModel, Field, field_validator
 
 class PaginationRequestDTO(BaseModel):
     """DTO for pagination requests"""
-    
+
     page: int = Field(1, ge=1, description="Page number (1-based)")
     per_page: int = Field(20, ge=1, le=100, description="Items per page")
     sort: Optional[str] = Field(None, description="Sort criteria (e.g., 'precio:desc')")
-    
+
     @property
     def offset(self) -> int:
         """Calculate offset from page and per_page"""
         return (self.page - 1) * self.per_page
-    
+
     def parse_sort_criteria(self) -> SortCriteria:
         """Parse sort string into SortCriteria"""
         if not self.sort:
             return SortCriteria(field="codigo", order="asc")  # Default
-        
+
         parts = self.sort.split(":")
         field = parts[0]
         order = parts[1] if len(parts) > 1 else "asc"
-        
+
         return SortCriteria(field=field, order=order)
 ```
 
@@ -529,7 +529,7 @@ from typing import List, Optional, Any
 
 class PaginatedResponseDTO(BaseModel):
     """Complete response DTO for paginated results"""
-    
+
     items: List[Any]
     pagination: PaginationMetadata
     filters_applied: Optional[dict] = None
@@ -538,14 +538,14 @@ class PaginatedResponseDTO(BaseModel):
 
 class PaginationMetadata(BaseModel):
     """Metadata for pagination"""
-    
+
     total_items: int = Field(..., description="Total items matching query")
     total_pages: int = Field(..., description="Total pages")
     current_page: int = Field(..., description="Current page number")
     per_page: int = Field(..., description="Items per page")
     has_next: bool = Field(..., description="Has next page")
     has_previous: bool = Field(..., description="Has previous page")
-    
+
     @classmethod
     def from_query(
         cls,
@@ -575,36 +575,36 @@ class PaginationMetadata(BaseModel):
 
 ```python
 class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
-    
+
     def buscar_productos_paginado(
         self,
         dto: PaginationRequestDTO
     ) -> tuple[list[ProductoEntity], int]:
         """Execute paginated query with sorting and filtering"""
-        
+
         # Base query
         query = self.session.query(ProductoModel)
-        
+
         # Apply filters
         query = self._apply_filters(query, dto.filters)
-        
+
         # Get total count BEFORE pagination
         total_count = query.count()
-        
+
         # Apply sorting
         query = self._apply_sorting(query, dto.parse_sort_criteria())
-        
+
         # Apply pagination
         query = query.offset(dto.offset).limit(dto.per_page)
-        
+
         # Execute query
         models = query.all()
-        
+
         # Convert to entities
         entities = [model.to_entity() for model in models]
-        
+
         return entities, total_count
-    
+
     def _apply_filters(
         self,
         query,
@@ -613,27 +613,27 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
         """Apply advanced filters to query"""
         if not filters:
             return query
-        
+
         # Brand filter
         if filters.marca:
             query = query.filter(ProductoModel.marca == filters.marca)
-        
+
         # Family filter
         if filters.familia:
             query = query.filter(ProductoModel.familia == filters.familia)
-        
+
         # Price range
         if filters.pvp_min is not None:
             query = query.filter(ProductoModel.pvp >= filters.pvp_min)
         if filters.pvp_max is not None:
             query = query.filter(ProductoModel.pvp <= filters.pvp_max)
-        
+
         # BC3 specific filters
         if filters.bc3_product_type:
             query = query.filter(
                 ProductoModel.bc3_product_type == filters.bc3_product_type
             )
-        
+
         if filters.bc3_has_descripcion_corta is not None:
             if filters.bc3_has_descripcion_corta:
                 query = query.filter(
@@ -643,13 +643,13 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
                 query = query.filter(
                     ProductoModel.bc3_descripcion_corta.is_(None)
                 )
-        
+
         # Text search
         if filters.buscar:
             query = self._apply_text_search(query, filters.buscar)
-        
+
         return query
-    
+
     def _apply_sorting(
         self,
         query,
@@ -658,7 +658,7 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
         """Apply sorting to query"""
         if not sort_criteria:
             return query.order_by(asc(ProductoModel.codigo))  # Default
-        
+
         field_mapping = {
             "codigo": ProductoModel.codigo,
             "descripcion": ProductoModel.descripcion,
@@ -668,14 +668,14 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
             "bc3_descripcion_corta": ProductoModel.bc3_descripcion_corta,
             "bc3_product_type": ProductoModel.bc3_product_type,
         }
-        
+
         field = field_mapping.get(sort_criteria.field)
         if field:
             order_func = desc if sort_criteria.order == "desc" else asc
             return query.order_by(order_func(field))
-        
+
         return query  # Fallback to no sorting
-    
+
     def _apply_text_search(
         self,
         query,
@@ -706,10 +706,10 @@ import json
 
 class PaginationCache:
     """Cache for pagination results"""
-    
+
     def __init__(self, cache_backend: CacheManager):
         self.cache = cache_backend
-    
+
     def generate_cache_key(
         self,
         dto: PaginationRequestDTO,
@@ -723,19 +723,19 @@ class PaginationCache:
             "sort": dto.sort,
             "filters": dto.filters.model_dump() if dto.filters else None,
         }
-        
+
         # Hash para key consistente
         key_str = json.dumps(key_data, sort_keys=True)
         return f"pag:{entity_type}:{hashlib.md5(key_str.encode()).hexdigest()}"
-    
+
     def get(self, cache_key: str) -> Optional[dict]:
         """Get cached results"""
         return self.cache.get(cache_key)
-    
+
     def set(self, cache_key: str, data: dict, ttl: int = 300):
         """Cache results with TTL"""
         self.cache.set(cache_key, data, ttl)
-    
+
     def invalidate_pattern(self, pattern: str):
         """Invalidate cache matching pattern"""
         self.cache.invalidate_pattern(pattern)
@@ -770,7 +770,7 @@ async def buscar_productos_v2_paginado(
     service: ProductoService = Depends(get_producto_service),
 ) -> PaginatedResponseDTO:
     """V2 endpoint with full pagination, sorting, and filtering"""
-    
+
     # Build DTO from query params
     filters = FilterCriteria(
         marca=marca,
@@ -781,17 +781,17 @@ async def buscar_productos_v2_paginado(
         bc3_has_descripcion_corta=bc3_has_descripcion_corta,
         buscar=buscar
     )
-    
+
     dto = PaginationRequestDTO(
         page=page,
         per_page=per_page,
         sort=sort,
         filters=filters
     )
-    
+
     # Execute query
     result = service.buscar_productos_paginado(dto)
-    
+
     return result
 ```
 
@@ -813,7 +813,7 @@ async def listar_productos_v1(
     service: ProductoService = Depends(get_producto_service),
 ) -> List[ProductoResponseDTO]:
     """V1 endpoint - backward compatible"""
-    
+
     # Adapt V1 params to V2 DTO
     v2_dto = V1ToV2Adapter.adapt_request(
         limit=limit,
@@ -821,10 +821,10 @@ async def listar_productos_v1(
         marca=marca,
         familia=familia
     )
-    
+
     # Use V2 service method
     paginated_result = service.buscar_productos_paginado(v2_dto)
-    
+
     # Return V1 format (just the items)
     return V1ToV2Adapter.adapt_response(paginated_result)
 ```
@@ -851,7 +851,7 @@ CREATE INDEX idx_productos_marca_familia ON productos_clean(marca, familia);
 
 -- Text search indexes (if supported)
 -- CREATE VIRTUAL TABLE productos_fts USING fts5(
---     codigo, descripcion, descripcion_corta, 
+--     codigo, descripcion, descripcion_corta,
 --     bc3_descripcion_corta, bc3_descripcion_completa
 -- );
 ```
