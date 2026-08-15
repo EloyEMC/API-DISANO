@@ -1,5 +1,5 @@
-"""
-Módulo de seguridad para API_DISANO
+"""Módulo de seguridad para API_DISANO.
+
 ===================================
 
 Contiene todos los componentes de seguridad de la API:
