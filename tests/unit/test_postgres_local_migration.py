@@ -263,6 +263,27 @@ def test_verify_source_target_rows_detects_content_digest_mismatch() -> None:
     assert result.extra_target_keys == 0
 
 
+def test_verify_source_target_rows_classifies_duplicate_source_after_target_exhaustion() -> None:
+    result = verify_source_target_rows([("a",), ("a",)], [("a",)])
+
+    assert result.duplicate_source_keys == 1
+    assert result.missing_target_keys == 1
+
+
+def test_verify_source_target_rows_classifies_duplicate_target_after_source_exhaustion() -> None:
+    result = verify_source_target_rows([("a",)], [("a",), ("a",)])
+
+    assert result.duplicate_target_keys == 1
+    assert result.extra_target_keys == 1
+
+
+def test_verify_source_target_rows_classifies_null_source_after_target_exhaustion() -> None:
+    result = verify_source_target_rows([(None,)], [])
+
+    assert result.null_source_keys == 1
+    assert result.missing_target_keys == 1
+
+
 def test_verify_source_target_rows_accepts_equivalent_sqlite_timestamp() -> None:
     result = verify_source_target_rows(
         [("a", "2026-08-14T17:13:30")],

@@ -215,10 +215,21 @@ def verify_source_target_rows(
     result = VerificationResult()
     while source_item is not None or target_item is not None:
         if source_item is None:
+            assert target_item is not None
+            target_key, _ = target_item
+            if target_key == previous_target:
+                result = _count(result, "duplicate_target_keys")
+            previous_target = target_key
             result = _count(result, "extra_target_keys")
             target_item = _next_row(target, key_index)
             continue
         if target_item is None:
+            source_key, _ = source_item
+            if source_key is None:
+                result = _count(result, "null_source_keys")
+            if source_key == previous_source:
+                result = _count(result, "duplicate_source_keys")
+            previous_source = source_key
             result = _count(result, "missing_target_keys")
             source_item = _next_row(source, key_index)
             continue
