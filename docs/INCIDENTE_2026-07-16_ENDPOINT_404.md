@@ -17,6 +17,7 @@
 **Estado:** 404 Not Found
 
 **Ruta de llamada:**
+
 ```javascript
 // BC3-Suite frontend (api-disano-helper.js)
 const data = await this._executeWithRetry('/api/buscar-productos', {...});
@@ -25,7 +26,8 @@ const data = await this._executeWithRetry('/api/buscar-productos', {...});
 // Frontend llama a endpoint que no existe
 ```
 
-**Causa raíz:** 
+**Causa raíz:**
+
 - BC3-Suite frontend JS llama a `/api/buscar-productos`
 - API DISANO backend tiene `/api/productos/buscar-productos`
 - Migración a arquitectura hexagonal cambió estructura de rutas
@@ -51,7 +53,7 @@ async def buscar_productos_post(
 ) -> dict:
     """
     POST endpoint for product search (BC3-Suite frontend compatibility).
-    
+
     Wrapper of /v2/paginated that accepts JSON body.
     Maps frontend parameters → backend V2 format.
     Returns response in frontend-expected format.
@@ -109,6 +111,7 @@ async def buscar_productos_post(
 
 **Archivo:** `app/infrastructure/models/producto_clean.py`  
 **Campos agregados:**
+
 ```python
 imagen: Optional[str] = None
 img_url: Optional[str] = None  
@@ -116,6 +119,7 @@ ean_13: Optional[float] = None  # SQLite REAL → conversión a String en entity
 ```
 
 **Conversión en to_entity():**
+
 ```python
 def to_entity(self) -> ProductoEntity:
     return ProductoEntity(
@@ -130,6 +134,7 @@ def to_entity(self) -> ProductoEntity:
 
 **Archivo:** `app/static/js/api-disano-helper.js`  
 **Cambios:**
+
 ```javascript
 // ❌ ANTES (endpoint incorrecto)
 const data = await this._executeWithRetry('/api/buscar-productos', {...});
@@ -170,7 +175,7 @@ systemctl restart pdfbudgets.service
 # Test endpoint POST con búsqueda "toledo"
 curl -X POST https://api.eloymartinezcuesta.com/api/productos/buscar-productos \
   -H "Content-Type: application/json" \
-  -H "X-API-Key: TU_API_KEY" \
+  -H "X-API-Key: ${API_KEY}" \
   -d '{"termino":"toledo","limit":20}'
 
 # Resultado esperado:
@@ -202,6 +207,7 @@ curl -X POST https://api.eloymartinezcuesta.com/api/productos/buscar-productos \
 ### Commits
 
 **API-DISANO (4139a54):**
+
 ```
 feat: agregar endpoint POST /api/productos/buscar-productos y modelo con campos de imagen
 
@@ -216,6 +222,7 @@ Validado: Toledo devuelve 20 productos con imágenes en producción
 ```
 
 **BC3-Suite (5a901a6e):**
+
 ```
 fix: actualizar endpoint búsqueda de productos a /api/productos/buscar-productos
 
@@ -231,11 +238,13 @@ Validado: Toledo devuelve 20 resultados con imágenes
 ### Archivos modificados
 
 **API-DISANO:**
+
 - `app/interfaces/http/productos.py` (endpoint POST)
 - `app/infrastructure/models/producto_clean.py` (campos imagen)
 - `database/tarifa_disano.db` (vista productos_clean)
 
 **BC3-Suite:**
+
 - `app/static/js/api-disano-helper.js` (endpoint + warning fix)
 
 ---
@@ -269,21 +278,25 @@ Validado: Toledo devuelve 20 resultados con imágenes
 ## 📚 REFERENCIAS
 
 **GitHub:**
-- API-DISANO commit: https://github.com/EloyEMC/API-DISANO/commit/4139a54
-- BC3-Suite commit: https://github.com/EloyEMC/BC3-Suite/commit/5a901a6e
+
+- API-DISANO commit: <https://github.com/EloyEMC/API-DISANO/commit/4139a54>
+- BC3-Suite commit: <https://github.com/EloyEMC/BC3-Suite/commit/5a901a6e>
 
 **Issues:**
-- API-DISANO Issue #2: https://github.com/EloyEMC/API-DISANO/issues/2
-- BC3-Suite Issue #8: https://github.com/EloyEMC/BC3-Suite/issues/8
+
+- API-DISANO Issue #2: <https://github.com/EloyEMC/API-DISANO/issues/2>
+- BC3-Suite Issue #8: <https://github.com/EloyEMC/BC3-Suite/issues/8>
 
 **Documentación relacionada:**
+
 - `README.md` - API documentation
 - `ARCHITECTURE.md` - Arquitectura hexagonal
 - `SECURITY_MODEL.md` - Autenticación API Keys
 
 **Credenciales:**
+
 - VPS: root@46.62.227.64
-- API Production: https://api.eloymartinezcuesta.com
+- API Production: <https://api.eloymartinezcuesta.com>
 
 ---
 
@@ -291,4 +304,3 @@ Validado: Toledo devuelve 20 resultados con imágenes
 **Última actualización:** 2026-07-16 12:40 UTC  
 **Responsable:** Eloy Martínez Cuesta  
 **Estado:** 🟢 RESUELTO Y VALIDADO EN PRODUCCIÓN
-
