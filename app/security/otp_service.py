@@ -1,5 +1,5 @@
-"""
-Two-Factor Authentication (2FA) Service.
+"""Two-Factor Authentication (2FA) Service.
+
 ========================================
 
 OTP-based 2FA for admin endpoints following BC3-Suite security patterns.
