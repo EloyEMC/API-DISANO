@@ -210,7 +210,7 @@ def buscar_productos_paginado(
 ) -> tuple[list[ProductoEntity], int]:
     """
     Returns: (entities_for_current_page, total_count)
-    
+
     Why return tuple instead of dict?
     - Type-safe: tuple[list[Entity], int] vs dict with dynamic keys
     - Clearer: first element is items, second is total
@@ -267,7 +267,7 @@ models = query.all()  # Executes SELECT ... LIMIT ... OFFSET ...
 def generate_cache_key(dto: PaginationRequestDTO, entity_type: str) -> str:
     """
     Generate cache key from DTO hash
-    
+
     Why hash instead of concatenation?
     - Consistent ordering: JSON dict keys sorted
     - Length-limited: MD5 hash is always 32 chars
@@ -282,13 +282,13 @@ def generate_cache_key(dto: PaginationRequestDTO, entity_type: str) -> str:
         "sort": dto.sort,
         "filters": dto.filters.model_dump() if dto.filters else None,
     }
-    
+
     # JSON with sorted keys for consistency
     key_str = json.dumps(key_data, sort_keys=True)
-    
+
     # MD5 hash (32 characters, hex string)
     hash_hex = hashlib.md5(key_str.encode()).hexdigest()
-    
+
     # Final cache key: pag:producto:1a2b3c4d5e6f7g8h9i0j...
     return f"pag:{entity_type}:{hash_hex}"
 ```
@@ -333,37 +333,37 @@ def generate_cache_key(dto: PaginationRequestDTO, entity_type: str) -> str:
 class ProductoService:
     def actualizar_producto(self, codigo: str, dto: ProductoUpdateDTO):
         """Update product with cache invalidation"""
-        
+
         # 1. Update database
         producto = self.repository.update(codigo, dto)
-        
+
         # 2. Invalidate ALL product pagination cache
         # Why invalidate all? Because any product change could affect ANY query
         # Alternative: Track which queries include this product (complex)
         self.cache.invalidate_pattern("pag:producto:*")
-        
+
         return producto
-    
+
     def crear_producto(self, dto: ProductoCreateDTO):
         """Create product with cache invalidation"""
-        
+
         # 1. Create in database
         producto = self.repository.create(dto)
-        
+
         # 2. Invalidate ALL product pagination cache
         self.cache.invalidate_pattern("pag:producto:*")
-        
+
         return producto
-    
+
     def eliminar_producto(self, codigo: str):
         """Delete product with cache invalidation"""
-        
+
         # 1. Delete from database
         self.repository.delete(codigo)
-        
+
         # 2. Invalidate ALL product pagination cache
         self.cache.invalidate_pattern("pag:producto:*")
-        
+
         return True
 ```
 
@@ -379,7 +379,7 @@ class ProductoService:
 ```python
 def warm_popular_queries(cache: PaginationCache, repository: ProductoRepository):
     """Warm cache for frequently accessed queries on startup"""
-    
+
     popular_queries = [
         PaginationRequestDTO(page=1, per_page=20),  # First page, no filters
         PaginationRequestDTO(
@@ -398,7 +398,7 @@ def warm_popular_queries(cache: PaginationCache, repository: ProductoRepository)
             sort="precio:desc"
         ),  # Sorted by price
     ]
-    
+
     for query in popular_queries:
         cache_key = cache.generate_cache_key(query)
         if not cache.get(cache_key):
@@ -419,7 +419,7 @@ async def buscar_productos_v2_paginado(
     # Pagination parameters
     page: int = Query(1, ge=1, description="Page number (1-based)"),
     per_page: int = Query(20, ge=1, le=100, description="Items per page"),
-    
+
     # Sorting parameter
     sort: Optional[str] = Query(
         None,
@@ -427,7 +427,7 @@ async def buscar_productos_v2_paginado(
                     "Fields: codigo, descripcion, marca, familia, pvp, "
                     "bc3_descripcion_corta, bc3_product_type"
     ),
-    
+
     # Filter parameters
     marca: Optional[str] = Query(None, description="Filter by brand"),
     familia: Optional[str] = Query(None, description="Filter by family"),
@@ -443,42 +443,42 @@ async def buscar_productos_v2_paginado(
         min_length=1,
         description="Search term (case-insensitive)"
     ),
-    
+
     # Dependency injection
     service: ProductoService = Depends(get_producto_service),
 ):
     """
     Search products with advanced pagination, sorting, and filtering.
-    
+
     ## Features
     - **Pagination**: Navigate large result sets with page/per_page
     - **Sorting**: Order results by any field (asc/desc)
     - **Advanced Filtering**: Filter by brand, family, price range, BC3 fields
     - **Text Search**: Full-text search across multiple fields
-    
+
     ## Examples
-    
+
     Get first page of Disano products:
     ```
     GET /api/productos/v2/list?page=1&per_page=20&marca=Disano
     ```
-    
+
     Sort by price descending:
     ```
     GET /api/productos/v2/list?sort=precio:desc
     ```
-    
+
     Filter by price range:
     ```
     GET /api/productos/v2/list?pvp_min=50&pvp_max=200
     ```
-    
+
     BC3 columnas only:
     ```
     GET /api/productos/v2/list?bc3_product_type=columna
     ```
     """
-    
+
     # Build DTO from query params
     filters = FilterCriteria(
         marca=marca,
@@ -489,17 +489,17 @@ async def buscar_productos_v2_paginado(
         bc3_has_descripcion_corta=bc3_has_descripcion_corta,
         buscar=buscar
     )
-    
+
     dto = PaginationRequestDTO(
         page=page,
         per_page=per_page,
         sort=sort,
         filters=filters
     )
-    
+
     # Execute query
     result = service.buscar_productos_paginado(dto)
-    
+
     return result
 ```
 
@@ -515,16 +515,16 @@ async def listar_productos_v1(
     limit: int = Query(10, ge=1, le=500),  # V1 allowed 500
     marca: Optional[str] = Query(None),
     familia: Optional[str] = Query(None),
-    
+
     # Dependency injection
     service: ProductoService = Depends(get_producto_service),
 ):
     """
     V1 endpoint - backward compatible.
-    
+
     Uses V2 pagination logic internally but returns V1 format.
     """
-    
+
     # Adapt V1 params to V2 DTO
     v2_dto = V1ToV2Adapter.adapt_request(
         limit=limit,
@@ -532,10 +532,10 @@ async def listar_productos_v1(
         marca=marca,
         familia=familia
     )
-    
+
     # Use V2 service method
     paginated_result = service.buscar_productos_paginado(v2_dto)
-    
+
     # Return V1 format (just the items, no metadata)
     return V1ToV2Adapter.adapt_response(paginated_result)
 ```
@@ -566,19 +566,19 @@ async def buscar_productos_v2_paginado(
             bc3_has_descripcion_corta=bc3_has_descripcion_corta,
             buscar=buscar
         )
-        
+
         dto = PaginationRequestDTO(
             page=page,
             per_page=per_page,
             sort=sort,
             filters=filters
         )
-        
+
         # Execute query
         result = service.buscar_productos_paginado(dto)
-        
+
         return result
-        
+
     except ValidationError as e:
         # Pydantic validation error (e.g., invalid sort field)
         raise HTTPException(
@@ -591,7 +591,7 @@ async def buscar_productos_v2_paginado(
                 }
             }
         )
-        
+
     except Exception as e:
         # Unexpected error
         raise HTTPException(
@@ -618,28 +618,28 @@ async def buscar_productos_v2_paginado(
 
 ```sql
 -- 1. Single-column indexes for frequently filtered fields
-CREATE INDEX IF NOT EXISTS idx_productos_marca 
+CREATE INDEX IF NOT EXISTS idx_productos_marca
 ON productos_clean(marca);
 
-CREATE INDEX IF NOT EXISTS idx_productos_familia 
+CREATE INDEX IF NOT EXISTS idx_productos_familia
 ON productos_clean(familia);
 
-CREATE INDEX IF NOT EXISTS idx_productos_pvp 
+CREATE INDEX IF NOT EXISTS idx_productos_pvp
 ON productos_clean(pvp);
 
-CREATE INDEX IF NOT EXISTS idx_productos_bc3_type 
+CREATE INDEX IF NOT EXISTS idx_productos_bc3_type
 ON productos_clean(bc3_product_type);
 
 -- 2. Composite indexes for common filter combinations
-CREATE INDEX IF NOT EXISTS idx_productos_marca_familia 
+CREATE INDEX IF NOT EXISTS idx_productos_marca_familia
 ON productos_clean(marca, familia);
 
-CREATE INDEX IF NOT EXISTS idx_productos_marca_pvp 
+CREATE INDEX IF NOT EXISTS idx_productos_marca_pvp
 ON productos_clean(marca, pvp);
 
 -- 3. Index for text search (if supported)
 -- SQLite FTS5 for full-text search
-CREATE VIRTUAL TABLE IF NOT EXISTS productos_fts 
+CREATE VIRTUAL TABLE IF NOT EXISTS productos_fts
 USING fts5(
     codigo,
     descripcion,
@@ -651,8 +651,8 @@ USING fts5(
 );
 
 -- Triggers to keep FTS table in sync
-CREATE TRIGGER IF NOT EXISTS productos_fts_insert 
-AFTER INSERT ON productos_clean 
+CREATE TRIGGER IF NOT EXISTS productos_fts_insert
+AFTER INSERT ON productos_clean
 BEGIN
     INSERT INTO productos_fts(
         rowid,
@@ -671,8 +671,8 @@ BEGIN
     );
 END;
 
-CREATE TRIGGER IF NOT EXISTS productos_fts_update 
-AFTER UPDATE ON productos_clean 
+CREATE TRIGGER IF NOT EXISTS productos_fts_update
+AFTER UPDATE ON productos_clean
 BEGIN
     UPDATE productos_fts SET
         codigo = NEW.codigo,
@@ -683,8 +683,8 @@ BEGIN
     WHERE rowid = NEW.rowid;
 END;
 
-CREATE TRIGGER IF NOT EXISTS productos_fts_delete 
-AFTER DELETE ON productos_clean 
+CREATE TRIGGER IF NOT EXISTS productos_fts_delete
+AFTER DELETE ON productos_clean
 BEGIN
     DELETE FROM productos_fts WHERE rowid = OLD.rowid;
 END;
@@ -700,12 +700,12 @@ ANALYZE;
 PRAGMA index_list('productos_clean');
 
 -- Check index size
-SELECT 
+SELECT
     name,
     tbl_name,
     sql
 FROM sqlite_master
-WHERE type = 'index' 
+WHERE type = 'index'
 AND tbl_name = 'productos_clean';
 ```
 
@@ -794,7 +794,7 @@ query = query.filter(
       /  Acceptance   \ complete workflows
      /________________\ (using TestClient)
     /                  \______________________
-   /    Integration Tests (30%)              \ 
+   /    Integration Tests (30%)              \
   /  ┌─────────────────────────────────┐     \
  /   │ Repository + Service + Cache       │    \
 /    │ - Real database (test DB)          │     \
@@ -838,13 +838,13 @@ def test_database():
         connect_args={"check_same_thread": False}
     )
     Base.metadata.create_all(engine)
-    
+
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     session = SessionLocal()
-    
+
     # Create test data
     yield session
-    
+
     session.close()
     engine.dispose()
 
@@ -880,17 +880,17 @@ def sample_productos(test_database):
             bc3_product_type="columna"
         ),
     ]
-    
+
     test_database.add_all(productos)
     test_database.commit()
-    
+
     return productos
 
 @pytest.fixture
 def pagination_cache():
     """Create in-memory cache for testing"""
     from app.infrastructure.cache.cache_manager import CacheManager
-    
+
     cache_manager = CacheManager()
     return PaginationCache(cache_manager)
 ```
@@ -905,7 +905,7 @@ def pagination_cache():
 def test_pagination_request_default_values():
     """Test default values for pagination request"""
     dto = PaginationRequestDTO()
-    
+
     assert dto.page == 1
     assert dto.per_page == 20
     assert dto.sort is None
@@ -914,14 +914,14 @@ def test_pagination_request_default_values():
 def test_pagination_request_offset_calculation():
     """Test offset calculation from page and per_page"""
     dto = PaginationRequestDTO(page=3, per_page=10)
-    
+
     assert dto.offset == 20  # (3-1) * 10
 
 def test_pagination_request_page_validation():
     """Test that page < 1 raises ValidationError"""
     with pytest.raises(ValidationError) as exc_info:
         PaginationRequestDTO(page=0, per_page=20)
-    
+
     errors = exc_info.value.errors()
     assert any(e["field"] == "page" and "greater than or equal to 1" in str(e["msg"]) for e in errors)
 
@@ -929,7 +929,7 @@ def test_pagination_request_per_page_validation():
     """Test that per_page > 100 raises ValidationError"""
     with pytest.raises(ValidationError) as exc_info:
         PaginationRequestDTO(page=1, per_page=101)
-    
+
     errors = exc_info.value.errors()
     assert any(e["field"] == "per_page" and "less than or equal to 100" in str(e["msg"]) for e in errors)
 ```
@@ -942,15 +942,15 @@ def test_pagination_request_per_page_validation():
 def test_repository_pagination_with_filters(sample_productos, test_database):
     """Test repository pagination with filters applied"""
     repo = SQLAlchemyProductoRepository(test_database)
-    
+
     dto = PaginationRequestDTO(
         page=1,
         per_page=10,
         filters=FilterCriteria(marca="Disano", pvp_min=50)
     )
-    
+
     items, total = repo.buscar_productos_paginado(dto)
-    
+
     assert len(items) <= 10
     assert total >= len(items)
     for item in items:
@@ -960,15 +960,15 @@ def test_repository_pagination_with_filters(sample_productos, test_database):
 def test_repository_sorting(sample_productos, test_database):
     """Test repository sorting by price descending"""
     repo = SQLAlchemyProductoRepository(test_database)
-    
+
     dto = PaginationRequestDTO(
         page=1,
         per_page=10,
         sort="precio:desc"
     )
-    
+
     items, _ = repo.buscar_productos_paginado(dto)
-    
+
     # Verify sorting
     prices = [item.pvp for item in items]
     assert prices == sorted(prices, reverse=True)
@@ -976,15 +976,15 @@ def test_repository_sorting(sample_productos, test_database):
 def test_repository_text_search(sample_productos, test_database):
     """Test repository text search"""
     repo = SQLAlchemyProductoRepository(test_database)
-    
+
     dto = PaginationRequestDTO(
         page=1,
         per_page=10,
         filters=FilterCriteria(buscar="LED")
     )
-    
+
     items, _ = repo.buscar_productos_paginado(dto)
-    
+
     # Verify text search
     assert len(items) >= 2  # At least 2 products have "LED"
     for item in items:
@@ -1006,16 +1006,16 @@ async def test_v2_pagination_endpoint(client, sample_productos):
     response = await client.get(
         "/api/productos/v2/list?page=1&per_page=2&sort=precio:desc"
     )
-    
+
     assert response.status_code == 200
     data = response.json()
-    
+
     # Verify response structure
     assert "items" in data
     assert "pagination" in data
     assert "filters_applied" in data
     assert "sorting_applied" in data
-    
+
     # Verify pagination metadata
     pagination = data["pagination"]
     assert pagination["total_items"] >= 3
@@ -1023,7 +1023,7 @@ async def test_v2_pagination_endpoint(client, sample_productos):
     assert pagination["per_page"] == 2
     assert pagination["total_pages"] >= 2
     assert len(data["items"]) == 2
-    
+
     # Verify sorting applied
     sorting = data["sorting_applied"]
     assert sorting["field"] == "precio"
@@ -1034,18 +1034,18 @@ async def test_v1_backward_compatibility(client, sample_productos):
     response_v1 = await client.get(
         "/api/productos/list?limit=2&marca=Disano"
     )
-    
+
     response_v2 = await client.get(
         "/api/productos/v2/list?per_page=2&marca=Disano"
     )
-    
+
     # Both should return same items
     assert response_v1.status_code == 200
     assert response_v2.status_code == 200
-    
+
     items_v1 = response_v1.json()
     items_v2 = response_v2.json()["items"]
-    
+
     assert len(items_v1) == len(items_v2)
     assert [item["codigo"] for item in items_v1] == [item["codigo"] for item in items_v2]
 
@@ -1058,17 +1058,17 @@ async def test_advanced_filtering_endpoint(client, sample_productos):
         "pvp_max=100&"
         "bc3_product_type=columna"
     )
-    
+
     assert response.status_code == 200
     data = response.json()
-    
+
     # Verify all filters applied
     filters_applied = data["filters_applied"]
     assert filters_applied["marca"] == "Disano"
     assert filters_applied["pvp_min"] == 40.0
     assert filters_applied["pvp_max"] == 100.0
     assert filters_applied["bc3_product_type"] == "columna"
-    
+
     # Verify results match filters
     for item in data["items"]:
         assert item["marca"] == "Disano"
@@ -1106,22 +1106,22 @@ def track_query_performance(func):
         start_time = time()
         result = func(*args, **kwargs)
         end_time = time()
-        
+
         execution_time = (end_time - start_time) * 1000  # Convert to ms
-        
+
         # Log performance (in real app, send to metrics service)
         print(f"{func.__name__}: {execution_time:.2f}ms")
-        
+
         # Alert on slow queries
         if execution_time > 200:  # P95 target
             print(f"WARNING: Slow query {func.__name__}: {execution_time:.2f}ms")
-        
+
         return result
-    
+
     return wrapper
 
 class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
-    
+
     @track_query_performance
     def buscar_productos_paginado(
         self,
@@ -1138,26 +1138,26 @@ from collections import defaultdict
 
 class CacheStatistics:
     """Track cache performance"""
-    
+
     def __init__(self):
         self.hits = 0
         self.misses = 0
         self.total_queries = 0
-    
+
     def record_hit(self):
         self.hits += 1
         self.total_queries += 1
-    
+
     def record_miss(self):
         self.misses += 1
         self.total_queries += 1
-    
+
     @property
     def hit_rate(self) -> float:
         if self.total_queries == 0:
             return 0.0
         return self.hits / self.total_queries
-    
+
     def reset(self):
         self.hits = 0
         self.misses = 0
@@ -1167,7 +1167,7 @@ class PaginationCache:
     def __init__(self, cache_backend: CacheManager):
         self.cache = cache_backend
         self.stats = CacheStatistics()
-    
+
     def get(self, cache_key: str) -> Optional[dict]:
         result = self.cache.get(cache_key)
         if result:
@@ -1175,7 +1175,7 @@ class PaginationCache:
         else:
             self.stats.record_miss()
         return result
-    
+
     def get_statistics(self) -> dict:
         return {
             "hits": self.stats.hits,
@@ -1291,47 +1291,47 @@ async def buscar_productos_v2_paginado(
 
 def add_pagination_indexes():
     """Add indexes for pagination performance"""
-    
+
     from app.infrastructure.database.connection import get_engine
     from sqlalchemy import text
-    
+
     engine = get_engine()
-    
+
     with engine.connect() as conn:
         # Create indexes
         conn.execute(text("""
-            CREATE INDEX IF NOT EXISTS idx_productos_marca 
+            CREATE INDEX IF NOT EXISTS idx_productos_marca
             ON productos_clean(marca)
         """))
-        
+
         conn.execute(text("""
-            CREATE INDEX IF NOT EXISTS idx_productos_familia 
+            CREATE INDEX IF NOT EXISTS idx_productos_familia
             ON productos_clean(familia)
         """))
-        
+
         conn.execute(text("""
-            CREATE INDEX IF NOT EXISTS idx_productos_pvp 
+            CREATE INDEX IF NOT EXISTS idx_productos_pvp
             ON productos_clean(pvp)
         """))
-        
+
         conn.execute(text("""
-            CREATE INDEX IF NOT EXISTS idx_productos_bc3_type 
+            CREATE INDEX IF NOT EXISTS idx_productos_bc3_type
             ON productos_clean(bc3_product_type)
         """))
-        
+
         conn.execute(text("""
-            CREATE INDEX IF NOT EXISTS idx_productos_marca_familia 
+            CREATE INDEX IF NOT EXISTS idx_productos_marca_familia
             ON productos_clean(marca, familia)
         """))
-        
+
         conn.execute(text("""
-            CREATE INDEX IF NOT EXISTS idx_productos_marca_pvp 
+            CREATE INDEX IF NOT EXISTS idx_productos_marca_pvp
             ON productos_clean(marca, pvp)
         """))
-        
+
         # Analyze indexes
         conn.execute(text("ANALYZE productos_clean"))
-        
+
         conn.commit()
 
 if __name__ == "__main__":
@@ -1344,12 +1344,12 @@ if __name__ == "__main__":
 ```python
 def rollback_pagination_indexes():
     """Rollback pagination indexes"""
-    
+
     from app.infrastructure.database.connection import get_engine
     from sqlalchemy import text
-    
+
     engine = get_engine()
-    
+
     with engine.connect() as conn:
         indexes = [
             "idx_productos_marca",
@@ -1359,10 +1359,10 @@ def rollback_pagination_indexes():
             "idx_productos_marca_familia",
             "idx_productos_marca_pvp"
         ]
-        
+
         for index in indexes:
             conn.execute(text(f"DROP INDEX IF EXISTS {index}"))
-        
+
         conn.commit()
 
 if __name__ == "__main__":
@@ -1381,26 +1381,26 @@ from pydantic_settings import BaseSettings
 
 class PaginationConfig(BaseSettings):
     """Pagination configuration"""
-    
+
     # Default pagination
     default_page: int = 1
     default_per_page: int = 20
     max_per_page: int = 100
-    
+
     # Cache configuration
     cache_ttl: int = 300  # 5 minutes
     cache_warming_enabled: bool = True
     cache_warming_queries: list = []
-    
+
     # Performance monitoring
     enable_performance_tracking: bool = True
     slow_query_threshold_ms: float = 200.0
     alert_on_slow_queries: bool = True
-    
+
     # Rate limiting
     rate_limit_enabled: bool = True
     rate_limit_per_minute: int = 100
-    
+
     class Config:
         env_file = ".env"
         env_prefix = "PAGINATION_"
@@ -1538,7 +1538,7 @@ python -m app.infrastructure.database.migrations.verify_rollback
 
 class FeatureFlags:
     """Feature flags for gradual rollout"""
-    
+
     PAGINATION_ENABLED = os.getenv("PAGINATION_ENABLED", "true").lower() == "true"
     V1_COMPATIBILITY_MODE = os.getenv("V1_COMPATIBILITY_MODE", "true").lower() == "true"
     CACHE_ENABLED = os.getenv("CACHE_ENABLED", "true").lower() == "true"
