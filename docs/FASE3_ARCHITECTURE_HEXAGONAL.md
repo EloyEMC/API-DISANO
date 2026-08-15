@@ -148,16 +148,16 @@ class ProductoEntity(BaseModel):
     marca: str = Field(..., min_length=1)
     familia: Optional[str] = None
     pvp: Optional[float] = None
-    
+
     # BC3 Suite fields
     bc3_descripcion_corta: Optional[str] = None
     bc3_product_type: Optional[str] = None
     bc3_descripcion_completa: Optional[str] = None
-    
+
     # Audit fields
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
-    
+
     class Config:
         frozen = True  # Immutable entity
 
@@ -168,28 +168,28 @@ from app.domain.entities.producto import ProductoEntity
 
 class ProductoRepositoryInterface(ABC):
     """Interface for Producto repository"""
-    
+
     @abstractmethod
     def get_by_codigo(self, codigo: str) -> Optional[ProductoEntity]:
         """Get product by code"""
         pass
-    
+
     @abstractmethod
     def buscar_productos(
-        self, 
-        termino: str, 
+        self,
+        termino: str,
         limit: int = 10,
         marca: str = "",
         familia: str = ""
     ) -> List[ProductoEntity]:
         """Search products with filters"""
         pass
-    
+
     @abstractmethod
     def save(self, producto: ProductoEntity) -> ProductoEntity:
         """Save product"""
         pass
-    
+
     @abstractmethod
     def delete(self, codigo: str) -> bool:
         """Delete product"""
@@ -247,21 +247,21 @@ from app.infrastructure.database.connection import Base
 class ProductoModel(Base):
     """SQLAlchemy model for Producto"""
     __tablename__ = "productos"
-    
+
     codigo = Column(String, primary_key=True)
     descripcion = Column(String, nullable=False)
     marca = Column(String, nullable=False)
     familia = Column(String, nullable=True)
     pvp = Column(Float, nullable=True)
-    
+
     # BC3 Suite fields
     bc3_descripcion_corta = Column(String, nullable=True)
     bc3_product_type = Column(String, nullable=True)
     bc3_descripcion_completa = Column(String, nullable=True)
-    
+
     created_at = Column(DateTime, nullable=True)
     updated_at = Column(DateTime, nullable=True)
-    
+
     def to_entity(self) -> ProductoEntity:
         """Convert to domain entity"""
         return ProductoEntity(
@@ -276,7 +276,7 @@ class ProductoModel(Base):
             created_at=self.created_at,
             updated_at=self.updated_at
         )
-    
+
     @classmethod
     def from_entity(cls, entity: ProductoEntity) -> "ProductoModel":
         """Create from domain entity"""
@@ -304,31 +304,31 @@ from app.domain.exceptions.not_found import ProductoNotFoundException
 
 class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
     """SQLAlchemy implementation of Producto repository"""
-    
+
     def __init__(self, session: Session):
         self.session = session
-    
+
     def get_by_codigo(self, codigo: str) -> Optional[ProductoEntity]:
         """Get product by code"""
         model = self.session.query(ProductoModel).filter(
             ProductoModel.codigo == codigo
         ).first()
-        
+
         if not model:
             raise ProductoNotFoundException(codigo)
-        
+
         return model.to_entity()
-    
+
     def buscar_productos(
-        self, 
-        termino: str, 
+        self,
+        termino: str,
         limit: int = 10,
         marca: str = "",
         familia: str = ""
     ) -> List[ProductoEntity]:
         """Search products with filters"""
         query = self.session.query(ProductoModel)
-        
+
         # Apply text search
         if termino:
             search_pattern = f"%{termino}%"
@@ -340,41 +340,41 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
                     ProductoModel.bc3_descripcion_completa.ilike(search_pattern)
                 )
             )
-        
+
         # Apply filters
         if marca:
             query = query.filter(ProductoModel.marca == marca)
-        
+
         if familia:
             query = query.filter(ProductoModel.familia == familia)
-        
+
         # Apply limit
         query = query.limit(limit)
-        
+
         # Return entities
         return [model.to_entity() for model in query.all()]
-    
+
     def save(self, producto: ProductoEntity) -> ProductoEntity:
         """Save product (create or update)"""
         model = ProductoModel.from_entity(producto)
-        
+
         self.session.merge(model)
         self.session.flush()  # Flush without commit
-        
+
         return model.to_entity()
-    
+
     def delete(self, codigo: str) -> bool:
         """Delete product"""
         model = self.session.query(ProductoModel).filter(
             ProductoModel.codigo == codigo
         ).first()
-        
+
         if not model:
             return False
-        
+
         self.session.delete(model)
         self.session.flush()
-        
+
         return True
 ```
 
@@ -421,35 +421,35 @@ from typing import List, Optional
 from app.domain.repositories.producto import ProductoRepositoryInterface
 from app.domain.entities.producto import ProductoEntity
 from app.domain.exceptions.validation import (
-    ValidationException, 
+    ValidationException,
     ProductoYaExisteException
 )
 from app.application.dto.producto import (
-    ProductoCreateDTO, 
+    ProductoCreateDTO,
     ProductoUpdateDTO
 )
 
 class ProductoService:
     """Business logic service for Producto"""
-    
+
     def __init__(self, repository: ProductoRepositoryInterface):
         self.repository = repository
-    
+
     def crear_producto(self, dto: ProductoCreateDTO) -> ProductoEntity:
         """Create new product with business rules"""
         # 1. Validations
         if len(dto.descripcion) < 2:
             raise ValidationException(
-                "descripcion", 
+                "descripcion",
                 "Mínimo 2 caracteres"
             )
-        
+
         if dto.pvp and dto.pvp < 0:
             raise ValidationException(
-                "pvp", 
+                "pvp",
                 "No puede ser negativo"
             )
-        
+
         # 2. Check uniqueness
         try:
             self.repository.get_by_codigo(dto.codigo)
@@ -459,7 +459,7 @@ class ProductoService:
             )
         except ProductoNotFoundException:
             pass  # OK, product doesn't exist
-        
+
         # 3. Create entity
         producto = ProductoEntity(
             codigo=dto.codigo,
@@ -471,36 +471,36 @@ class ProductoService:
             bc3_product_type=dto.bc3_product_type,
             bc3_descripcion_completa=dto.bc3_descripcion_completa
         )
-        
+
         # 4. Persist through repository
         return self.repository.save(producto)
-    
+
     def actualizar_producto(
-        self, 
-        codigo: str, 
+        self,
+        codigo: str,
         dto: ProductoUpdateDTO
     ) -> ProductoEntity:
         """Update product"""
         # 1. Get existing
         producto = self.repository.get_by_codigo(codigo)
-        
+
         # 2. Apply updates
         update_data = dto.dict(exclude_unset=True)
         updated_producto = producto.copy(update=update_data)
-        
+
         # 3. Validations
         if updated_producto.pvp and updated_producto.pvp < 0:
             raise ValidationException(
-                "pvp", 
+                "pvp",
                 "No puede ser negativo"
             )
-        
+
         # 4. Persist
         return self.repository.save(updated_producto)
-    
+
     def buscar_productos(
-        self, 
-        termino: str, 
+        self,
+        termino: str,
         limit: int = 10,
         marca: str = "",
         familia: str = ""
@@ -512,12 +512,12 @@ class ProductoService:
             marca=marca,
             familia=familia
         )
-    
+
     def eliminar_producto(self, codigo: str) -> bool:
         """Delete product"""
         # 1. Verify exists
         self.repository.get_by_codigo(codigo)
-        
+
         # 2. Delete
         return self.repository.delete(codigo)
 
@@ -724,7 +724,7 @@ def test_crear_producto_success():
         marca="Test",
         pvp=99.99
     )
-    
+
     service = ProductoService(mock_repo)
     dto = ProductoCreateDTO(
         codigo="TEST001",
@@ -732,10 +732,10 @@ def test_crear_producto_success():
         marca="Test",
         pvp=99.99
     )
-    
+
     # Act
     result = service.crear_producto(dto)
-    
+
     # Assert
     assert result.codigo == "TEST001"
     assert result.descripcion == "Test Product"
@@ -750,14 +750,14 @@ def test_crear_producto_duplicate_code():
         descripcion="Existing",
         marca="Test"
     )
-    
+
     service = ProductoService(mock_repo)
     dto = ProductoCreateDTO(
         codigo="TEST001",
         descripcion="Test Product",
         marca="Test"
     )
-    
+
     # Act & Assert
     with pytest.raises(ProductoYaExisteException):
         service.crear_producto(dto)
