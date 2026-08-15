@@ -31,7 +31,7 @@ Uso:
 """
 
 from fastapi import Request
-from typing import Dict, List, Optional
+from typing import Dict, List
 from datetime import datetime, timedelta
 from collections import defaultdict
 import hashlib

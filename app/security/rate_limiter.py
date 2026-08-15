@@ -63,8 +63,8 @@ except ModuleNotFoundError:  # Optional dependency; custom middleware remains ac
         return request.client.host if request.client else "unknown"
 
 
-from app.config import get_settings
-from app.security.logging_config import logger, log_security_event
+from app.config import get_settings  # noqa: E402
+from app.security.logging_config import logger, log_security_event  # noqa: E402
 
 settings = get_settings()
 
