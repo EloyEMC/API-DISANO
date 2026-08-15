@@ -6,6 +6,8 @@ Tests que importan y ejecutan código real de app/middleware_redis.py.
 Sin Settings import, usa mocks para Redis.
 ."""
 
+from pathlib import Path
+
 import pytest
 
 
@@ -15,8 +17,6 @@ class TestRedisMiddlewareModule:
     def test_middleware_redis_module_exists(self):
         """GREEN: Verificar que middleware_redis.py existe."""
         # Arrange & Act
-        from pathlib import Path
-
         redis_path = Path("app/middleware_redis.py")
 
         # Assert
@@ -25,8 +25,6 @@ class TestRedisMiddlewareModule:
     def test_middleware_redis_module_has_redis_limiter_class(self):
         """GREEN: Verificar que tiene RedisRateLimitMiddleware."""
         # Arrange
-        from pathlib import Path
-
         content = Path("app/middleware_redis.py").read_text()
 
         # Assert
@@ -35,8 +33,6 @@ class TestRedisMiddlewareModule:
     def test_middleware_redis_has_dispatch_method(self):
         """GREEN: Verificar que tiene async dispatch."""
         # Arrange
-        from pathlib import Path
-
         content = Path("app/middleware_redis.py").read_text()
 
         # Assert
@@ -45,8 +41,6 @@ class TestRedisMiddlewareModule:
     def test_middleware_redis_imports_redis(self):
         """GREEN: Verificar que importa redis."""
         # Arrange
-        from pathlib import Path
-
         content = Path("app/middleware_redis.py").read_text()
 
         # Assert
@@ -58,9 +52,7 @@ class TestRedisMiddlewareModule:
         redis_path = Path("app/middleware_redis.py")
 
         # Assert - Debe tener al menos 3000 bytes
-        assert redis_path.stat().st_size > 3000, (
-            "middleware_redis.py debe tener ≥3000 bytes"
-        )
+        assert redis_path.stat().st_size > 3000, "middleware_redis.py debe tener ≥3000 bytes"
 
 
 class TestRedisMiddlewareStructure:
