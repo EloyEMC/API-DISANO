@@ -1,5 +1,5 @@
-"""
-Módulo de autenticación mediante API Keys.
+"""Módulo de autenticación mediante API Keys.
+
 ==========================================
 
 Este módulo proporciona funciones para validar API Keys en las peticiones HTTP.
