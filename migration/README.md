@@ -160,6 +160,24 @@ SELECT
 FROM productos;
 ```
 
+## Source/Target Verification Guarantee
+
+`postgres_local_migrate.py` verifies every imported row before the transaction
+commits. It streams source and target rows ordered by `CÓDIGO`, compares
+canonicalized values field by field, and fails closed on NULL or duplicate
+source keys, missing target keys, extra target keys, content mismatches, and
+unsupported value types. NULL and the empty string are encoded differently.
+Verification retains only one row of lookahead and counters; row contents
+are never logged. The existing verified PostgreSQL backup gate remains a
+prerequisite, and any verification failure rolls the transaction back.
+
+The SQLite source is opened once in read-only mode with one explicit
+transaction. That transaction establishes a consistent source snapshot before
+counting, remains open while batches are streamed, and is reused for source
+verification. A concurrent source writer therefore cannot make the count,
+import stream, and verification observe different versions of the data; rows
+are still streamed without loading the complete source into memory.
+
 ## Idempotency
 
 Both tasks are idempotent (safe to run multiple times):
