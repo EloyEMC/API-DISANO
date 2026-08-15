@@ -1,5 +1,5 @@
 """
-Detector de Patrones de Scraping
+Detector de Patrones de Scraping.
 =================================
 
 Este módulo implementa detección heurística de comportamientos de scraping.
@@ -62,14 +62,12 @@ class ScrapingDetector:
     """
 
     def __init__(self):
-        """Inicializa el detector con estructuras de datos vacías"""
+        """Inicializa el detector con estructuras de datos vacías."""
         # Historial de peticiones: {identifier: [(timestamp, endpoint), ...]}
         self.request_history: Dict[str, List[tuple]] = defaultdict(list)
 
         # Contadores de patrones sospechosos: {identifier: {pattern: count}}
-        self.pattern_counts: Dict[str, Dict[str, int]] = defaultdict(
-            lambda: defaultdict(int)
-        )
+        self.pattern_counts: Dict[str, Dict[str, int]] = defaultdict(lambda: defaultdict(int))
 
         # IPs bloqueadas temporalmente: {ip: unban_timestamp}
         self.banned_ips: Dict[str, float] = {}
@@ -140,9 +138,7 @@ class ScrapingDetector:
         # Calcular intervalos entre peticiones
         intervals = []
         for i in range(1, min(len(request_history), 20)):
-            interval = (
-                request_history[i][0] - request_history[i - 1][0]
-            ).total_seconds()
+            interval = (request_history[i][0] - request_history[i - 1][0]).total_seconds()
             intervals.append(interval)
 
         # Si todos los intervalos son < 200ms y muy consistentes
@@ -150,9 +146,7 @@ class ScrapingDetector:
             avg_interval = sum(intervals) / len(intervals)
             if avg_interval < 0.2:  # Menos de 200ms promedio
                 # Calcular desviación estándar
-                variance = sum((x - avg_interval) ** 2 for x in intervals) / len(
-                    intervals
-                )
+                variance = sum((x - avg_interval) ** 2 for x in intervals) / len(intervals)
                 std_dev = variance**0.5
                 # Si desviación estándar es baja → timing perfecto (scraper)
                 if std_dev < 0.05:
@@ -196,8 +190,7 @@ class ScrapingDetector:
         if len(product_codes) >= 20:
             # Calcular diferencias entre códigos consecutivos
             differences = [
-                product_codes[i + 1] - product_codes[i]
-                for i in range(len(product_codes) - 1)
+                product_codes[i + 1] - product_codes[i] for i in range(len(product_codes) - 1)
             ]
 
             # Si la mayoría de diferencias son pequeñas (0-100), es secuencial
@@ -283,9 +276,7 @@ class ScrapingDetector:
             patterns["no_referer"] = 10
 
         # 4. Demasiadas peticiones en poco tiempo (máximo 20 puntos)
-        recent_count = len(
-            [ts for ts, _ in history if (current_time - ts).total_seconds() < 60]
-        )
+        recent_count = len([ts for ts, _ in history if (current_time - ts).total_seconds() < 60])
         if recent_count > 50:
             score += 20
             reasons.append(f"Too many requests: {recent_count}/minute")
@@ -347,9 +338,7 @@ class ScrapingDetector:
         if analysis["score"] >= 90:
             ban_duration = settings.ban_duration_first_offense
             self.banned_ips[client_ip] = datetime.now().timestamp() + ban_duration
-            logger.warning(
-                f"IP baneada temporalmente: {client_ip} - Duración: {ban_duration}s"
-            )
+            logger.warning(f"IP baneada temporalmente: {client_ip} - Duración: {ban_duration}s")
 
         return analysis["is_suspicious"]
 
@@ -382,9 +371,7 @@ class ScrapingDetector:
 
         if any(request.url.path.startswith(path) for path in honeypot_paths):
             client_ip = request.client.host if request.client else "unknown"
-            self.honeypot_accesses[client_ip] = (
-                self.honeypot_accesses.get(client_ip, 0) + 1
-            )
+            self.honeypot_accesses[client_ip] = self.honeypot_accesses.get(client_ip, 0) + 1
 
             logger.warning(f"HONEYPOT accedido: {request.url.path} desde {client_ip}")
             log_security_event(
