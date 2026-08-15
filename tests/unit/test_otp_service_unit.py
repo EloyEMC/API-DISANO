@@ -44,7 +44,7 @@ class TestOTPServiceUnit:
         otp_service = OTPService()
         email = "test@example.com"
 
-        otp = otp_service.generate_otp(email)
+        otp_service.generate_otp(email)
         status = otp_service.get_otp_status(email)
 
         assert status is not None
