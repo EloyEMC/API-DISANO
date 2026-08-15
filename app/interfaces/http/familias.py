@@ -1,7 +1,7 @@
-"""HTTP interface for Familia using hexagonal architecture
+"""HTTP interface for Familia using hexagonal architecture.
 
 FastAPI router with dependency injection for families endpoints.
-."""
+"""
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import List
@@ -60,7 +60,7 @@ async def buscar_familias_paginado(
 
     Endpoint público con soporte completo de paginación, ordenamiento y filtros.
     Proporciona metadatos de paginación y caché integrado.
-    ."""
+    """
     try:
         # Build pagination request DTO
         pagination_dto = PaginationRequestDTO(
@@ -97,8 +97,8 @@ async def get_top_bc3_coverage_v2(
     """
     Obtener familias con mayor cobertura BC3 V2.
 
-    **V2 New Feature** - Endpoint mejorado con funcionalidad adicional
-    ."""
+    **V2 New Feature** - Endpoint mejorado con funcionalidad adicional.
+    """
     try:
         leaderboard = service.get_bc3_coverage_leaderboard(limit=limit)
         return [
@@ -123,10 +123,11 @@ async def get_familias(
     service: FamiliaService = Depends(get_familia_service),
 ) -> List:
     """
-    Get all families with BC3 statistics
+    Get all families with BC3 statistics.
 
     **V1 Backward Compatible** - Returns same format as legacy router
-    ."""
+    .
+    """
     try:
         familias = service.get_all_familias()
         return [familia.model_dump() for familia in familias[:limit]]
@@ -139,32 +140,14 @@ async def get_familias_stats(
     service: FamiliaService = Depends(get_familia_service),
 ) -> dict:
     """
-    Get aggregate statistics across all families
+    Get aggregate statistics across all families.
 
     **V1 Backward Compatible** - Returns same format as legacy router
-    ."""
+    .
+    """
     try:
         stats = service.get_statistics()
         return stats
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error: {str(e)}") from None
-
-
-@router.get("/{nombre}")
-async def get_familia_by_nombre(
-    nombre: str,
-    service: FamiliaService = Depends(get_familia_service),
-) -> dict:
-    """
-    Get family by name with statistics
-
-    **V1 Backward Compatible** - Returns same format as legacy router
-    ."""
-    try:
-        familia = service.get_familia_by_nombre(nombre)
-        return familia.model_dump()
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e)) from None
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}") from None
 
@@ -175,10 +158,11 @@ async def get_top_bc3_coverage(
     service: FamiliaService = Depends(get_familia_service),
 ) -> List:
     """
-    Get families with highest BC3 coverage
+    Get families with highest BC3 coverage.
 
     **V2 New Feature** - New endpoint with enhanced functionality
-    ."""
+    .
+    """
     try:
         leaderboard = service.get_bc3_coverage_leaderboard(limit=limit)
         return [
@@ -188,5 +172,25 @@ async def get_top_bc3_coverage(
             }
             for familia in leaderboard
         ]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}") from None
+
+
+@router.get("/{nombre}")
+async def get_familia_by_nombre(
+    nombre: str,
+    service: FamiliaService = Depends(get_familia_service),
+) -> dict:
+    """
+    Get family by name with statistics.
+
+    **V1 Backward Compatible** - Returns same format as legacy router
+    .
+    """
+    try:
+        familia = service.get_familia_by_nombre(nombre)
+        return familia.model_dump()
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from None
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}") from None
