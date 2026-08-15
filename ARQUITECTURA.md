@@ -7,7 +7,7 @@
 
 CLIENTE (App Flask / Frontend Astro / Móvil)
     ↓
-    Header: X-API-Key: KlawgIxZIDTWbqaqSW2P-9miD-RwnW2HD7fMdjBtdlE
+    Header: X-API-Key: ${API_KEY}
     User-Agent: Mozilla/5.0 (compatible; MyApp/1.0)
     ↓
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -45,7 +45,7 @@ CLIENTE (App Flask / Frontend Astro / Móvil)
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │  4. BUSINESS LOGIC - Routers (productos.py, familias.py, bc3.py)          │
 │     ├─► Validar parámetros (limit ≤ 100)                                  │
-│     ├─► Consultar SQLite                                                  │
+│     ├─► Consultar PostgreSQL                                              │
 │     ├─► Aplicar filtros                                                   │
 │     ├─► Paginar resultados                                                │
 │     └─► Retornar JSON                                                     │
@@ -109,7 +109,7 @@ RESPUESTA HTTP 200 OK
 │    ├── familias.py                       /v1/internal/families
 │    └── bc3.py                            /v1/internal/bc3
 │
-├── 💾 database/tarifa_disano.db           SQLite (8,288 productos)
+├── 💾 PostgreSQL                          Base de datos del runtime oficial
 │
 ├── 📝 logs/                               Logs
 │    ├── api.log                           Todos los accesos
@@ -155,7 +155,7 @@ RESPUESTA HTTP 200 OK
 │  4. productos.py router                                     │
 │     ├─ GET /v1/internal/products                           │
 │     ├─ Query params: limit=100                             │
-│     ├─ SQLite: SELECT * FROM productos LIMIT 100           │
+│     ├─ PostgreSQL: SELECT * FROM productos LIMIT 100       │
 │     └─ Return JSON                                         │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
@@ -222,6 +222,7 @@ RESPUESTA HTTP 200 OK
 
 2. **Iniciar servidor**
    ```bash
+   export DATABASE_URL='postgresql://user:password@host:5432/database'
    source venv/bin/activate
    python -m uvicorn app.main:app --reload
    ```
@@ -229,7 +230,7 @@ RESPUESTA HTTP 200 OK
 3. **Verificar seguridad**
    ```bash
    export API_URL='http://127.0.0.1:8000'
-   export API_KEY='KlawgIxZIDTWbqaqSW2P-9miD-RwnW2HD7fMdjBtdlE'
+   export API_KEY="${API_KEY:?Set API_KEY in your environment}"
    bash scripts/verify_security.sh
    ```
 
@@ -279,7 +280,7 @@ python -c "import secrets; print(secrets.token_urlsafe(32))"
 python -m py_compile app/main.py
 
 # Test rápido de API key
-curl -H "X-API-Key: tu-key" http://localhost:8000/health
+curl -H "X-API-Key: ${API_KEY}" http://localhost:8000/health
 ```
 
 ### Archivos clave
@@ -294,9 +295,15 @@ curl -H "X-API-Key: tu-key" http://localhost:8000/health
 ### Variables de entorno críticas
 
 ```bash
-API_KEYS=tu-api-key-aqui                    # 🔑 OBLIGATORIO
+API_KEYS=<inyectada por el entorno o gestor de secretos> # 🔑 OBLIGATORIO
+DATABASE_URL=postgresql://user:password@host:5432/database # 💾 Runtime oficial
 CORS_ORIGINS=https://tu-dominio.com        # 🌐 Producción
 ENVIRONMENT=production                      # ⚙️ Producción
 RATE_LIMIT_PER_CLIENT=30                    # ⏱️ Ajustar si necesario
 LOG_LEVEL=INFO                              # 📊 DEBUG para desarrollo
 ```
+
+`DATABASE_URL` es obligatoria en el runtime oficial y debe usar PostgreSQL
+(`postgresql://` o `postgresql+driver://`). SQLite queda limitado a herramientas
+de prueba ejecutadas con `ENVIRONMENT=testing`; no es un backend válido para el
+runtime oficial.

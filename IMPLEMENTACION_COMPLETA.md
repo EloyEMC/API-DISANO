@@ -104,7 +104,8 @@ En otra terminal:
 ```bash
 # Configurar variables
 export API_URL='http://127.0.0.1:8000'
-export API_KEY='KlawgIxZIDTWbqaqSW2P-9miD-RwnW2HD7fMdjBtdlE'
+export API_KEY="${API_KEY:?Set API_KEY in your environment}"
+export DATABASE_URL='postgresql://user:password@host:5432/database'
 
 # Ejecutar script de verificación
 bash scripts/verify_security.sh
@@ -120,7 +121,7 @@ curl http://127.0.0.1:8000/health
 curl http://127.0.0.1:8000/v1/internal/products/
 
 # 3. Con API key (debe funcionar)
-curl -H "X-API-Key: KlawgIxZIDTWbqaqSW2P-9miD-RwnW2HD7fMdjBtdlE" \
+curl -H "X-API-Key: ${API_KEY}" \
   http://127.0.0.1:8000/v1/internal/products/?limit=5
 
 # 4. Documentación (debe ser 404)
@@ -151,7 +152,7 @@ $ curl http://127.0.0.1:8000/v1/internal/products/
 
 ### Test 3: Con API Key Válida
 ```bash
-$ curl -H "X-API-Key: Klawg..." http://127.0.0.1:8000/v1/internal/products/?limit=2
+$ curl -H "X-API-Key: ${API_KEY}" http://127.0.0.1:8000/v1/internal/products/?limit=2
 [
   {"CÓDIGO":"11253300", "DESCRIPCION":"...", ...},
   {"CÓDIGO":"11253400", "DESCRIPCION":"...", ...}
@@ -307,9 +308,22 @@ pip install -r requirements.txt
 # Verificar que .env existe
 cat .env
 
-# Debe contener:
-# API_KEYS=tu-api-key-aqui
+# Debe definir API_KEYS mediante el entorno o un gestor de secretos.
+# No copies claves reales en documentación ni en archivos versionados.
 ```
+
+### Error: DATABASE_URL ausente o no compatible
+
+El runtime oficial exige `DATABASE_URL` con PostgreSQL. Configúrala mediante el
+entorno o el gestor de secretos del despliegue:
+
+```bash
+export DATABASE_URL='postgresql://user:password@host:5432/database'
+```
+
+Se aceptan URLs `postgresql://` y `postgresql+driver://`. SQLite se reserva
+exclusivamente para herramientas de prueba con `ENVIRONMENT=testing`; no debe
+usarse como backend del runtime oficial.
 
 ---
 
