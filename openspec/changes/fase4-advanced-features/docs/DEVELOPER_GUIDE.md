@@ -122,7 +122,7 @@ if response.status_code == 200:
     data = response.json()
     products = data['items']
     pagination = data['pagination']
-    
+
     print(f"Got {len(products)} products")
     print(f"Total pages: {pagination['total_pages']}")
 ```
@@ -171,24 +171,24 @@ if data['items']:
 def get_all_products():
     page = 1
     all_products = []
-    
+
     while True:
         response = requests.get(
             f"{BASE_URL}/productos/v2/paginated",
             params={'page': page, 'per_page': 100}
         )
-        
+
         data = response.json()
         products = data['items']
         all_products.extend(products)
-        
+
         # Check if there are more pages
         pagination = data['pagination']
         if not pagination['has_next']:
             break
-            
+
         page += 1
-    
+
     print(f"Retrieved {len(all_products)} total products")
     return all_products
 
@@ -293,31 +293,31 @@ class APIDISANOV2Client:
     def __init__(self, base_url="http://localhost:8000/api"):
         self.base_url = base_url
         self.session = requests.Session()
-    
+
     def get_products(self, page=1, per_page=10, **filters):
         """Get paginated products with optional filters"""
         params = {'page': page, 'per_page': per_page}
         params.update(filters)
-        
+
         response = self.session.get(
             f"{self.base_url}/productos/v2/paginated",
             params=params
         )
         response.raise_for_status()
         return response.json()
-    
+
     def get_families(self, page=1, per_page=10, **filters):
         """Get paginated families with optional filters"""
         params = {'page': page, 'per_page': per_page}
         params.update(filters)
-        
+
         response = self.session.get(
             f"{self.base_url}/familias/v2/paginated",
             params=params
         )
         response.raise_for_status()
         return response.json()
-    
+
     def get_bc3_stats(self):
         """Get BC3 compatibility statistics"""
         response = self.session.get(f"{self.base_url}/bc3/v2/stats")
@@ -340,26 +340,26 @@ class PaginatedIterator:
         self.filters = filters
         self.current_page = 1
         self.has_next = True
-    
+
     def __iter__(self):
         return self
-    
+
     def __next__(self):
         if not self.has_next:
             raise StopIteration
-        
+
         response = self.client.get_products(
             page=self.current_page,
             per_page=self.per_page,
             **self.filters
         )
-        
+
         products = response['items']
         pagination = response['pagination']
-        
+
         self.has_next = pagination['has_next']
         self.current_page += 1
-        
+
         return products
 
 # Usage
@@ -383,31 +383,31 @@ def get_products_by_multiple_criteria():
     params = {
         # Text search
         'buscar': 'emergencia',
-        
+
         # Exact matches
         'marca': 'Disano',
         'familia': 'Emergencia',
-        
+
         # Price range
         'pvp_min': 10,
         'pvp_max': 200,
-        
+
         # BC3 specific
         'bc3_product_type': 'luminaria',
-        
+
         # Sorting
         'sort': 'pvp:desc',
-        
+
         # Pagination
         'page': 1,
         'per_page': 20
     }
-    
+
     response = requests.get(
         f"{BASE_URL}/productos/v2/paginated",
         params=params
     )
-    
+
     data = response.json()
     return data['items']
 ```
@@ -419,7 +419,7 @@ def get_all_products_in_family(family_name):
     """Get all products in a family using pagination"""
     all_products = []
     page = 1
-    
+
     while True:
         response = requests.get(
             f"{BASE_URL}/productos/v2/paginated",
@@ -429,42 +429,42 @@ def get_all_products_in_family(family_name):
                 'per_page': 100  # Maximum page size
             }
         )
-        
+
         data = response.json()
         products = data['items']
         all_products.extend(products)
-        
+
         if not data['pagination']['has_next']:
             break
-            
+
         page += 1
-    
+
     return all_products
 
 def get_family_statistics():
     """Get statistics for all families"""
     families = []
     page = 1
-    
+
     while True:
         response = requests.get(
             f"{BASE_URL}/familias/v2/paginated",
             params={'page': page, 'per_page': 100}
         )
-        
+
         data = response.json()
         families.extend(data['items'])
-        
+
         if not data['pagination']['has_next']:
             break
-            
+
         page += 1
-    
+
     # Calculate statistics
     total_families = len(families)
     total_products = sum(f['total_productos'] for f in families)
     bc3_compatible = sum(f['con_bc3'] for f in families)
-    
+
     return {
         'total_families': total_families,
         'total_products': total_products,
@@ -479,13 +479,13 @@ def get_family_statistics():
 def robust_api_request(url, params=None, max_retries=3):
     """Make robust API requests with retry logic"""
     import time
-    
+
     for attempt in range(max_retries):
         try:
             response = requests.get(url, params=params)
             response.raise_for_status()
             return response.json()
-            
+
         except requests.exceptions.HTTPError as e:
             if e.response.status_code == 422:
                 # Validation error - don't retry
@@ -499,14 +499,14 @@ def robust_api_request(url, params=None, max_retries=3):
             else:
                 # Other errors - don't retry
                 raise
-                
+
         except requests.exceptions.RequestException as e:
             # Network error - retry
             if attempt < max_retries - 1:
                 time.sleep(2 ** attempt)
                 continue
             raise
-    
+
     raise Exception(f"Request failed after {max_retries} attempts")
 ```
 
@@ -634,29 +634,29 @@ def process_products_in_batches():
     batch_size = 50
     page = 1
     processed_count = 0
-    
+
     while True:
         response = requests.get(
             f"{BASE_URL}/productos/v2/paginated",
             params={'page': page, 'per_page': batch_size}
         )
-        
+
         data = response.json()
         products = data['items']
-        
+
         # Process batch
         for product in products:
             process_product(product)
             processed_count += 1
-        
+
         # Progress tracking
         if processed_count % 100 == 0:
             print(f"Processed {processed_count} products...")
-        
+
         # Check for more pages
         if not data['pagination']['has_next']:
             break
-            
+
         page += 1
 ```
 
@@ -676,10 +676,10 @@ def test_pagination():
     response = requests.get(
         f"{BASE_URL}/productos/v2/paginated?page=1&per_page=5"
     )
-    
+
     assert response.status_code == 200
     data = response.json()
-    
+
     # Validate pagination metadata
     assert 'pagination' in data
     assert data['pagination']['current_page'] == 1
@@ -692,10 +692,10 @@ def test_filtering():
         f"{BASE_URL}/productos/v2/paginated",
         params={'marca': 'Disano'}
     )
-    
+
     assert response.status_code == 200
     data = response.json()
-    
+
     # Validate filter was applied
     assert 'filters_applied' in data
     assert data['filters_applied']['marca'] == 'Disano'
@@ -706,10 +706,10 @@ def test_sorting():
         f"{BASE_URL}/productos/v2/paginated",
         params={'sort': 'pvp:desc'}
     )
-    
+
     assert response.status_code == 200
     data = response.json()
-    
+
     # Validate sorting was applied
     assert 'sorting_applied' in data
     assert data['sorting_applied']['field'] == 'pvp'
@@ -726,25 +726,25 @@ def test_full_workflow():
         f"{BASE_URL}/productos/v2/paginated?page=1&per_page=10"
     )
     assert products_response.status_code == 200
-    
+
     # Step 2: Apply filters
     filtered_response = requests.get(
         f"{BASE_URL}/productos/v2/paginated",
         params={'marca': 'Disano', 'per_page': 10}
     )
     assert filtered_response.status_code == 200
-    
+
     # Step 3: Apply sorting
     sorted_response = requests.get(
         f"{BASE_URL}/productos/v2/paginated",
         params={'sort': 'pvp:desc', 'per_page': 10}
     )
     assert sorted_response.status_code == 200
-    
+
     # Step 4: Get BC3 stats
     stats_response = requests.get(f"{BASE_URL}/bc3/v2/stats")
     assert stats_response.status_code == 200
-    
+
     print("✅ Full workflow test passed")
 ```
 
@@ -760,18 +760,18 @@ import os
 
 class Settings:
     ENVIRONMENT = os.getenv('ENVIRONMENT', 'development')
-    
+
     # Database
     DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///database/tarifa_disano.db')
-    
+
     # Cache
     CACHE_ENABLED = os.getenv('CACHE_ENABLED', 'true').lower() == 'true'
     CACHE_TTL = int(os.getenv('CACHE_TTL', '300'))  # 5 minutes
-    
+
     # API
     API_PREFIX = os.getenv('API_PREFIX', '/api')
     ALLOWED_ORIGINS = os.getenv('ALLOWED_ORIGINS', '*').split(',')
-    
+
     # Performance
     MAX_PER_PAGE = int(os.getenv('MAX_PER_PAGE', '100'))
     DEFAULT_PER_PAGE = int(os.getenv('DEFAULT_PER_PAGE', '10'))
