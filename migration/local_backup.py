@@ -187,6 +187,7 @@ def postgres_backup(url: str, output_dir: Path) -> tuple[Path, Path]:
         )
         if not manifest_path.is_file() or manifest_path.stat().st_size == 0:
             raise BackupError("PostgreSQL backup manifest was not created")
+        _verify_postgres_archive(backup_path)
     except OSError as exc:
         backup_path.unlink(missing_ok=True)
         manifest_path.unlink(missing_ok=True)

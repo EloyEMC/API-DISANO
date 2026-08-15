@@ -117,25 +117,54 @@ def test_postgres_backup_uses_sanitized_url_and_pgpassword_only(
     output_dir = tmp_path / "backups"
     received_env: dict[str, str] = {}
 
-    def create_dump(command: list[str], **kwargs: object) -> Mock:
-        received_env.update(kwargs["env"])
-        Path(command[command.index("--file") + 1]).write_bytes(b"custom-format-dump")
+    def run_postgres_command(command: list[str], **kwargs: object) -> Mock:
+        if command[0] == "pg_dump":
+            received_env.update(kwargs["env"])
+            Path(command[command.index("--file") + 1]).write_bytes(b"custom-format-dump")
         return Mock(returncode=0)
 
     with (
-        patch("migration.local_backup.shutil_which", return_value="/usr/bin/pg_dump"),
-        patch("migration.local_backup.subprocess.run", side_effect=create_dump) as run,
+        patch(
+            "migration.local_backup.shutil_which",
+            side_effect=lambda command: f"/usr/bin/{command}",
+        ),
+        patch("migration.local_backup.subprocess.run", side_effect=run_postgres_command) as run,
     ):
         backup, manifest = postgres_backup(
             "postgresql://backup:encoded%20secret@localhost:5432/app", output_dir
         )
 
-    command = run.call_args.args[0]
+    command = run.call_args_list[0].args[0]
     assert command[command.index("--dbname") + 1] == ("postgresql://backup@localhost:5432/app")
     assert "encoded%20secret" not in " ".join(command)
     assert received_env["PGPASSWORD"] == "encoded secret"
     assert backup.is_file() and backup.stat().st_size > 0
     assert manifest.is_file() and manifest.stat().st_size > 0
+    assert run.call_args_list[1].args[0] == ["pg_restore", "--list", str(backup)]
+
+
+def test_postgres_backup_cleans_artifacts_when_archive_verification_fails(
+    tmp_path: Path,
+) -> None:
+    output_dir = tmp_path / "backups"
+
+    def run_postgres_command(command: list[str], **_: object) -> Mock:
+        if command[0] == "pg_dump":
+            Path(command[command.index("--file") + 1]).write_bytes(b"custom-format-dump")
+            return Mock(returncode=0)
+        return Mock(returncode=2)
+
+    with (
+        patch(
+            "migration.local_backup.shutil_which",
+            side_effect=lambda command: f"/usr/bin/{command}",
+        ),
+        patch("migration.local_backup.subprocess.run", side_effect=run_postgres_command),
+        pytest.raises(BackupError, match="pg_restore failed with exit status 2"),
+    ):
+        postgres_backup("postgresql://backup:secret@localhost/app", output_dir)
+
+    assert list(output_dir.iterdir()) == []
 
 
 @pytest.mark.parametrize("returncode,contents", [(2, b"partial"), (0, b"")])
