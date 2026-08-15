@@ -24,7 +24,7 @@ cp .env.example .env
 python -c "import secrets; print(secrets.token_urlsafe(32))"
 
 # Configurar en .env:
-# API_KEYS=tu-api-key-generada-aqui
+# API_KEYS=${API_KEY}
 # ENVIRONMENT=development  # Cambiar a production en despliegue
 # CORS_ORIGINS=http://localhost:3000  # Tu frontend
 ```
@@ -55,7 +55,7 @@ Todos los endpoints requieren API Key en el header `X-API-Key`:
 curl http://localhost:8000/v1/internal/products/
 
 # Con API key válida
-curl -H "X-API-Key: tu-api-key-aqui" \
+curl -H "X-API-Key: ${API_KEY}" \
   http://localhost:8000/v1/internal/products/
 ```
 
@@ -64,13 +64,14 @@ curl -H "X-API-Key: tu-api-key-aqui" \
 ```bash
 # Configurar variables
 export API_URL='http://localhost:8000'
-export API_KEY='tu-api-key-aqui'
+export API_KEY="${API_KEY:?Set API_KEY in your environment}"
 
 # Ejecutar script de verificación
 bash scripts/verify_security.sh
 ```
 
 El script verificará:
+
 - ✅ Documentación oculta (/docs, /openapi.json → 404)
 - ✅ Autenticación requerida (401 sin API key)
 - ✅ Rate limiting funcionando (429 después de N peticiones)
@@ -204,6 +205,7 @@ pip install -r requirements.txt
 ## 🆘 Soporte
 
 Si encuentras algún problema o tienes preguntas, revisa:
+
 1. Los logs en `logs/api.log` y `logs/security.log`
 2. El plan de seguridad en `docs/PLAN_SEGURIDAD.md`
 3. Ejecuta `bash scripts/verify_security.sh` para diagnosticar
