@@ -10,6 +10,7 @@ from migration.local_backup import (
     BackupError,
     build_parser,
     normalize_local_postgres_url,
+    postgres_backup,
     sqlite_backup,
     verify,
 )
@@ -108,6 +109,73 @@ def test_postgres_url_normalizer_preserves_driver_qualified_scheme() -> None:
 
     assert normalized == "postgresql+psycopg://user@localhost:5433/db"
     assert password == "secret"
+
+
+def test_postgres_backup_uses_sanitized_url_and_pgpassword_only(
+    tmp_path: Path,
+) -> None:
+    output_dir = tmp_path / "backups"
+    received_env: dict[str, str] = {}
+
+    def create_dump(command: list[str], **kwargs: object) -> Mock:
+        received_env.update(kwargs["env"])
+        Path(command[command.index("--file") + 1]).write_bytes(b"custom-format-dump")
+        return Mock(returncode=0)
+
+    with (
+        patch("migration.local_backup.shutil_which", return_value="/usr/bin/pg_dump"),
+        patch("migration.local_backup.subprocess.run", side_effect=create_dump) as run,
+    ):
+        backup, manifest = postgres_backup(
+            "postgresql://backup:encoded%20secret@localhost:5432/app", output_dir
+        )
+
+    command = run.call_args.args[0]
+    assert command[command.index("--dbname") + 1] == ("postgresql://backup@localhost:5432/app")
+    assert "encoded%20secret" not in " ".join(command)
+    assert received_env["PGPASSWORD"] == "encoded secret"
+    assert backup.is_file() and backup.stat().st_size > 0
+    assert manifest.is_file() and manifest.stat().st_size > 0
+
+
+@pytest.mark.parametrize("returncode,contents", [(2, b"partial"), (0, b"")])
+def test_postgres_backup_cleans_failed_or_empty_dump(
+    tmp_path: Path, returncode: int, contents: bytes
+) -> None:
+    output_dir = tmp_path / "backups"
+
+    def create_dump(command: list[str], **_: object) -> Mock:
+        Path(command[command.index("--file") + 1]).write_bytes(contents)
+        return Mock(returncode=returncode)
+
+    with (
+        patch("migration.local_backup.shutil_which", return_value="/usr/bin/pg_dump"),
+        patch("migration.local_backup.subprocess.run", side_effect=create_dump),
+        pytest.raises(BackupError),
+    ):
+        postgres_backup("postgresql://backup:secret@localhost/app", output_dir)
+
+    assert list(output_dir.iterdir()) == []
+
+
+def test_postgres_backup_cleans_dump_when_manifest_creation_fails(
+    tmp_path: Path,
+) -> None:
+    output_dir = tmp_path / "backups"
+
+    def create_dump(command: list[str], **_: object) -> Mock:
+        Path(command[command.index("--file") + 1]).write_bytes(b"custom-format-dump")
+        return Mock(returncode=0)
+
+    with (
+        patch("migration.local_backup.shutil_which", return_value="/usr/bin/pg_dump"),
+        patch("migration.local_backup.subprocess.run", side_effect=create_dump),
+        patch("migration.local_backup.Path.write_text", side_effect=OSError("disk full")),
+        pytest.raises(BackupError, match="creating local files"),
+    ):
+        postgres_backup("postgresql://backup:secret@localhost/app", output_dir)
+
+    assert list(output_dir.iterdir()) == []
 
 
 def test_verify_rejects_missing_postgres_backup_with_stable_error(

@@ -166,30 +166,38 @@ def postgres_backup(url: str, output_dir: Path) -> tuple[Path, Path]:
     env = os.environ.copy()
     if password is not None:
         env["PGPASSWORD"] = password
+    manifest_path = _manifest_path(backup_path)
     try:
         result = subprocess.run(
             command, env=env, capture_output=True, text=True, check=False
         )
+        if result.returncode != 0:
+            raise BackupError(f"pg_dump failed with exit status {result.returncode}")
+        if not backup_path.is_file() or backup_path.stat().st_size == 0:
+            raise BackupError("pg_dump completed without producing a non-empty dump")
+
+        manifest = {
+            "format": "postgresql-custom",
+            "backup": backup_path.name,
+            "sha256": _sha256(backup_path),
+            "created_at_utc": datetime.now(timezone.utc).isoformat(),
+        }
+        manifest_path.write_text(
+            json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
+        )
+        if not manifest_path.is_file() or manifest_path.stat().st_size == 0:
+            raise BackupError("PostgreSQL backup manifest was not created")
     except OSError as exc:
-        raise BackupError("Could not execute pg_dump") from exc
+        backup_path.unlink(missing_ok=True)
+        manifest_path.unlink(missing_ok=True)
+        raise BackupError("PostgreSQL backup failed while creating local files") from exc
+    except BackupError:
+        backup_path.unlink(missing_ok=True)
+        manifest_path.unlink(missing_ok=True)
+        raise
     finally:
         if password is not None:
             env["PGPASSWORD"] = ""
-    if result.returncode != 0:
-        backup_path.unlink(missing_ok=True)
-        raise BackupError(f"pg_dump failed with exit status {result.returncode}")
-    if not backup_path.is_file() or backup_path.stat().st_size == 0:
-        backup_path.unlink(missing_ok=True)
-        raise BackupError("pg_dump completed without producing a non-empty dump")
-
-    manifest_path = _manifest_path(backup_path)
-    manifest = {
-        "format": "postgresql-custom",
-        "backup": backup_path.name,
-        "sha256": _sha256(backup_path),
-        "created_at_utc": datetime.now(timezone.utc).isoformat(),
-    }
-    manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     return backup_path, manifest_path
 
 
