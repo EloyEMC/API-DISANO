@@ -101,12 +101,8 @@ CREATE TABLE IF NOT EXISTS bc3_enrichment_job_items (
         END IF;
     END $$;
 
-    CREATE INDEX IF NOT EXISTS ix_bc3_enrichment_jobs_idempotency_key
-        ON bc3_enrichment_jobs (idempotency_key);
 CREATE INDEX IF NOT EXISTS ix_bc3_enrichment_jobs_status_created_at
     ON bc3_enrichment_jobs (status, created_at);
-CREATE INDEX IF NOT EXISTS ix_bc3_enrichment_job_items_job_id_codigo
-    ON bc3_enrichment_job_items (job_id, codigo);
 
 DO $$
 BEGIN

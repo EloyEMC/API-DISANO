@@ -59,6 +59,15 @@ def test_schema_contains_id_generator_compatibility_block() -> None:
     assert "TRUNCATE" not in sql.upper()
 
 
+def test_schema_uses_unique_constraints_without_redundant_indexes() -> None:
+    sql = SCHEMA_PATH.read_text(encoding="utf-8")
+
+    assert "idempotency_key TEXT NOT NULL UNIQUE" in sql
+    assert "uq_bc3_enrichment_job_items_job_id_codigo UNIQUE (job_id, codigo)" in sql
+    assert "ix_bc3_enrichment_jobs_idempotency_key" not in sql
+    assert "ix_bc3_enrichment_job_items_job_id_codigo" not in sql
+
+
 def test_argument_validation_requires_expected_cli_options(tmp_path: Path) -> None:
     args = parse_args(
         [
