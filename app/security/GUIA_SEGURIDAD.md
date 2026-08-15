@@ -1,434 +1,210 @@
-# 🔒 GUÍA DE SEGURIDAD - app/security/
+# Guía de seguridad de `app/security/`
 
-**CUÁNDO LEER ESTE ARCHIVO:**
-- Necesitas proteger un endpoint
-- Quieres entender cómo funciona la autenticación
-- Vas a modificar el sistema de seguridad
+Esta guía describe las dependencias y utilidades de seguridad actuales. La migración del
+módulo heredado ya terminó: la aplicación instala los middlewares desde `app/middleware.py`,
+no desde `app/security.py`. El archivo `app/security.py` se conserva únicamente como
+compatibilidad heredada y no debe usarse en código nuevo.
 
----
+## Qué usar
 
-## 📁 MÓDULOS DE SEGURIDAD
+| Necesidad | Interfaz actual |
+| --- | --- |
+| Proteger un endpoint con una API key | `app.security.api_key.verify_api_key` |
+| Proteger una operación administrativa | `app.security.api_key.require_admin_api_key` |
+| Configurar límites con SlowAPI | `app.security.rate_limiter.limiter` |
+| Identificar clientes para rate limiting | `app.security.rate_limiter.get_api_key_identifier` |
+| Evaluar un User-Agent | `app.security.user_agent_filter.is_user_agent_allowed` |
+| Analizar patrones de scraping | `app.security.scraping_detector.detector` |
+| Registrar eventos de seguridad | `app.security.logging_config.log_security_event` |
 
-```
-security/
-├── api_key.py              # Verificación de API keys
-├── rate_limiter.py         # Rate limiting con slowapi
-├── scraping_detector.py    # Detector de scraping
-├── user_agent_filter.py    # Filtro de User-Agent
-└── logging_config.py      # Configuración logging
-```
+Los middlewares globales (`APIKeyMiddleware`, `RateLimitMiddleware`,
+`UserAgentMiddleware` y `SecurityHeadersMiddleware`) pertenecen a `app/middleware.py`.
+`app/main.py` activa autenticación, rate limiting y filtro de User-Agent solo en producción;
+las cabeceras de seguridad se aplican en todos los entornos.
 
----
+## Autenticación de endpoints
 
-## 🔑 AUTENTICACIÓN - API KEYS
+La API key normal se envía en `X-API-Key`. `verify_api_key` devuelve una vista parcial de la
+key para logging y responde `401` si falta o no es válida.
 
-### Archivo: `api_key.py`
-
-### Función principal: `get_api_key()`
 ```python
-from fastapi import Header, HTTPException
-from typing import Annotated
+from fastapi import APIRouter, Depends
 
-X_API_KEY = Header(..., alias="X-API-Key")
+from app.security.api_key import verify_api_key
 
-def get_api_key(
-    api_key: Annotated[str, X_API_KEY]
-) -> str:
-    """Verifica que la API key es válida."""
-    settings = get_settings()
+router = APIRouter()
 
-    if not api_key:
-        raise HTTPException(
-            status_code=401,
-            detail="X-API-Key header is required"
-        )
 
-    if api_key not in settings.api_keys:
-        raise HTTPException(
-            status_code=403,
-            detail="Invalid API key"
-        )
-
-    return api_key
+@router.get("/productos")
+async def list_products(api_key_preview: str = Depends(verify_api_key)):
+    return {"authenticated_as": api_key_preview}
 ```
 
-### Uso en endpoints
+Las operaciones administrativas usan `X-Admin-API-Key` y la dependencia
+`require_admin_api_key`:
+
 ```python
-from app.security.api_key import get_api_key
+from fastapi import APIRouter, Depends
 
-@router.get("/productos/")
-async def listar_productos(
-    api_key: str = Depends(get_api_key)  # ✅ Requiere auth
-):
-    return {"data": "productos"}
+from app.security.api_key import require_admin_api_key
+
+admin_router = APIRouter()
+
+
+@admin_router.post("/admin/productos", dependencies=[Depends(require_admin_api_key)])
+async def create_product():
+    return {"created": True}
 ```
 
-### Auth admin (escritura)
+En desarrollo, la validación administrativa se omite según el contrato actual. No dependas
+de ese comportamiento para probar producción.
+
+## Rate limiting
+
+La aplicación activa `RateLimitMiddleware` en producción. El límite por cliente proviene de
+`Settings.rate_limit_per_client`; cada cliente se identifica por `X-API-Key` y, si no existe,
+por su IP. Una respuesta limitada usa estado `429`, cabecera `Retry-After` y cabeceras
+`X-RateLimit-*`.
+
+Para límites específicos de un endpoint con SlowAPI:
+
 ```python
-def verify_admin_key(
-    api_key: Annotated[str, X_API_KEY]
-) -> str:
-    """Verifica API key de administrador."""
-    settings = get_settings()
-
-    if api_key not in settings.admin_api_keys:
-        raise HTTPException(
-            status_code=403,
-            detail="Admin API key required"
-        )
-
-    return api_key
-
-# Uso
-@router.post("/admin/productos")
-async def crear_producto(
-    api_key: str = Depends(verify_admin_key)  # ✅ Admin only
-):
-    pass
-```
-
----
-
-## ⏱️ RATE LIMITING
-
-### Archivo: `rate_limiter.py`
-
-### Sistema: slowapi
-```python
-from slowapi import Limiter
-from slowapi.util import get_remote_address
-from app.config import get_settings
-
-# Rate limiter configurado
-rate_limiter = Limiter(key_func=get_remote_address)
-
-def check_rate_limit(api_key: str, settings):
-    """Verifica rate limit."""
-    # Rate limit por cliente
-    @rate_limiter.limit(f"{settings.rate_limit_per_client}/minute")
-    def limit_func():
-        return True
-
-    # Rate limit global
-    @rate_limiter.limit(f"{settings.rate_limit_global}/minute")
-    def global_func():
-        return True
-
-    return True
-```
-
-### Uso en endpoints
-```python
-from app.security.rate_limiter import check_rate_limit
-from app.config import get_settings
-
-@router.get("/productos/")
-async def listar_productos(
-    api_key: str = Depends(get_api_key),
-    settings = Depends(get_settings)
-):
-    check_rate_limit(api_key, settings)  # ✅ Verificar
-    return {"data": "productos"}
-```
-
-### Configuración en .env
-```bash
-RATE_LIMIT_PER_CLIENT=30    # 30 requests/minuto por cliente
-RATE_LIMIT_GLOBAL=1000       # 1000 requests/minuto global
-RATE_LIMIT_BURST=10          # 10 en burst
-```
-
-### Respuesta 429
-```json
-{
-  "detail": "Rate limit exceeded",
-  "retry-after": 60
-}
-```
-
----
-
-## 🤖 ANTI-SCRAPING
-
-### Archivo: `scraping_detector.py`
-
-### Función: `detect_scraping_pattern()`
-```python
-from collections import defaultdict
-from datetime import datetime, timedelta
-from app.security.logging_config import logger
-
-# Almacenar requests por IP
-request_history = defaultdict(list)
-
-def detect_scraping_pattern(client_ip: str) -> bool:
-    """Detecta patrones de scraping."""
-    now = datetime.now()
-
-    # Limpiar historial antiguo (> 1 hora)
-    request_history[client_ip] = [
-        req_time for req_time in request_history[client_ip]
-        if now - req_time < timedelta(hours=1)
-    ]
-
-    # Contar requests en último minuto
-    recent_requests = sum(
-        1 for req_time in request_history[client_ip]
-        if now - req_time < timedelta(minutes=1)
-    )
-
-    # Detectar patrón sospechoso
-    if recent_requests > 100:  # Umbral
-        logger.warning(f"Scraping detectado: {client_ip}")
-        return True  # Es scraping
-
-    request_history[client_ip].append(now)
-    return False
-```
-
-### Uso
-```python
-from app.security.scraping_detector import detect_scraping_pattern
 from fastapi import Request
 
-@router.get("/productos/")
-async def listar_productos(
-    request: Request,  # Para obtener IP
-    api_key: str = Depends(get_api_key)
-):
-    client_ip = request.client.host
-    if detect_scraping_pattern(client_ip):
-        raise HTTPException(
-            status_code=403,
-            detail="Scraping detected"
-        )
+from app.security.rate_limiter import limiter
+
+
+@router.get("/productos")
+@limiter.limit("30/minute")
+async def list_products(request: Request):
+    return {"items": []}
 ```
 
----
+El parámetro `request` es obligatorio para que SlowAPI resuelva el cliente. El almacenamiento
+configurado es en memoria; varios workers no comparten ese estado.
 
-## 🌐 USER AGENT FILTER
+## User-Agent y scraping
 
-### Archivo: `user_agent_filter.py`
+El middleware de producción rechaza User-Agents que contienen patrones configurados como
+`curl`, `wget`, `bot` o `selenium`. La utilidad equivalente para una comprobación explícita
+recibe el objeto `Request` completo:
 
-### User-Agent sospechosos
 ```python
-SUSPICIOUS_AGENTS = [
-    "curl",
-    "wget",
-    "python-requests",
-    "scrapy",
-    "selenium",
-    "phantomjs",
-    "headless"
-]
+from fastapi import HTTPException, Request
 
-def is_suspicious_user_agent(user_agent: str) -> bool:
-    """Detecta User-Agents sospechosos."""
-    if not user_agent:
-        return True  # Sin UA = sospechoso
+from app.security.user_agent_filter import is_user_agent_allowed
 
-    user_agent_lower = user_agent.lower()
 
-    for suspicious in SUSPICIOUS_AGENTS:
-        if suspicious in user_agent_lower:
-            return True
-
-    return False
+async def require_allowed_user_agent(request: Request) -> None:
+    if not is_user_agent_allowed(request):
+        raise HTTPException(status_code=403, detail="User-Agent not allowed")
 ```
 
-### Uso
-```python
-from app.security.user_agent_filter import is_suspicious_user_agent
-from fastapi import Request, Header
+La detección heurística se expone mediante la instancia compartida `detector`:
 
-@router.get("/productos/")
-async def listar_productos(
-    request: Request,
-    user_agent: str = Header(None),
-    api_key: str = Depends(get_api_key)
-):
-    if is_suspicious_user_agent(user_agent):
-        raise HTTPException(
-            status_code=403,
-            detail="Suspicious User-Agent"
-        )
+```python
+from fastapi import HTTPException, Request
+
+from app.security.scraping_detector import detector
+
+
+async def reject_suspicious_traffic(request: Request) -> None:
+    analysis = detector.analyze_request(request)
+    if analysis["is_suspicious"]:
+        raise HTTPException(status_code=403, detail="Suspicious activity detected")
 ```
 
----
+Estas utilidades mantienen estado en memoria. Si se usan con varios workers, el estado debe
+moverse a un almacén compartido antes de tratarlo como una protección global.
 
-## 🔐 COMBINAR MÚLTIPLES MÉTODOS
+## Logging
 
-### Endpoint totalmente protegido
+`app/main.py` llama a `setup_logging()` al iniciar. Para eventos de seguridad, registra solo
+una vista parcial o derivada de las credenciales; nunca escribas una key completa en logs.
+
 ```python
-@router.get("/productos/")
-async def listar_productos(
-    request: Request,
-    user_agent: str = Header(None),
-    api_key: str = Depends(get_api_key),
-    settings = Depends(get_settings)
-):
-    # 1. Verificar API key
-    # (ya hecho por Depends)
+from app.security.logging_config import log_security_event
 
-    # 2. Verificar rate limit
-    check_rate_limit(api_key, settings)
-
-    # 3. Detectar scraping
-    client_ip = request.client.host
-    if detect_scraping_pattern(client_ip):
-        raise HTTPException(403, detail="Scraping detected")
-
-    # 4. Verificar User-Agent
-    if is_suspicious_user_agent(user_agent):
-        raise HTTPException(403, detail="Suspicious UA")
-
-    # 5. Lógica del endpoint
-    return {"data": "productos"}
-```
-
----
-
-## 📊 LOGGING DE SEGURIDAD
-
-### Archivo: `logging_config.py`
-
-### Configuración con loguru
-```python
-from loguru import logger
-import sys
-
-# Configurar loguru
-logger.remove()  # Eliminar handler default
-logger.add(
-    sys.stderr,
-    level="INFO",
-    format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
-)
-
-# Logs de seguridad en archivo separado
-logger.add(
-    "logs/security.log",
-    level="WARNING",
-    rotation="10 MB",
-    retention="30 days",
-    format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}"
+log_security_event(
+    event_type="auth_failed",
+    details="Invalid API key",
+    client_ip="203.0.113.10",
+    api_key="abcd1234...",
 )
 ```
 
-### Logging de eventos de seguridad
-```python
-from app.security.logging_config import logger
+## Configuración relevante
 
-@router.post("/admin/productos")
-async def crear_producto(
-    producto: ProductoCreate,
-    api_key: str = Depends(verify_admin_key),
-    request: Request
-):
-    # Log de acción admin
-    logger.info(
-        f"Producto creado: {producto.codigo} "
-        f"por API key: {api_key[:8]}... "
-        f"desde IP: {request.client.host}"
-    )
+La configuración se centraliza en `app.config.Settings`. Las variables principales son:
 
-    return {"mensaje": "ok"}
-```
-
----
-
-## 🛡️ CORS CONFIGURATION
-
-### Configuración en main.py
-```python
-from fastapi.middleware.cors import CORSMiddleware
-from app.config import get_settings
-
-settings = get_settings()
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.cors_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-```
-
-### En .env
 ```bash
-# Orígenes permitidos
-CORS_ORIGINS=https://mi-sitio.com,https://app.mi-sitio.com
+ENVIRONMENT=production
+API_KEYS=replace-with-a-strong-random-key
+ADMIN_API_KEYS=replace-with-a-separate-strong-random-key
+RATE_LIMIT_ENABLED=true
+RATE_LIMIT_PER_CLIENT=30
+RATE_LIMIT_GLOBAL=1000
+RATE_LIMIT_BURST=10
+CORS_ORIGINS=https://example.com,https://app.example.com
+HTTPS_ENABLED=true
 ```
 
----
+No reutilices keys normales como keys administrativas. En producción, el arranque valida la
+configuración obligatoria mediante `Settings.validate_required()`.
 
-## 📝 CHECKLIST DE SEGURIDAD
+## Comprobaciones manuales
 
-Antes de desplegar a producción:
+Exporta valores de prueba antes de ejecutar los ejemplos. Se especifica un User-Agent de
+navegador porque el middleware de producción bloquea el User-Agent predeterminado de `curl`.
 
-- [ ] Cambiar todas las API keys por defecto
-- [ ] Habilitar HTTPS (`HTTPS_ENABLED=true`)
-- [ ] Configurar CORS correctamente
-- [ ] Verificar rate limiting apropiado
-- [ ] Revisar logs de seguridad
-- [ ] Probar todos los endpoints
-- [ ] Verificar que no hay endpoints sin auth
-- [ ] Configurar firewall (solo puertos 80, 443)
-
----
-
-## 🧪 TESTING DE SEGURIDAD
-
-### Probar autenticación
 ```bash
-# Sin API key (debe fallar 401)
-curl http://localhost:8000/api/productos/
-
-# Con API key inválida (debe fallar 403)
-curl -H "X-API-Key: invalid-key" \
-     http://localhost:8000/api/productos/
-
-# Con API key válida (debe funcionar)
-curl -H "X-API-Key: tu-key-valida" \
-     http://localhost:8000/api/productos/
+export API_BASE_URL="http://localhost:8000"
+export API_KEY="replace-with-a-test-key"
+export ADMIN_API_KEY="replace-with-a-test-admin-key"
+export INVALID_API_KEY="invalid-test-key"
+export BROWSER_USER_AGENT="Mozilla/5.0 security-check"
 ```
 
-### Probar rate limiting
 ```bash
-# Hacer muchas requests rápidamente
-for i in {1..50}; do
-  curl -s -H "X-API-Key: tu-key" \
-       http://localhost:8000/api/productos/
-done
-# Debería devolver 429 después de cierto punto
+# Sin key: 401 en producción.
+curl -i -A "${BROWSER_USER_AGENT}" \
+  "${API_BASE_URL}/api/productos/"
+
+# Key inválida: 401.
+curl -i -A "${BROWSER_USER_AGENT}" \
+  -H "X-API-Key: ${INVALID_API_KEY}" \
+  "${API_BASE_URL}/api/productos/"
+
+# Key válida: el endpoint procesa la petición.
+curl -i -A "${BROWSER_USER_AGENT}" \
+  -H "X-API-Key: ${API_KEY}" \
+  "${API_BASE_URL}/api/productos/"
+
+# Sin key administrativa: 403 en una operación admin protegida.
+curl -i -X DELETE -A "${BROWSER_USER_AGENT}" \
+  -H "X-API-Key: ${API_KEY}" \
+  "${API_BASE_URL}/api/admin/productos/TEST"
+
+# Key administrativa válida: la operación alcanza el endpoint.
+curl -i -X DELETE -A "${BROWSER_USER_AGENT}" \
+  -H "X-Admin-API-Key: ${ADMIN_API_KEY}" \
+  "${API_BASE_URL}/api/admin/productos/TEST"
 ```
 
-### Probar admin endpoints
-```bash
-# Con API key normal (debe fallar 403)
-curl -X POST \
-     -H "X-API-Key: normal-key" \
-     -H "Content-Type: application/json" \
-     -d '{"codigo":"TEST"}' \
-     http://localhost:8000/api/admin/productos
+Use credenciales y datos desechables: el último ejemplo ejecuta una operación destructiva si
+el producto existe.
 
-# Con admin key (debe funcionar)
-curl -X POST \
-     -H "X-API-Key: admin-key" \
-     -H "Content-Type: application/json" \
-     -d '{"codigo":"TEST"}' \
-     http://localhost:8000/api/admin/productos
-```
+## Checklist de producción
 
----
+- [ ] `ENVIRONMENT=production` y secretos únicos están configurados.
+- [ ] Las keys normales y administrativas son distintas y no aparecen en logs ni repositorio.
+- [ ] CORS contiene solo orígenes autorizados.
+- [ ] HTTPS y HSTS están verificados detrás del proxy real.
+- [ ] Los límites se probaron con la topología real de workers.
+- [ ] Los endpoints administrativos exigen `X-Admin-API-Key`.
+- [ ] Las respuestas `401`, `403` y `429` fueron verificadas en producción o staging.
 
-## 📚 REFERENCIAS
+## Referencias
 
-- **Desarrollo general:** `../GUIA_DESARROLLO.md`
-- **Endpoints:** `../routers/GUIA_ENDPOINTS.md`
-- **Variables:** `../../VARIABLES_ENTORNO.md`
-
----
-
-**Última actualización:** 14 Feb 2026
+- [Guía de desarrollo](../GUIA_DESARROLLO.md)
+- [Variables de entorno](../../VARIABLES_ENTORNO.md)
