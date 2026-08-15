@@ -1,5 +1,5 @@
 """
-Filtro de User-Agent anti-scraping
+Filtro de User-Agent anti-scraping.
 ===================================
 
 Este módulo implementa filtrado de User-Agents para bloquear scrapers conocidos.
