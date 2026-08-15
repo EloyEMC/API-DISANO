@@ -114,9 +114,9 @@ def test_get_producto_service_creates_service():
     with patch('app.interfaces.http.productos.get_producto_repository') as mock_get_repo:
         mock_repo = Mock(spec=ProductoRepositoryInterface)
         mock_get_repo.return_value = mock_repo
-        
+
         service = get_producto_service()
-        
+
         assert service.repository == mock_repo
         mock_get_repo.assert_called_once()
 
@@ -125,10 +125,10 @@ def test_get_producto_repository_creates_repository():
     with patch('app.interfaces.http.productos.get_db_session') as mock_get_session:
         mock_session = Mock()
         mock_get_session.return_value = mock_session
-        
+
         from app.infrastructure.repositories.producto import SQLAlchemyProductoRepository
         repo = get_producto_repository()
-        
+
         assert isinstance(repo, SQLAlchemyProductoRepository)
         mock_get_session.assert_called_once()
 
@@ -136,7 +136,7 @@ def test_http_layer_no_sqlite3_imports():
     """Test that HTTP layer does not import sqlite3"""
     import app.interfaces.http.productos as productos_module
     import inspect
-    
+
     source = inspect.getsource(productos_module)
     assert 'sqlite3' not in source.lower()
 ```
@@ -631,11 +631,11 @@ def test_producto_search_dto_validation():
     dto = ProductoSearchDTO(buscar="test", limit=10, marca="", familia="")
     assert dto.buscar == "test"
     assert dto.limit == 10
-    
+
     # Invalid: limit < 1
     with pytest.raises(ValueError):
         ProductoSearchDTO(buscar="test", limit=0, marca="", familia="")
-    
+
     # Invalid: limit > 100
     with pytest.raises(ValueError):
         ProductoSearchDTO(buscar="test", limit=101, marca="", familia="")
@@ -645,7 +645,7 @@ def test_producto_response_dto_from_entity():
     from app.domain.entities.producto import ProductoEntity
     from app.application.dto.producto import ProductoResponseDTO
     from datetime import datetime
-    
+
     entity = ProductoEntity(
         codigo="TEST001",
         descripcion="Test Product",
@@ -657,7 +657,7 @@ def test_producto_response_dto_from_entity():
         created_at=datetime.now(),
         updated_at=datetime.now(),
     )
-    
+
     dto = ProductoResponseDTO.from_entity(entity)
     assert dto.codigo == "TEST001"
     assert dto.descripcion == "Test Product"
@@ -732,13 +732,13 @@ def test_di_flow_http_to_database(db_session):
     """Test HTTP → Depends → Service → Repository → Database → Response"""
     # Act
     response = client.get("/api/productos/v2/list?buscar=test&limit=5")
-    
+
     # Assert
     assert response.status_code == 200
     data = response.json()
     assert isinstance(data, list)
     assert len(data) <= 5
-    
+
     # Verify data structure (DTO conversion worked)
     if len(data) > 0:
         product = data[0]
@@ -752,9 +752,9 @@ def test_service_layer_validation(db_session):
     from app.infrastructure.repositories.producto import SQLAlchemyProductoRepository
     from app.application.dto.producto import ProductoCreateDTO, ProductoSearchDTO
     from app.domain.exceptions.not_found import ValidationException
-    
+
     service = ProductoService(SQLAlchemyProductoRepository(db_session))
-    
+
     # Test validation: descripcion too short
     with pytest.raises(ValidationException):
         dto = ProductoCreateDTO(
@@ -769,14 +769,14 @@ def test_repository_orm_operations(db_session):
     from app.infrastructure.repositories.producto import SQLAlchemyProductoRepository
     from app.domain.entities.producto import ProductoEntity
     from datetime import datetime
-    
+
     repo = SQLAlchemyProductoRepository(db_session)
-    
+
     # Test ORM query
     entity = repo.get_by_codigo("TEST001")
     assert entity is not None
     assert isinstance(entity, ProductoEntity)
-    
+
     # Test ORM filtering
     entities = repo.buscar_productos(termino="test", limit=5, marca="", familia="")
     assert isinstance(entities, list)
@@ -791,12 +791,12 @@ def test_dto_validation(db_session):
     )
     from app.domain.entities.producto import ProductoEntity
     from datetime import datetime
-    
+
     # Test input DTO validation
     dto = ProductoSearchDTO(buscar="test", limit=10, marca="", familia="")
     assert dto.buscar == "test"
     assert dto.limit == 10
-    
+
     # Test output DTO conversion
     entity = ProductoEntity(
         codigo="TEST001",
@@ -816,7 +816,7 @@ def test_error_handling_and_http_status_codes(db_session):
     response = client.get("/api/productos/v2/NONEXISTENT")
     assert response.status_code == 404
     assert "not found" in response.json()["detail"].lower()
-    
+
     # Test 422 (validation error)
     response = client.get("/api/productos/v2/list?limit=0")  # Invalid limit
     assert response.status_code == 422  # Pydantic validation error
@@ -827,9 +827,9 @@ def test_database_transaction_commit_rollback(db_session):
     from app.infrastructure.repositories.producto import SQLAlchemyProductoRepository
     from app.application.dto.producto import ProductoCreateDTO
     from app.domain.exceptions.not_found import ProductoYaExisteException
-    
+
     service = ProductoService(SQLAlchemyProductoRepository(db_session))
-    
+
     # Test commit (successful transaction)
     try:
         dto = ProductoCreateDTO(
@@ -841,7 +841,7 @@ def test_database_transaction_commit_rollback(db_session):
         assert result.codigo == dto.codigo
     except ProductoYaExisteException:
         pass  # Expected if code exists
-    
+
     # Test rollback (failed transaction)
     # This is implicit in service layer - if validation fails, no commit happens
 ```
@@ -902,38 +902,38 @@ client = TestClient(app)
 def test_v2_list_endpoint_performance():
     """Test V2 list endpoint performance: P95 < 100ms"""
     response_times = []
-    
+
     for _ in range(100):  # 100 requests
         start = time.time()
         response = client.get("/api/productos/v2/list?buscar=test&limit=10")
         elapsed = time.time() - start
         response_times.append(elapsed)
         assert response.status_code == 200
-    
+
     # Calculate P95
     response_times.sort()
     p95_index = int(len(response_times) * 0.95)
     p95 = response_times[p95_index]
-    
+
     assert p95 < 0.1  # < 100ms (0.1s)
     print(f"P95 response time: {p95 * 1000:.2f}ms")
 
 def test_v2_detail_endpoint_performance():
     """Test V2 detail endpoint performance: P95 < 50ms"""
     response_times = []
-    
+
     for _ in range(100):  # 100 requests
         start = time.time()
         response = client.get("/api/productos/v2/TEST001")
         elapsed = time.time() - start
         response_times.append(elapsed)
         assert response.status_code == 200
-    
+
     # Calculate P95
     response_times.sort()
     p95_index = int(len(response_times) * 0.95)
     p95 = response_times[p95_index]
-    
+
     assert p95 < 0.05  # < 50ms (0.05s)
     print(f"P95 response time: {p95 * 1000:.2f}ms")
 
@@ -941,16 +941,16 @@ def test_memory_no_leaks():
     """Test no memory leaks in DI after 10k requests"""
     import psutil
     import os
-    
+
     process = psutil.Process(os.getpid())
     initial_memory = process.memory_info().rss
-    
+
     for _ in range(10000):  # 10k requests
         client.get("/api/productos/v2/list?buscar=test&limit=1")
-    
+
     final_memory = process.memory_info().rss
     memory_increase = final_memory - initial_memory
-    
+
     # Memory increase should be reasonable (< 50MB)
     assert memory_increase < 50 * 1024 * 1024  # < 50MB
     print(f"Memory increase: {memory_increase / 1024 / 1024:.2f}MB")
@@ -959,7 +959,7 @@ def test_application_startup_time():
     """Test application startup < 2s"""
     import subprocess
     import time
-    
+
     start = time.time()
     result = subprocess.run(
         ["python", "-c", "from app.main import app; print('Ready')"],
@@ -968,7 +968,7 @@ def test_application_startup_time():
         timeout=10
     )
     elapsed = time.time() - start
-    
+
     assert result.returncode == 0
     assert elapsed < 2.0  # < 2s
     print(f"Startup time: {elapsed:.2f}s")
