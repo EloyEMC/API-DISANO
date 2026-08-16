@@ -5,6 +5,14 @@ Business logic layer that coordinates repositories and applies domain rules.
 
 from typing import cast
 
+from app.application.dto.bc3_enrichment import (
+    BC3_ENRICHMENT_FIELDS,
+    BC3EnrichmentChange,
+    BC3EnrichmentPreviewItem,
+    BC3EnrichmentPreviewRequest,
+    BC3EnrichmentPreviewResponse,
+)
+
 from app.domain.entities.producto import ProductoEntity
 from app.domain.exceptions.not_found import (
     ProductoNotFoundException,
@@ -267,3 +275,32 @@ class ProductoService:
             filters_applied=filters or {},
             sorting_applied=None,
         )
+
+    def preview_bc3_enrichment(
+        self, request: BC3EnrichmentPreviewRequest
+    ) -> BC3EnrichmentPreviewResponse:
+        """Compare BC3 proposals with raw products without writing anything."""
+        products = cast(
+            dict[str, ProductoEntity],
+            getattr(self.repository, "get_private_by_codigos")(
+                [item.codigo for item in request.items]
+            ),
+        )
+        preview_items: list[BC3EnrichmentPreviewItem] = []
+        missing_codes: list[str] = []
+        for item in request.items:
+            product = products.get(item.codigo)
+            if product is None:
+                missing_codes.append(item.codigo)
+                continue
+            changes = [
+                BC3EnrichmentChange(
+                    field=field,
+                    current_value=getattr(product, field),
+                    proposed_value=getattr(item, field),
+                )
+                for field in BC3_ENRICHMENT_FIELDS
+                if getattr(product, field) != getattr(item, field)
+            ]
+            preview_items.append(BC3EnrichmentPreviewItem(codigo=item.codigo, changes=changes))
+        return BC3EnrichmentPreviewResponse(items=preview_items, missing_codes=missing_codes)

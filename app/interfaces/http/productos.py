@@ -21,6 +21,10 @@ from app.application.dto.producto import (
     ProductoExternalPage,
     ProductoExternalResponse,
 )
+from app.application.dto.bc3_enrichment import (
+    BC3EnrichmentPreviewRequest,
+    BC3EnrichmentPreviewResponse,
+)
 from app.domain.exceptions.not_found import ProductoNotFoundException
 from app.interfaces.http.response_serializers import ProductoResponseSerializer
 from app.config import get_settings
@@ -274,6 +278,20 @@ async def get_product_bc3_v1(
         return ProductoBC3Response.model_validate(entity.model_dump()).model_dump(exclude_none=True)
     except ProductoNotFoundException as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from None
+
+
+@router.post(
+    "/bc3/v1/enrichment/preview",
+    response_model=BC3EnrichmentPreviewResponse,
+    dependencies=[Depends(verify_bc3_api_key)],
+    summary="Preview BC3 enrichment changes",
+)
+async def preview_bc3_enrichment(
+    request: BC3EnrichmentPreviewRequest,
+    service: ProductoService = Depends(get_producto_service),
+) -> BC3EnrichmentPreviewResponse:
+    """Return BC3 field differences without persisting proposals."""
+    return service.preview_bc3_enrichment(request)
 
 
 @router.get(

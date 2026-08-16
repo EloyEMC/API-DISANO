@@ -336,3 +336,14 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
         total_count = query.count()
         models = query.offset(dto["offset"]).limit(dto["per_page"]).all()
         return [model.to_entity() for model in models], total_count
+
+        def get_private_by_codigos(self, codigos: list[str]) -> dict[str, ProductoEntity]:
+            """Read the requested BC3 products without mutating the session."""
+            if not codigos:
+                return {}
+            models = (
+                self.session.query(ProductoRawModel)
+                .filter(ProductoRawModel.codigo.in_(codigos))
+                .all()
+            )
+            return {model.codigo: model.to_entity() for model in models}
