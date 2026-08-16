@@ -3,7 +3,7 @@
 FastAPI router with dependency injection for product endpoints.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Body
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Body
 from fastapi.security import APIKeyHeader
 from typing import Any, List, Optional
 from pydantic import BaseModel
@@ -22,6 +22,8 @@ from app.application.dto.producto import (
     ProductoExternalResponse,
 )
 from app.application.dto.bc3_enrichment import (
+    BC3EnrichmentApplyRequest,
+    BC3EnrichmentApplyResponse,
     BC3EnrichmentJobStatusResponse,
     BC3EnrichmentPreviewRequest,
     BC3EnrichmentPreviewResponse,
@@ -293,6 +295,26 @@ async def preview_bc3_enrichment(
 ) -> BC3EnrichmentPreviewResponse:
     """Return BC3 field differences without persisting proposals."""
     return service.preview_bc3_enrichment(request)
+
+
+@router.post(
+    "/bc3/v1/enrichment/apply",
+    response_model=BC3EnrichmentApplyResponse,
+    dependencies=[Depends(verify_bc3_api_key)],
+    summary="Apply BC3 enrichment changes",
+)
+async def apply_bc3_enrichment(
+    request: BC3EnrichmentApplyRequest,
+    idempotency_key: str = Header(..., alias="Idempotency-Key", min_length=1),
+    service: ProductoService = Depends(get_producto_service),
+) -> BC3EnrichmentApplyResponse:
+    """Apply BC3 enrichment atomically with durable idempotency."""
+    try:
+        return service.apply_bc3_enrichment(request, idempotency_key)
+    except ValueError as exc:
+        if str(exc) == "idempotency key has already been used with a different request":
+            raise HTTPException(status_code=409, detail=str(exc)) from None
+        raise
 
 
 @router.get(

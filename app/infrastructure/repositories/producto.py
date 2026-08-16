@@ -1,8 +1,14 @@
+from datetime import datetime, timezone
 from typing import List, Tuple, cast
+from uuid import uuid4
 
 from sqlalchemy import asc, desc, or_
 from sqlalchemy.orm import Session
 
+from app.application.dto.bc3_enrichment import (
+    BC3_ENRICHMENT_FIELDS,
+    hash_bc3_enrichment_items,
+)
 from app.domain.entities.producto import ProductoEntity
 from app.domain.exceptions.not_found import ProductoNotFoundException
 from app.domain.repositories.producto import ProductoRepositoryInterface
@@ -315,6 +321,99 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
         if not model:
             raise ProductoNotFoundException(codigo)
         return model.to_entity()
+
+    def apply_bc3_enrichment(self, items: list[dict], idempotency_key: str) -> dict[str, object]:
+        """Apply one idempotent BC3 enrichment transaction."""
+        request_hash = hash_bc3_enrichment_items(items)
+        with self.session.begin():
+            existing = (
+                self.session.query(BC3EnrichmentJobModel)
+                .filter(BC3EnrichmentJobModel.idempotency_key == idempotency_key)
+                .first()
+            )
+            if existing is not None:
+                if existing.request_hash != request_hash:
+                    raise ValueError(
+                        "idempotency key has already been used with a different request"
+                    )
+                return self._bc3_apply_result(existing)
+
+            job = BC3EnrichmentJobModel(
+                job_id=str(uuid4()),
+                idempotency_key=idempotency_key,
+                request_hash=request_hash,
+                status="running",
+                total_items=len(items),
+            )
+            self.session.add(job)
+            self.session.flush()
+
+            codes = [item["codigo"] for item in items]
+            products = {
+                model.codigo: model
+                for model in self.session.query(ProductoRawModel)
+                .filter(ProductoRawModel.codigo.in_(codes))
+                .all()
+            }
+            updated_codes: list[str] = []
+            unchanged_codes: list[str] = []
+            missing_codes: list[str] = []
+            for item in items:
+                product = products.get(item["codigo"])
+                values = {field: item.get(field) for field in BC3_ENRICHMENT_FIELDS}
+                if product is None:
+                    result_status = "missing"
+                    missing_codes.append(item["codigo"])
+                else:
+                    changed = any(
+                        getattr(product, field) != value for field, value in values.items()
+                    )
+                    if changed:
+                        for field, value in values.items():
+                            setattr(product, field, value)
+                        result_status = "updated"
+                        updated_codes.append(item["codigo"])
+                    else:
+                        result_status = "unchanged"
+                        unchanged_codes.append(item["codigo"])
+                self.session.add(
+                    BC3EnrichmentJobItemModel(
+                        job_id=job.job_id,
+                        codigo=item["codigo"],
+                        result_status=result_status,
+                        **values,
+                    )
+                )
+
+            job.status = "completed"
+            job.updated_items = len(updated_codes)
+            job.unchanged_items = len(unchanged_codes)
+            job.missing_items = len(missing_codes)
+            job.completed_at = datetime.now(timezone.utc)
+            self.session.flush()
+            return {
+                "updated_codes": updated_codes,
+                "unchanged_codes": unchanged_codes,
+                "missing_codes": missing_codes,
+                "job_id": job.job_id,
+                "status": job.status,
+            }
+
+    def _bc3_apply_result(self, job: BC3EnrichmentJobModel) -> dict[str, object]:
+        """Project a stored job to the apply response without writing."""
+        items = (
+            self.session.query(BC3EnrichmentJobItemModel)
+            .filter(BC3EnrichmentJobItemModel.job_id == job.job_id)
+            .order_by(BC3EnrichmentJobItemModel.id.asc())
+            .all()
+        )
+        return {
+            "updated_codes": [item.codigo for item in items if item.result_status == "updated"],
+            "unchanged_codes": [item.codigo for item in items if item.result_status == "unchanged"],
+            "missing_codes": [item.codigo for item in items if item.result_status == "missing"],
+            "job_id": job.job_id,
+            "status": job.status,
+        }
 
     def get_bc3_enrichment_job_status(self, job_id: str) -> dict[str, object] | None:
         """Return only the safe, read-only status projection for a BC3 job."""

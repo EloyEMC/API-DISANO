@@ -7,6 +7,8 @@ from typing import cast
 
 from app.application.dto.bc3_enrichment import (
     BC3_ENRICHMENT_FIELDS,
+    BC3EnrichmentApplyRequest,
+    BC3EnrichmentApplyResponse,
     BC3EnrichmentChange,
     BC3EnrichmentPreviewItem,
     BC3EnrichmentPreviewRequest,
@@ -243,6 +245,17 @@ class ProductoService:
             }
             if request_dto.sort
             else None,
+        )
+
+    def apply_bc3_enrichment(
+        self, request: BC3EnrichmentApplyRequest, idempotency_key: str
+    ) -> BC3EnrichmentApplyResponse:
+        """Persist a BC3 enrichment request through one repository transaction."""
+        return cast(
+            BC3EnrichmentApplyResponse,
+            getattr(self.repository, "apply_bc3_enrichment")(
+                [item.model_dump() for item in request.items], idempotency_key
+            ),
         )
 
     def obtener_estado_enriquecimiento_bc3(self, job_id: str) -> dict | None:
