@@ -22,6 +22,7 @@ from app.application.dto.producto import (
     ProductoExternalResponse,
 )
 from app.application.dto.bc3_enrichment import (
+    BC3EnrichmentJobStatusResponse,
     BC3EnrichmentPreviewRequest,
     BC3EnrichmentPreviewResponse,
 )
@@ -292,6 +293,39 @@ async def preview_bc3_enrichment(
 ) -> BC3EnrichmentPreviewResponse:
     """Return BC3 field differences without persisting proposals."""
     return service.preview_bc3_enrichment(request)
+
+
+@router.get(
+    "/bc3/v1/enrichment/jobs/{job_id}",
+    response_model=BC3EnrichmentJobStatusResponse,
+    dependencies=[Depends(verify_bc3_api_key)],
+    summary="Get BC3 enrichment job status",
+)
+async def get_bc3_enrichment_job_status(
+    job_id: str, service: ProductoService = Depends(get_producto_service)
+) -> BC3EnrichmentJobStatusResponse:
+    """Return a safe read-only status projection for an enrichment job."""
+    result = service.obtener_estado_enriquecimiento_bc3(job_id)
+    if result is None:
+        raise HTTPException(status_code=404, detail="Enrichment job not found")
+    safe_result = {
+        field: result[field]
+        for field in (
+            "job_id",
+            "status",
+            "total_items",
+            "updated_items",
+            "unchanged_items",
+            "missing_items",
+            "created_at",
+            "completed_at",
+        )
+    }
+    safe_result["items"] = [
+        {field: item[field] for field in ("codigo", "result_status", "error_message")}
+        for item in sorted(result["items"], key=lambda item: item["codigo"])
+    ]
+    return BC3EnrichmentJobStatusResponse.model_validate(safe_result)
 
 
 @router.get(

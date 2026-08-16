@@ -245,6 +245,13 @@ class ProductoService:
             else None,
         )
 
+    def obtener_estado_enriquecimiento_bc3(self, job_id: str) -> dict | None:
+        """Return the safe durable status projection for a BC3 job."""
+        return cast(
+            dict | None,
+            getattr(self.repository, "get_bc3_enrichment_job_status")(job_id),
+        )
+
     def obtener_producto_privado(self, codigo: str) -> ProductoEntity:
         """Get a BC3 product from the raw-product repository projection."""
         return cast(

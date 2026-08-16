@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List, Tuple, cast
 
 from sqlalchemy import asc, desc, or_
 from sqlalchemy.orm import Session
@@ -8,6 +8,10 @@ from app.domain.exceptions.not_found import ProductoNotFoundException
 from app.domain.repositories.producto import ProductoRepositoryInterface
 from app.infrastructure.models.producto_clean import ProductoModelClean as ProductoModel
 from app.infrastructure.models.producto import ProductoRawModel
+from app.infrastructure.models.enrichment import (
+    BC3EnrichmentJobItemModel,
+    BC3EnrichmentJobModel,
+)
 from app.infrastructure.cache.pagination_cache import get_pagination_cache
 
 
@@ -311,6 +315,41 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
         if not model:
             raise ProductoNotFoundException(codigo)
         return model.to_entity()
+
+    def get_bc3_enrichment_job_status(self, job_id: str) -> dict[str, object] | None:
+        """Return only the safe, read-only status projection for a BC3 job."""
+        job = (
+            self.session.query(BC3EnrichmentJobModel)
+            .filter(BC3EnrichmentJobModel.job_id == job_id)
+            .first()
+        )
+        if job is None:
+            return None
+
+        items = (
+            self.session.query(BC3EnrichmentJobItemModel)
+            .filter(BC3EnrichmentJobItemModel.job_id == job_id)
+            .order_by(BC3EnrichmentJobItemModel.codigo.asc())
+            .all()
+        )
+        return {
+            "job_id": cast(str, job.job_id),
+            "status": cast(str, job.status),
+            "total_items": cast(int, job.total_items),
+            "updated_items": cast(int, job.updated_items),
+            "unchanged_items": cast(int, job.unchanged_items),
+            "missing_items": cast(int, job.missing_items),
+            "created_at": job.created_at,
+            "completed_at": job.completed_at,
+            "items": [
+                {
+                    "codigo": cast(str, item.codigo),
+                    "result_status": cast(str, item.result_status),
+                    "error_message": cast(str | None, item.error_message),
+                }
+                for item in items
+            ],
+        }
 
     def buscar_productos_privado(self, dto: dict) -> Tuple[List[ProductoEntity], int]:
         """Paginate private BC3 products from the raw ``productos`` table."""
