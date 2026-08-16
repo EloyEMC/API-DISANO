@@ -7,7 +7,14 @@ import pytest
 from fastapi.testclient import TestClient
 from fastapi import FastAPI
 
-from app.interfaces.http.productos import router as productos_router
+from app.interfaces.http.productos import (
+    get_producto_service,
+    router as productos_router,
+)
+from app.application.dto.pagination.pagination_response import (
+    PaginatedResponseDTO,
+    PaginationMetadata,
+)
 from app.domain.services.producto import ProductoService
 
 
@@ -15,7 +22,7 @@ from app.domain.services.producto import ProductoService
 def app():
     """Create FastAPI application for testing."""
     app = FastAPI()
-    app.include_router(productos_router, prefix="/api/productos")
+    app.include_router(productos_router, prefix="/api")
     return app
 
 
@@ -26,11 +33,12 @@ def client(app):
 
 
 @pytest.fixture
-def mock_producto_service(mocker):
-    """Mock ProductoService for testing."""
+def mock_producto_service(app, mocker):
+    """Mock ProductoService and override the FastAPI dependency for one test."""
     mock_service = mocker.Mock(spec=ProductoService)
-    mocker.patch("app.interfaces.http.productos.get_producto_service", return_value=mock_service)
-    return mock_service
+    app.dependency_overrides[get_producto_service] = lambda: mock_service
+    yield mock_service
+    app.dependency_overrides.clear()
 
 
 class TestV2ProductPaginationEndpoint:
@@ -46,7 +54,7 @@ class TestV2ProductPaginationEndpoint:
     def test_pagination_with_page_parameter(self, client, mock_producto_service):
         """Test pagination with page parameter."""
         # Mock service response
-        mock_service.buscar_productos_paginado.return_value = (
+        mock_producto_service.buscar_productos_paginado.return_value = (
             [],  # entities
             0,  # total
         )
@@ -60,7 +68,7 @@ class TestV2ProductPaginationEndpoint:
 
     def test_pagination_with_sorting(self, client, mock_producto_service):
         """Test pagination with sorting parameter."""
-        mock_service.buscar_productos_paginado.return_value = ([], 0)
+        mock_producto_service.buscar_productos_paginado.return_value = ([], 0)
 
         response = client.get("/api/productos/v2/paginated?sort=pvp:asc")
 
@@ -70,7 +78,7 @@ class TestV2ProductPaginationEndpoint:
 
     def test_pagination_with_text_filter(self, client, mock_producto_service):
         """Test pagination with text search filter."""
-        mock_service.buscar_productos_paginado.return_value = ([], 0)
+        mock_producto_service.buscar_productos_paginado.return_value = ([], 0)
 
         response = client.get("/api/productos/v2/paginated?buscar=cocina")
 
@@ -78,7 +86,7 @@ class TestV2ProductPaginationEndpoint:
 
     def test_pagination_with_marca_filter(self, client, mock_producto_service):
         """Test pagination with marca filter."""
-        mock_service.buscar_productos_paginado.return_value = ([], 0)
+        mock_producto_service.buscar_productos_paginado.return_value = ([], 0)
 
         response = client.get("/api/productos/v2/paginated?marca=SIEMENS")
 
@@ -86,7 +94,7 @@ class TestV2ProductPaginationEndpoint:
 
     def test_pagination_with_familia_filter(self, client, mock_producto_service):
         """Test pagination with familia filter."""
-        mock_service.buscar_productos_paginado.return_value = ([], 0)
+        mock_producto_service.buscar_productos_paginado.return_value = ([], 0)
 
         response = client.get("/api/productos/v2/paginated?familia=KITCHEN")
 
@@ -94,7 +102,7 @@ class TestV2ProductPaginationEndpoint:
 
     def test_pagination_with_price_range_filter(self, client, mock_producto_service):
         """Test pagination with price range filter."""
-        mock_service.buscar_productos_paginado.return_value = ([], 0)
+        mock_producto_service.buscar_productos_paginado.return_value = ([], 0)
 
         response = client.get("/api/productos/v2/paginated?pvp_min=100&pvp_max=500")
 
@@ -102,7 +110,7 @@ class TestV2ProductPaginationEndpoint:
 
     def test_pagination_with_multiple_filters(self, client, mock_producto_service):
         """Test pagination with multiple filters combined."""
-        mock_service.buscar_productos_paginado.return_value = ([], 0)
+        mock_producto_service.buscar_productos_paginado.return_value = ([], 0)
 
         response = client.get(
             "/api/productos/v2/paginated"
@@ -113,7 +121,10 @@ class TestV2ProductPaginationEndpoint:
 
     def test_pagination_response_structure(self, client, mock_producto_service):
         """Test that pagination response has correct structure."""
-        mock_service.buscar_productos_paginado.return_value = ([], 0)
+        mock_producto_service.buscar_productos_paginado.return_value = PaginatedResponseDTO(
+            items=[],
+            pagination=PaginationMetadata.from_query(total_items=0, current_page=1, per_page=10),
+        )
 
         response = client.get("/api/productos/v2/paginated?page=1&per_page=10")
 
@@ -147,9 +158,9 @@ class TestV2ProductPaginationEndpoint:
 
     def test_pagination_empty_results(self, client, mock_producto_service):
         """Test pagination with empty results."""
-        mock_service.buscar_productos_paginado.return_value = (
-            [],
-            0,  # No results
+        mock_producto_service.buscar_productos_paginado.return_value = PaginatedResponseDTO(
+            items=[],
+            pagination=PaginationMetadata.from_query(total_items=0, current_page=1, per_page=20),
         )
 
         response = client.get("/api/productos/v2/paginated?buscar=xyz123")
@@ -162,7 +173,7 @@ class TestV2ProductPaginationEndpoint:
 
     def test_pagination_service_call_parameters(self, client, mock_producto_service):
         """Test that service is called with correct parameters."""
-        mock_service.buscar_productos_paginado.return_value = ([], 0)
+        mock_producto_service.buscar_productos_paginado.return_value = ([], 0)
 
         response = client.get(
             "/api/productos/v2/paginated"

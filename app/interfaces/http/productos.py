@@ -517,7 +517,7 @@ async def get_producto(
     try:
         producto = service.obtener_producto(codigo)
         return producto.model_dump()
-    except ValueError as e:
+    except (ProductoNotFoundException, ValueError) as e:
         raise HTTPException(status_code=404, detail=str(e)) from None
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}") from None

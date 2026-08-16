@@ -1,19 +1,20 @@
-"""
-Conftest.py - Fixtures pytest para API-DISANO
-===============================================
+"""Conftest.py - Fixtures pytest para API-DISANO.
 
 Fixtures compartidos para tests siguiendo patrones BC3-Suite.
-Parchea get_settings() para evitar pydantic-settings bloqueo.
-."""
+Parchea get_settings() para evitar bloqueo de pydantic-settings.
+"""
 
 import pytest
 from pathlib import Path
 from typing import Generator
 from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
 from unittest.mock import AsyncMock, Mock
 import sqlite3
 import os
+import shutil
 import sys
+import tempfile
 
 # FIX: Asegurar que importamos el proyecto API-DISANO correcto
 # y no otro proyecto 'app' que pueda estar en sys.path
@@ -22,7 +23,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 # Import explícito del proyecto actual
-import app.config as config_module
+import app.config as config_module  # noqa: E402
 
 # Force import for coverage measurement
 
@@ -33,9 +34,47 @@ for var in ["SECRET_KEY", "API_KEYS", "ADMIN_API_KEYS", "ENVIRONMENT"]:
 
 # STEP 2: Configurar variables de entorno limpias
 os.environ["ENVIRONMENT"] = "testing"
-os.environ["SECRET_KEY"] = "test-secret-key-32-chars-safe-testing"
-os.environ["API_KEYS"] = "test-api-key-1,test-api-key-2"
-os.environ["ADMIN_API_KEYS"] = '["test-admin-key-1"]'
+os.environ["SECRET_KEY"] = "test-secret-key-placeholder"
+os.environ["API_KEYS"] = "test-api-key-placeholder,test-api-key-placeholder-2"
+os.environ["ADMIN_API_KEYS"] = '["test-admin-api-key-placeholder"]'
+
+# Copy and repair the tracked fixture in a process-local directory. The
+# tracked database must remain immutable during the test session.
+_test_database_tmpdir = tempfile.TemporaryDirectory(prefix="api-disano-tests-")
+_test_database_path = Path(_test_database_tmpdir.name) / "testing.db"
+_tracked_database_path = PROJECT_ROOT / "testing" / "testing.db"
+shutil.copy2(_tracked_database_path, _test_database_path)
+
+_database = sqlite3.connect(_test_database_path)
+_database.execute("DROP VIEW IF EXISTS productos_clean")
+_database.execute(
+    """
+CREATE VIEW productos_clean AS
+SELECT
+[CÓDIGO] AS codigo,
+DESCRIPCION AS descripcion,
+MARCA AS marca,
+Familia_WEB AS familia,
+[CÓDIGO WEB] AS codigo_web,
+REFERENCIA AS referencia,
+[EAN 13] AS ean_13,
+imagen AS imagen,
+img_url AS img_url,
+descripcion_corta AS descripcion_corta,
+[PVP_26_01_26] AS pvp,
+bc3_descripcion_corta AS bc3_descripcion_corta,
+bc3_descripcion_completa AS bc3_descripcion_completa,
+bc3_descripcion_larga AS bc3_descripcion_larga,
+bc3_product_type AS bc3_product_type,
+bc3_processed_at AS bc3_processed_at,
+RAEE_A AS raee_a,
+RAEE_L AS raee_l,
+RAEE_T AS raee_t
+FROM productos
+"""
+)
+_database.commit()
+_database.close()
 
 # STEP 3: Parchear get_settings ANTES de importar app.main
 _original_get_settings = None
@@ -47,9 +86,9 @@ def _patch_get_settings():
 
     return Settings(
         environment="testing",
-        api_keys="test-api-key-1,test-api-key-2",
-        admin_api_keys=["test-admin-key-1"],
-        database_path="testing/testing.db",
+        api_keys="test-api-key-placeholder",
+        admin_api_keys=["test-admin-api-key-placeholder"],
+        database_path=str(_test_database_path),
     )
 
 
@@ -59,28 +98,25 @@ _original_get_settings = config_module.get_settings
 config_module.get_settings = _patch_get_settings
 
 
-# STEP 4: Parchear get_database_path para usar testing/testing.db
+# STEP 4: Parchear get_database_path para usar la copia temporal reparada
 def _patch_get_database_path():
-    """Parchear get_database_path para retornar testing/testing.db."""
-    from pathlib import Path
-
-    return Path(__file__).parent.parent / "testing" / "testing.db"
+    """Parchear get_database_path para retornar la base temporal de tests."""
+    return _test_database_path
 
 
 # Importar y parchear connection.py
-import app.infrastructure.database.connection as connection_module
+import app.infrastructure.database.connection as connection_module  # noqa: E402
 
 _original_get_database_path = connection_module.get_database_path
 connection_module.get_database_path = _patch_get_database_path
 
 # Recrear engine con la base de datos correcta
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import StaticPool
+from sqlalchemy import create_engine  # noqa: E402
+from sqlalchemy.orm import sessionmaker  # noqa: E402
+from sqlalchemy.pool import StaticPool  # noqa: E402
 
-test_db_path = _patch_get_database_path()
 connection_module.engine = create_engine(
-    f"sqlite:///{test_db_path}",
+    f"sqlite:///{_test_database_path}",
     connect_args={"check_same_thread": False},
     poolclass=StaticPool,
     echo=False,
@@ -88,28 +124,25 @@ connection_module.engine = create_engine(
 connection_module.SessionFactory = sessionmaker(
     bind=connection_module.engine, expire_on_commit=False
 )
-connection_module.SessionLocal = sessionmaker(
-    bind=connection_module.engine, expire_on_commit=False
-)
+connection_module.SessionLocal = sessionmaker(bind=connection_module.engine, expire_on_commit=False)
 
 
 @pytest.fixture(scope="session", autouse=True)
 def test_db_path() -> Path:
-    """
-    Path a la base de datos de testing SQLite.
+    """Path a la base de datos de testing SQLite.
 
     Returns:
         Path: Ruta a testing/testing.db
 
     ⚠️ IMPORTANTE: Nunca usa database/tarifa_disano.db desde tests!
+
     """
-    return Path(__file__).parent.parent / "testing" / "testing.db"
+    return _test_database_path
 
 
 @pytest.fixture
 def db_session(test_db_path: Path) -> Generator[sqlite3.Connection, None, None]:
-    """
-    Database session con SQLite in-memory.
+    """Database session con SQLite in-memory.
 
     Siempre usa testing/testing.db, nunca producción.
 
@@ -118,6 +151,7 @@ def db_session(test_db_path: Path) -> Generator[sqlite3.Connection, None, None]:
 
     Yields:
         sqlite3.Connection: Sesión de base de datos
+
     """
     connection = sqlite3.connect(test_db_path)
     connection.row_factory = sqlite3.Row
@@ -128,9 +162,8 @@ def db_session(test_db_path: Path) -> Generator[sqlite3.Connection, None, None]:
 @pytest.fixture
 def sqlalchemy_session(
     test_db_path: Path,
-) -> Generator["Session", None, None]:
-    """
-    SQLAlchemy ORM Session para tests de repository.
+) -> Generator[Session, None, None]:
+    """Sqlalchemy ORM Session para tests de repository.
 
     Usa la misma base de datos de testing/testing.db que db_session.
 
@@ -139,6 +172,7 @@ def sqlalchemy_session(
 
     Yields:
         Session: SQLAlchemy ORM session
+
     """
     from sqlalchemy import create_engine
     from sqlalchemy.orm import sessionmaker
@@ -160,13 +194,22 @@ def sqlalchemy_session(
     engine.dispose()
 
 
+@pytest.fixture(autouse=True)
+def clear_app_dependency_overrides() -> Generator[None, None, None]:
+    """Clear shared FastAPI dependency overrides after each test."""
+    yield
+    from app.main import app
+
+    app.dependency_overrides.clear()
+
+
 @pytest.fixture
 def client() -> TestClient:
-    """
-    Test client FastAPI con get_settings parcheado.
+    """Test client FastAPI con get_settings parcheado.
 
     Returns:
         TestClient: Cliente HTTP para testing
+
     """
     from app.main import app
 
@@ -174,21 +217,27 @@ def client() -> TestClient:
 
 
 @pytest.fixture
+def mock_db_connection() -> Mock:
+    """Compatibility mock for legacy security endpoint tests."""
+    return Mock()
+
+
+@pytest.fixture
 def auth_headers() -> dict:
     """Headers con API key válida para testing."""
-    return {"X-API-Key": "test-api-key-1"}
+    return {"X-API-Key": "test-api-key-placeholder"}
 
 
 @pytest.fixture
 def admin_headers() -> dict:
     """Headers con admin API key válida para testing."""
-    return {"X-Admin-API-Key": "test-admin-key-1"}
+    return {"X-Admin-API-Key": "test-admin-api-key-placeholder"}
 
 
 @pytest.fixture
 def invalid_auth_headers() -> dict:
     """Headers con API key inválida para testing negativo."""
-    return {"X-API-Key": "invalid-api-key-123456"}
+    return {"X-API-Key": "invalid-api-key-placeholder"}
 
 
 @pytest.fixture

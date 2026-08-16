@@ -28,6 +28,11 @@ def get_api_keys():
     return []
 
 
+def get_bc3_api_keys():
+    """Get dedicated BC3 API keys from the central Settings contract."""
+    return get_settings().bc3_api_keys_list
+
+
 def get_environment():
     """Get environment from settings."""
     return os.getenv("ENVIRONMENT", "development")
@@ -64,6 +69,12 @@ class APIKeyMiddleware(BaseHTTPMiddleware):
 
     # Paths that don't require API key
     EXEMPT_PATHS = {"/", "/health", "/docs", "/redoc", "/openapi.json"}
+    BC3_PATH_PREFIX = "/api/productos/bc3"
+
+    @classmethod
+    def _is_bc3_path(cls, path: str) -> bool:
+        """Return whether a path belongs to the dedicated BC3 route tree."""
+        return path == cls.BC3_PATH_PREFIX or path.startswith(f"{cls.BC3_PATH_PREFIX}/")
 
     async def dispatch(self, request: Request, call_next):
         """Validate the API key before forwarding the request."""
@@ -86,9 +97,11 @@ class APIKeyMiddleware(BaseHTTPMiddleware):
                 content={"detail": "API Key is required. Use X-API-Key or X-Admin-API-Key header."},
             )
 
-        # Validate regular API key if provided
+        # Validate regular API key against the route's credential scope.
         if api_key:
-            valid_keys = get_api_keys()
+            valid_keys = (
+                get_bc3_api_keys() if self._is_bc3_path(request.url.path) else get_api_keys()
+            )
             if api_key in valid_keys:
                 return await call_next(request)
 

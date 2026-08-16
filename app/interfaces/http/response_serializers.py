@@ -1,13 +1,16 @@
-"""Response serializers for V2 endpoints
+"""Response serializers for V2 endpoints.
 
 Handles conversion of domain entities to API response DTOs,
 JSON serialization, and formatting for consistent API responses.
-."""
+.
+"""
 
 from typing import Any, Dict, List, Optional
 from datetime import datetime
 from decimal import Decimal
 import json
+
+from app.application.dto.producto import ProductoBC3Response, ProductoExternalResponse
 
 
 class ResponseSerializer:
@@ -27,8 +30,7 @@ class ResponseSerializer:
         entity_type: str = "producto",
         exclude_fields: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
-        """
-        Serialize a domain entity to a dictionary
+        """Serialize a domain entity to a dictionary.
 
         Args:
             entity: Domain entity to serialize
@@ -37,7 +39,9 @@ class ResponseSerializer:
 
         Returns:
             Serialized entity as dictionary
-        ."""
+        .
+
+        """
         if entity is None:
             return {}
 
@@ -72,8 +76,7 @@ class ResponseSerializer:
         entity_type: str = "producto",
         exclude_fields: Optional[List[str]] = None,
     ) -> List[Dict[str, Any]]:
-        """
-        Serialize a list of domain entities
+        """Serialize a list of domain entities.
 
         Args:
             entities: List of domain entities to serialize
@@ -82,23 +85,22 @@ class ResponseSerializer:
 
         Returns:
             List of serialized entities as dictionaries
+
         """
-        return [
-            cls.serialize_entity(entity, entity_type, exclude_fields)
-            for entity in entities
-        ]
+        return [cls.serialize_entity(entity, entity_type, exclude_fields) for entity in entities]
 
     @classmethod
     def serialize_pagination_metadata(cls, metadata: Any) -> Dict[str, Any]:
-        """
-        Serialize pagination metadata
+        """Serialize pagination metadata.
 
         Args:
             metadata: Pagination metadata object
 
         Returns:
             Serialized pagination metadata
-        ."""
+        .
+
+        """
         if hasattr(metadata, "model_dump"):
             return metadata.model_dump()
         elif hasattr(metadata, "dict"):
@@ -112,8 +114,7 @@ class ResponseSerializer:
     def serialize_paginated_response(
         cls, paginated_response: Any, entity_type: str = "producto"
     ) -> Dict[str, Any]:
-        """
-        Serialize a paginated response with entities and metadata
+        """Serialize a paginated response with entities and metadata.
 
         Args:
             paginated_response: PaginatedResponseDTO object
@@ -121,7 +122,9 @@ class ResponseSerializer:
 
         Returns:
             Serialized paginated response
-        ."""
+        .
+
+        """
         # Serialize items
         if hasattr(paginated_response, "items"):
             items = cls.serialize_entities(paginated_response.items, entity_type)
@@ -130,9 +133,7 @@ class ResponseSerializer:
 
         # Serialize pagination metadata
         if hasattr(paginated_response, "pagination"):
-            pagination = cls.serialize_pagination_metadata(
-                paginated_response.pagination
-            )
+            pagination = cls.serialize_pagination_metadata(paginated_response.pagination)
         else:
             pagination = {}
 
@@ -149,8 +150,7 @@ class ResponseSerializer:
 
     @classmethod
     def format_for_json(cls, data: Any, indent: int = 2) -> str:
-        """
-        Format data as JSON string with custom formatting
+        """Format data as JSON string with custom formatting.
 
         Args:
             data: Data to format
@@ -158,10 +158,11 @@ class ResponseSerializer:
 
         Returns:
             JSON string
+
         """
 
         def json_serializer(obj):
-            """Custom JSON serializer for special types."""
+            """Serialize special JSON types."""
             if isinstance(obj, datetime):
                 return obj.isoformat()
             elif isinstance(obj, Decimal):
@@ -182,8 +183,7 @@ class ResponseSerializer:
         message: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
-        """
-        Create a standardized success response
+        """Create a standardized success response.
 
         Args:
             data: Response data
@@ -192,7 +192,9 @@ class ResponseSerializer:
 
         Returns:
             Standardized success response
-        ."""
+        .
+
+        """
         response = {
             "success": True,
             "data": data,
@@ -214,8 +216,7 @@ class ResponseSerializer:
         details: Optional[Dict[str, Any]] = None,
         error_code: Optional[str] = None,
     ) -> Dict[str, Any]:
-        """
-        Create a standardized error response
+        """Create a standardized error response.
 
         Args:
             error: Error message
@@ -224,7 +225,9 @@ class ResponseSerializer:
 
         Returns:
             Standardized error response
-        ."""
+        .
+
+        """
         response = {
             "success": False,
             "error": error,
@@ -243,8 +246,7 @@ class ResponseSerializer:
     def filter_sensitive_fields(
         cls, data: Dict[str, Any], sensitive_fields: List[str] = None
     ) -> Dict[str, Any]:
-        """
-        Filter out sensitive fields from response data
+        """Filter out sensitive fields from response data.
 
         Args:
             data: Data to filter
@@ -252,7 +254,9 @@ class ResponseSerializer:
 
         Returns:
             Filtered data
-        ."""
+        .
+
+        """
         if sensitive_fields is None:
             sensitive_fields = []
 
@@ -265,8 +269,7 @@ class ResponseSerializer:
 
     @classmethod
     def format_currency(cls, value: Optional[float], currency: str = "EUR") -> str:
-        """
-        Format a value as currency
+        """Format a value as currency.
 
         Args:
             value: Numeric value to format
@@ -274,7 +277,9 @@ class ResponseSerializer:
 
         Returns:
             Formatted currency string
-        ."""
+        .
+
+        """
         if value is None:
             return f"N/A {currency}"
 
@@ -282,8 +287,7 @@ class ResponseSerializer:
 
     @classmethod
     def format_percentage(cls, value: Optional[float], decimals: int = 2) -> str:
-        """
-        Format a value as percentage
+        """Format a value as percentage.
 
         Args:
             value: Numeric value to format
@@ -291,7 +295,9 @@ class ResponseSerializer:
 
         Returns:
             Formatted percentage string
-        ."""
+        .
+
+        """
         if value is None:
             return "N/A"
 
@@ -300,6 +306,9 @@ class ResponseSerializer:
 
 class ProductoResponseSerializer(ResponseSerializer):
     """Serializer specific to Producto entities."""
+
+    EXTERNAL_FIELDS = frozenset(ProductoExternalResponse.model_fields)
+    BC3_FIELDS = frozenset(ProductoBC3Response.model_fields)
 
     PRODUCTO_FIELDS_ORDER = [
         "codigo",
@@ -321,11 +330,8 @@ class ProductoResponseSerializer(ResponseSerializer):
     ]
 
     @classmethod
-    def serialize_producto(
-        cls, producto: Any, detailed: bool = False
-    ) -> Dict[str, Any]:
-        """
-        Serialize a producto entity with field ordering
+    def serialize_producto(cls, producto: Any, detailed: bool = False) -> Dict[str, Any]:
+        """Serialize a producto entity with field ordering.
 
         Args:
             producto: Producto entity to serialize
@@ -333,7 +339,9 @@ class ProductoResponseSerializer(ResponseSerializer):
 
         Returns:
             Serialized producto with ordered fields
-        ."""
+        .
+
+        """
         data = cls.serialize_entity(producto, "producto")
 
         if not detailed:
@@ -368,8 +376,7 @@ class ProductoResponseSerializer(ResponseSerializer):
     def serialize_productos_list(
         cls, productos: List[Any], detailed: bool = False
     ) -> List[Dict[str, Any]]:
-        """
-        Serialize a list of productos
+        """Serialize a list of productos.
 
         Args:
             productos: List of producto entities
@@ -377,6 +384,7 @@ class ProductoResponseSerializer(ResponseSerializer):
 
         Returns:
             List of serialized productos
+
         """
         return [cls.serialize_producto(p, detailed) for p in productos]
 
@@ -386,15 +394,16 @@ class FamiliaResponseSerializer(ResponseSerializer):
 
     @classmethod
     def serialize_familia(cls, familia: Any) -> Dict[str, Any]:
-        """
-        Serialize a familia entity with BC3 coverage
+        """Serialize a familia entity with BC3 coverage.
 
         Args:
             familia: Familia entity to serialize
 
         Returns:
             Serialized familia with BC3 statistics
-        ."""
+        .
+
+        """
         data = cls.serialize_entity(familia, "familia")
 
         # Calculate BC3 coverage percentage if not present
@@ -410,14 +419,14 @@ class FamiliaResponseSerializer(ResponseSerializer):
 
     @classmethod
     def serialize_familias_list(cls, familias: List[Any]) -> List[Dict[str, Any]]:
-        """
-        Serialize a list of familias with BC3 coverage
+        """Serialize a list of familias with BC3 coverage.
 
         Args:
             familias: List of familia entities
 
         Returns:
             List of serialized familias
+
         """
         return [cls.serialize_familia(f) for f in familias]
 
@@ -427,15 +436,16 @@ class BC3ResponseSerializer(ResponseSerializer):
 
     @classmethod
     def serialize_bc3_stats(cls, stats: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Serialize BC3 statistics with formatted percentages
+        """Serialize BC3 statistics with formatted percentages.
 
         Args:
             stats: BC3 statistics dictionary
 
         Returns:
             Formatted BC3 statistics
-        ."""
+        .
+
+        """
         formatted_stats = stats.copy()
 
         # Format percentages if present
@@ -448,15 +458,16 @@ class BC3ResponseSerializer(ResponseSerializer):
 
     @classmethod
     def serialize_bc3_producto(cls, producto: Any) -> Dict[str, Any]:
-        """
-        Serialize a producto with BC3-specific fields
+        """Serialize a producto with BC3-specific fields.
 
         Args:
             producto: Producto entity with BC3 data
 
         Returns:
             Serialized producto with BC3 focus
-        ."""
+        .
+
+        """
         data = cls.serialize_entity(producto, "producto")
 
         # Focus on BC3 fields
