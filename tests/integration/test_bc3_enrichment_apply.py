@@ -82,7 +82,7 @@ class ApplyRepository:
 def _client(client: TestClient, repository: ApplyRepository) -> TestClient:
     app = cast(Any, client).app
     app.dependency_overrides.clear()
-    app.dependency_overrides[get_producto_service] = lambda: ProductoService(repository)
+    app.dependency_overrides[get_producto_service] = lambda: ProductoService(cast(Any, repository))
     return client
 
 
