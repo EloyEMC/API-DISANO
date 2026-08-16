@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from typing import List, Tuple, cast
+from typing import Any, cast
 from uuid import uuid4
 
 from sqlalchemy import asc, desc, or_
@@ -12,13 +12,23 @@ from app.application.dto.bc3_enrichment import (
 from app.domain.entities.producto import ProductoEntity
 from app.domain.exceptions.not_found import ProductoNotFoundException
 from app.domain.repositories.producto import ProductoRepositoryInterface
-from app.infrastructure.models.producto_clean import ProductoModelClean as ProductoModel
-from app.infrastructure.models.producto import ProductoRawModel
+from app.infrastructure.models.producto_clean import (
+    ProductoModelClean as _ProductoModel,
+)
+from app.infrastructure.models.producto import ProductoRawModel as _ProductoRawModel
 from app.infrastructure.models.enrichment import (
-    BC3EnrichmentJobItemModel,
-    BC3EnrichmentJobModel,
+    BC3EnrichmentJobItemModel as _BC3EnrichmentJobItemModel,
+    BC3EnrichmentJobModel as _BC3EnrichmentJobModel,
 )
 from app.infrastructure.cache.pagination_cache import get_pagination_cache
+
+
+# These legacy ORM models use untyped SQLAlchemy ``Column`` declarations.
+# Keep the repository runtime behavior unchanged while containing that typing debt.
+ProductoModel = cast(Any, _ProductoModel)
+ProductoRawModel = cast(Any, _ProductoRawModel)
+BC3EnrichmentJobItemModel = cast(Any, _BC3EnrichmentJobItemModel)
+BC3EnrichmentJobModel = cast(Any, _BC3EnrichmentJobModel)
 
 
 class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
@@ -65,7 +75,7 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
         limit: int = 10,
         marca: str = "",
         familia: str = "",
-    ) -> List[ProductoEntity]:
+    ) -> list[ProductoEntity]:
         """
         Search products with text search and filters.
 
@@ -110,7 +120,7 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
         # Convert models to entities
         return [model.to_entity() for model in query.all()]
 
-    def get_all(self, skip: int = 0, limit: int = 100) -> List[ProductoEntity]:
+    def get_all(self, skip: int = 0, limit: int = 100) -> list[ProductoEntity]:
         """
         Get all products with pagination.
 
@@ -172,7 +182,7 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
         """
         return self.session.query(ProductoModel).count()
 
-    def buscar_productos_paginado(self, dto: dict) -> Tuple[List[ProductoEntity], int]:
+    def buscar_productos_paginado(self, dto: dict) -> tuple[list[ProductoEntity], int]:
         """Execute paginated query with sorting and filtering.
 
         This method wraps the actual query with caching logic to improve
@@ -216,7 +226,7 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
 
         return entities, total_count
 
-    def _execute_pagination_query(self, dto: dict) -> Tuple[List[ProductoEntity], int]:
+    def _execute_pagination_query(self, dto: dict) -> tuple[list[ProductoEntity], int]:
         """Execute the actual pagination query (without caching).
 
         This is the internal query execution method that can be reused
@@ -337,7 +347,6 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
                         "idempotency key has already been used with a different request"
                     )
                 return self._bc3_apply_result(existing)
-
             job = BC3EnrichmentJobModel(
                 job_id=str(uuid4()),
                 idempotency_key=idempotency_key,
@@ -347,12 +356,10 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
             )
             self.session.add(job)
             self.session.flush()
-
-            codes = [item["codigo"] for item in items]
             products = {
                 model.codigo: model
                 for model in self.session.query(ProductoRawModel)
-                .filter(ProductoRawModel.codigo.in_(codes))
+                .filter(ProductoRawModel.codigo.in_([item["codigo"] for item in items]))
                 .all()
             }
             updated_codes: list[str] = []
@@ -384,7 +391,6 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
                         **values,
                     )
                 )
-
             job.status = "completed"
             job.updated_items = len(updated_codes)
             job.unchanged_items = len(unchanged_codes)
@@ -399,8 +405,7 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
                 "status": job.status,
             }
 
-    def _bc3_apply_result(self, job: BC3EnrichmentJobModel) -> dict[str, object]:
-        """Project a stored job to the apply response without writing."""
+    def _bc3_apply_result(self, job: Any) -> dict[str, object]:
         items = (
             self.session.query(BC3EnrichmentJobItemModel)
             .filter(BC3EnrichmentJobItemModel.job_id == job.job_id)
@@ -416,7 +421,7 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
         }
 
     def get_bc3_enrichment_job_status(self, job_id: str) -> dict[str, object] | None:
-        """Return only the safe, read-only status projection for a BC3 job."""
+        """Return the persisted status projection for an enrichment job."""
         job = (
             self.session.query(BC3EnrichmentJobModel)
             .filter(BC3EnrichmentJobModel.job_id == job_id)
@@ -424,7 +429,6 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
         )
         if job is None:
             return None
-
         items = (
             self.session.query(BC3EnrichmentJobItemModel)
             .filter(BC3EnrichmentJobItemModel.job_id == job_id)
@@ -450,7 +454,7 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
             ],
         }
 
-    def buscar_productos_privado(self, dto: dict) -> Tuple[List[ProductoEntity], int]:
+    def buscar_productos_privado(self, dto: dict) -> tuple[list[ProductoEntity], int]:
         """Paginate private BC3 products from the raw ``productos`` table."""
 
         query = self.session.query(ProductoRawModel)
@@ -475,13 +479,11 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
         models = query.offset(dto["offset"]).limit(dto["per_page"]).all()
         return [model.to_entity() for model in models], total_count
 
-        def get_private_by_codigos(self, codigos: list[str]) -> dict[str, ProductoEntity]:
-            """Read the requested BC3 products without mutating the session."""
-            if not codigos:
-                return {}
-            models = (
-                self.session.query(ProductoRawModel)
-                .filter(ProductoRawModel.codigo.in_(codigos))
-                .all()
-            )
-            return {model.codigo: model.to_entity() for model in models}
+    def get_private_by_codigos(self, codigos: list[str]) -> dict[str, ProductoEntity]:
+        """Read the requested BC3 products without mutating the session."""
+        if not codigos:
+            return {}
+        models = (
+            self.session.query(ProductoRawModel).filter(ProductoRawModel.codigo.in_(codigos)).all()
+        )
+        return {model.codigo: model.to_entity() for model in models}

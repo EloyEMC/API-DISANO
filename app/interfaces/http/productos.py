@@ -3,7 +3,7 @@
 FastAPI router with dependency injection for product endpoints.
 """
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Query, Body
+from fastapi import APIRouter, Depends, Header, HTTPException, Query
 from fastapi.security import APIKeyHeader
 from typing import Any, List, Optional
 from pydantic import BaseModel
@@ -12,6 +12,13 @@ from sqlalchemy.orm import Session
 from app.domain.services.producto import ProductoService
 from app.infrastructure.repositories.producto import SQLAlchemyProductoRepository
 from app.infrastructure.database.connection import SessionLocal
+from app.application.dto.bc3_enrichment import (
+    BC3EnrichmentApplyRequest,
+    BC3EnrichmentApplyResponse,
+    BC3EnrichmentJobStatusResponse,
+    BC3EnrichmentPreviewRequest,
+    BC3EnrichmentPreviewResponse,
+)
 from app.application.dto.pagination import (
     PaginationRequestDTO,
 )
@@ -20,13 +27,6 @@ from app.application.dto.producto import (
     ProductoBC3Response,
     ProductoExternalPage,
     ProductoExternalResponse,
-)
-from app.application.dto.bc3_enrichment import (
-    BC3EnrichmentApplyRequest,
-    BC3EnrichmentApplyResponse,
-    BC3EnrichmentJobStatusResponse,
-    BC3EnrichmentPreviewRequest,
-    BC3EnrichmentPreviewResponse,
 )
 from app.domain.exceptions.not_found import ProductoNotFoundException
 from app.interfaces.http.response_serializers import ProductoResponseSerializer

@@ -3,7 +3,7 @@
 Business logic layer that coordinates repositories and applies domain rules.
 """
 
-from typing import cast
+from typing import Any, cast
 
 from app.application.dto.bc3_enrichment import (
     BC3_ENRICHMENT_FIELDS,
@@ -253,7 +253,7 @@ class ProductoService:
         """Persist a BC3 enrichment request through one repository transaction."""
         return cast(
             BC3EnrichmentApplyResponse,
-            getattr(self.repository, "apply_bc3_enrichment")(
+            cast(Any, self.repository).apply_bc3_enrichment(
                 [item.model_dump() for item in request.items], idempotency_key
             ),
         )
@@ -262,14 +262,14 @@ class ProductoService:
         """Return the safe durable status projection for a BC3 job."""
         return cast(
             dict | None,
-            getattr(self.repository, "get_bc3_enrichment_job_status")(job_id),
+            cast(Any, self.repository).get_bc3_enrichment_job_status(job_id),
         )
 
     def obtener_producto_privado(self, codigo: str) -> ProductoEntity:
         """Get a BC3 product from the raw-product repository projection."""
         return cast(
             ProductoEntity,
-            getattr(self.repository, "get_private_by_codigo")(codigo),
+            cast(Any, self.repository).get_private_by_codigo(codigo),
         )
 
     def buscar_productos_privado(
@@ -283,7 +283,7 @@ class ProductoService:
         }
         entities, total = cast(
             tuple[list[ProductoEntity], int],
-            getattr(self.repository, "buscar_productos_privado")(dto_dict),
+            cast(Any, self.repository).buscar_productos_privado(dto_dict),
         )
         return PaginatedResponseDTO(
             items=entities,
@@ -302,7 +302,7 @@ class ProductoService:
         """Compare BC3 proposals with raw products without writing anything."""
         products = cast(
             dict[str, ProductoEntity],
-            getattr(self.repository, "get_private_by_codigos")(
+            cast(Any, self.repository).get_private_by_codigos(
                 [item.codigo for item in request.items]
             ),
         )

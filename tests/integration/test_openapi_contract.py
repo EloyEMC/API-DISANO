@@ -93,7 +93,12 @@ def test_openapi_lists_public_and_private_read_contracts_with_pagination() -> No
         "filters_applied",
         "sorting_applied",
     }
-    assert set(public_item["properties"]) & {"codigo", "descripcion", "marca", "pvp"} == {
+    assert set(public_item["properties"]) & {
+        "codigo",
+        "descripcion",
+        "marca",
+        "pvp",
+    } == {
         "codigo",
         "descripcion",
         "marca",

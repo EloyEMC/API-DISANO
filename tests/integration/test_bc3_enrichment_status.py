@@ -25,9 +25,21 @@ class StatusRepository:
                 "created_at": datetime(2026, 8, 16, 10, 0, tzinfo=timezone.utc),
                 "completed_at": datetime(2026, 8, 16, 10, 1, tzinfo=timezone.utc),
                 "items": [
-                    {"codigo": "BC3-002", "result_status": "unchanged", "error_message": None},
-                    {"codigo": "BC3-001", "result_status": "updated", "error_message": None},
-                    {"codigo": "BC3-404", "result_status": "missing", "error_message": "not found"},
+                    {
+                        "codigo": "BC3-002",
+                        "result_status": "unchanged",
+                        "error_message": None,
+                    },
+                    {
+                        "codigo": "BC3-001",
+                        "result_status": "updated",
+                        "error_message": None,
+                    },
+                    {
+                        "codigo": "BC3-404",
+                        "result_status": "missing",
+                        "error_message": "not found",
+                    },
                 ],
                 "idempotency_key": "must-not-leak",
                 "request_hash": "must-not-leak",

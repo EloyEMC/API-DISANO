@@ -73,8 +73,20 @@ def test_contracts_reject_non_bc3_fields(model: Any, payload: dict[str, Any]) ->
 
 
 def test_request_hash_is_deterministic_for_equivalent_mapping_order() -> None:
-    first = [{"codigo": "BC3-001", "bc3_descripcion_corta": "Short", "bc3_product_type": None}]
-    second = [{"bc3_product_type": None, "bc3_descripcion_corta": "Short", "codigo": "BC3-001"}]
+    first = [
+        {
+            "codigo": "BC3-001",
+            "bc3_descripcion_corta": "Short",
+            "bc3_product_type": None,
+        }
+    ]
+    second = [
+        {
+            "bc3_product_type": None,
+            "bc3_descripcion_corta": "Short",
+            "codigo": "BC3-001",
+        }
+    ]
 
     assert hash_bc3_enrichment_items(first) == hash_bc3_enrichment_items(second)
 

@@ -8,7 +8,10 @@ from uuid import uuid4
 import pytest
 from fastapi.testclient import TestClient
 
-from app.application.dto.bc3_enrichment import BC3_ENRICHMENT_FIELDS, hash_bc3_enrichment_items
+from app.application.dto.bc3_enrichment import (
+    BC3_ENRICHMENT_FIELDS,
+    hash_bc3_enrichment_items,
+)
 from app.domain.services.producto import ProductoService
 from app.interfaces.http.productos import get_producto_service
 
@@ -91,7 +94,9 @@ def bc3_headers(monkeypatch: pytest.MonkeyPatch) -> dict[str, str]:
     from app.interfaces.http import productos
 
     monkeypatch.setattr(
-        productos, "get_settings", lambda: SimpleNamespace(bc3_api_keys_list=["test-bc3-key"])
+        productos,
+        "get_settings",
+        lambda: SimpleNamespace(bc3_api_keys_list=["test-bc3-key"]),
     )
     return {"X-API-Key": "test-bc3-key"}
 
