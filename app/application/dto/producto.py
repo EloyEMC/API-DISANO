@@ -116,10 +116,40 @@ class ProductoExternalResponse(BaseModel):
     bc3_processed_at: Optional[datetime] = None
 
 
+class ProductoBC3Response(ProductoExternalResponse):
+    """Private BC3 contract including legacy discount and logistics data."""
+
+    dto: Optional[str] = None
+    up_log: Optional[float] = None
+    u_caja: Optional[int] = None
+    clase_etim: Optional[str] = None
+    peso_bruto_kg: Optional[float] = None
+    peso_bruto_gr: Optional[float] = None
+    peso_neto_kg: Optional[float] = None
+    peso_neto_gr: Optional[float] = None
+    longitud_m: Optional[float] = None
+    longitud_mm: Optional[float] = None
+    ancho_m: Optional[float] = None
+    ancho_mm: Optional[float] = None
+    alto_m: Optional[float] = None
+    altura_mm: Optional[float] = None
+    volumen_dm3: Optional[float] = None
+    cm3: Optional[float] = None
+
+
 class ProductoExternalPage(BaseModel):
     """Versioned public paginated response."""
 
     items: list[ProductoExternalResponse]
+    pagination: dict
+    filters_applied: dict | None = None
+    sorting_applied: dict | None = None
+
+
+class ProductoBC3Page(BaseModel):
+    """Versioned private BC3 paginated response."""
+
+    items: list[ProductoBC3Response]
     pagination: dict
     filters_applied: dict | None = None
     sorting_applied: dict | None = None

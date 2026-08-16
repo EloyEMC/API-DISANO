@@ -57,6 +57,24 @@ class ProductoEntity(BaseModel):
     img_url: Optional[str] = Field(None, description="Image URL")
     descontinuado: Optional[int] = Field(None, description="Discontinued flag")
 
+    # Private BC3 contract fields; never expose these in the public contract.
+    dto: Optional[str] = None
+    up_log: Optional[float] = None
+    u_caja: Optional[int] = None
+    clase_etim: Optional[str] = None
+    peso_bruto_kg: Optional[float] = None
+    peso_bruto_gr: Optional[float] = None
+    peso_neto_kg: Optional[float] = None
+    peso_neto_gr: Optional[float] = None
+    longitud_m: Optional[float] = None
+    longitud_mm: Optional[float] = None
+    ancho_m: Optional[float] = None
+    ancho_mm: Optional[float] = None
+    alto_m: Optional[float] = None
+    altura_mm: Optional[float] = None
+    volumen_dm3: Optional[float] = None
+    cm3: Optional[float] = None
+
     # Energy efficiency / recycling fields (RAEE)
     raee_a: Optional[float] = Field(
         None, description="RAEE aparatos (electrical appliances recycling fee)"

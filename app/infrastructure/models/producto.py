@@ -281,3 +281,99 @@ class ProductoModel(Base):
     def __repr__(self) -> str:
         """String representation for debugging."""
         return f"<ProductoModel(codigo='{self.CÓDIGO}', descripcion='{self.DESCRIPCION[:20]}...')>"
+
+
+class ProductoRawModel(Base):
+    """Read-only projection of the real ``productos`` table."""
+
+    __tablename__ = "productos"
+
+    codigo = Column("CÓDIGO", String, primary_key=True, nullable=False)
+    marca = Column("MARCA", String, nullable=True)
+    codigo_web = Column("CÓDIGO WEB", String, nullable=True)
+    referencia = Column("REFERENCIA", String, nullable=True)
+    ean_13 = Column("EAN 13", Float, nullable=True)
+    descripcion = Column("DESCRIPCION", String, nullable=True)
+    up_log = Column("U.P.LOG", Float, nullable=True)
+    u_caja = Column("U.CAJA", Integer, nullable=True)
+    dto = Column("DTO.", String, nullable=True)
+    clase_etim = Column("CLASE ETIM", String, nullable=True)
+    raee_a = Column("RAEE_A", Float, nullable=True)
+    raee_l = Column("RAEE_L", Float, nullable=True)
+    raee_t = Column("RAEE_T", Float, nullable=True)
+    peso_bruto_kg = Column("Peso bruto KG", Float, nullable=True)
+    peso_bruto_gr = Column("Peso bruto GR", Float, nullable=True)
+    peso_neto_kg = Column("Peso neto KG", Float, nullable=True)
+    peso_neto_gr = Column("Peso neto GR", Float, nullable=True)
+    longitud_m = Column("Longitud M", Float, nullable=True)
+    longitud_mm = Column("Longitud MM", Float, nullable=True)
+    ancho_m = Column("Ancho M", Float, nullable=True)
+    ancho_mm = Column("Ancho MM", Float, nullable=True)
+    alto_m = Column("Alto M", Float, nullable=True)
+    altura_mm = Column("Altura MM", Float, nullable=True)
+    volumen_dm3 = Column("Volumen DM3", Float, nullable=True)
+    cm3 = Column("CM3", Float, nullable=True)
+    serie_familia_1 = Column("Serie_familia_1", String, nullable=True)
+    familia_web = Column("Familia_WEB", String, nullable=True)
+    familia_catalogo = Column("Familia_Catalogo", String, nullable=True)
+    familia_catalogo_ptl = Column("Familia_Catalogo_PTL", String, nullable=True)
+    imagen = Column("imagen", String, nullable=True)
+    url_ficha_tec = Column("Url_ficha_tec", String, nullable=True)
+    descontinuado = Column("descontinuado", Integer, nullable=True)
+    descripcion_corta = Column("descripcion_corta", String, nullable=True)
+    img_url = Column("img_url", String, nullable=True)
+    pvp = Column("PVP_26_01_26", Float, nullable=True)
+    bc3_descripcion_corta = Column("bc3_descripcion_corta", String, nullable=True)
+    bc3_descripcion_larga = Column("bc3_descripcion_larga", String, nullable=True)
+    bc3_product_type = Column("bc3_product_type", String, nullable=True)
+    bc3_processed_at = Column("bc3_processed_at", DateTime, nullable=True)
+    bc3_descripcion_completa = Column("bc3_descripcion_completa", String, nullable=True)
+
+    def to_entity(self):
+        """Map the raw row to the domain entity's stable field names."""
+        from app.domain.entities.producto import ProductoEntity
+
+        return ProductoEntity(
+            codigo=self.codigo,
+            descripcion=self.descripcion or "",
+            marca=self.marca or "",
+            familia=self.familia_web or self.familia_catalogo,
+            pvp=self.pvp,
+            descripcion_corta=self.descripcion_corta,
+            familia_web=self.familia_web,
+            serie_familia_1=self.serie_familia_1,
+            familia_catalogo=self.familia_catalogo,
+            familia_catalogo_ptl=self.familia_catalogo_ptl,
+            url_ficha_tec=self.url_ficha_tec,
+            codigo_web=self.codigo_web,
+            referencia=self.referencia,
+            ean_13=str(self.ean_13) if self.ean_13 is not None else None,
+            imagen=self.imagen,
+            img_url=self.img_url,
+            descontinuado=self.descontinuado,
+            bc3_descripcion_corta=self.bc3_descripcion_corta,
+            bc3_product_type=self.bc3_product_type,
+            bc3_descripcion_completa=self.bc3_descripcion_completa or self.bc3_descripcion_larga,
+            bc3_descripcion_larga=self.bc3_descripcion_larga,
+            created_at=self.bc3_processed_at,
+            updated_at=self.bc3_processed_at,
+            dto=self.dto,
+            up_log=self.up_log,
+            u_caja=self.u_caja,
+            clase_etim=self.clase_etim,
+            peso_bruto_kg=self.peso_bruto_kg,
+            peso_bruto_gr=self.peso_bruto_gr,
+            peso_neto_kg=self.peso_neto_kg,
+            peso_neto_gr=self.peso_neto_gr,
+            longitud_m=self.longitud_m,
+            longitud_mm=self.longitud_mm,
+            ancho_m=self.ancho_m,
+            ancho_mm=self.ancho_mm,
+            alto_m=self.alto_m,
+            altura_mm=self.altura_mm,
+            volumen_dm3=self.volumen_dm3,
+            cm3=self.cm3,
+            raee_a=self.raee_a,
+            raee_l=self.raee_l,
+            raee_t=self.raee_t,
+        )

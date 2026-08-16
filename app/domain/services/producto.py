@@ -1,7 +1,9 @@
-"""Domain service for Producto
+"""Domain service for Producto.
 
 Business logic layer that coordinates repositories and applies domain rules.
-."""
+"""
+
+from typing import cast
 
 from app.domain.entities.producto import ProductoEntity
 from app.domain.exceptions.not_found import (
@@ -58,7 +60,7 @@ class ProductoService:
         Raises:
             ValidationException: If validation fails
             ProductoYaExisteException: If code already exists
-        ."""
+        """
         # 1. Validations
         if len(dto.descripcion) < 2:
             raise ValidationException("descripcion", "Mínimo 2 caracteres")
@@ -82,9 +84,7 @@ class ProductoService:
         # 4. Persist through repository
         return self.repository.save(producto)
 
-    def actualizar_producto(
-        self, codigo: str, dto: ProductoUpdateDTO
-    ) -> ProductoEntity:
+    def actualizar_producto(self, codigo: str, dto: ProductoUpdateDTO) -> ProductoEntity:
         """
         Update existing product.
 
@@ -98,7 +98,7 @@ class ProductoService:
         Raises:
             ProductoNotFoundException: If product doesn't exist
             ValidationException: If validation fails
-        ."""
+        """
         # 1. Get existing
         existing = self.repository.get_by_codigo(codigo)
 
@@ -126,7 +126,7 @@ class ProductoService:
 
         Returns:
             list[ProductoEntity]: Matching products
-        ."""
+        """
         return self.repository.buscar_productos(
             termino=dto.buscar or "",
             limit=dto.limit,
@@ -168,9 +168,7 @@ class ProductoService:
         # 2. Delete
         return self.repository.delete(codigo)
 
-    def get_all_productos(
-        self, skip: int = 0, limit: int = 100
-    ) -> list[ProductoEntity]:
+    def get_all_productos(self, skip: int = 0, limit: int = 100) -> list[ProductoEntity]:
         """
         Get all products with pagination.
 
@@ -202,7 +200,7 @@ class ProductoService:
 
         Returns:
             PaginatedResponseDTO: Products with pagination metadata
-        ."""
+        """
         # Convert DTO to dict format for repository
         dto_dict: dict = {
             "page": request_dto.page,
@@ -237,4 +235,35 @@ class ProductoService:
             }
             if request_dto.sort
             else None,
+        )
+
+    def obtener_producto_privado(self, codigo: str) -> ProductoEntity:
+        """Get a BC3 product from the raw-product repository projection."""
+        return cast(
+            ProductoEntity,
+            getattr(self.repository, "get_private_by_codigo")(codigo),
+        )
+
+    def buscar_productos_privado(
+        self, request_dto: PaginationRequestDTO, filters: dict | None = None
+    ) -> PaginatedResponseDTO:
+        """Search BC3 products using the raw-product repository projection."""
+        dto_dict = {
+            "offset": request_dto.offset,
+            "per_page": request_dto.per_page,
+            "filters": filters or {},
+        }
+        entities, total = cast(
+            tuple[list[ProductoEntity], int],
+            getattr(self.repository, "buscar_productos_privado")(dto_dict),
+        )
+        return PaginatedResponseDTO(
+            items=entities,
+            pagination=PaginationMetadata.from_query(
+                total_items=total,
+                current_page=request_dto.page,
+                per_page=request_dto.per_page,
+            ),
+            filters_applied=filters or {},
+            sorting_applied=None,
         )

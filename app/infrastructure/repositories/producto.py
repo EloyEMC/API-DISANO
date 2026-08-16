@@ -7,6 +7,7 @@ from app.domain.entities.producto import ProductoEntity
 from app.domain.exceptions.not_found import ProductoNotFoundException
 from app.domain.repositories.producto import ProductoRepositoryInterface
 from app.infrastructure.models.producto_clean import ProductoModelClean as ProductoModel
+from app.infrastructure.models.producto import ProductoRawModel
 from app.infrastructure.cache.pagination_cache import get_pagination_cache
 
 
@@ -40,12 +41,8 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
 
         Raises:
             ProductoNotFoundException: If product doesn't exist
-        ."""
-        model = (
-            self.session.query(ProductoModel)
-            .filter(ProductoModel.codigo == codigo)
-            .first()
-        )
+        """
+        model = self.session.query(ProductoModel).filter(ProductoModel.codigo == codigo).first()
 
         if not model:
             raise ProductoNotFoundException(codigo)
@@ -70,7 +67,7 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
 
         Returns:
             List[ProductoEntity]: Matching products
-        ."""
+        """
         query = self.session.query(ProductoModel)
 
         # Apply text search if term provided
@@ -146,11 +143,7 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
         Returns:
             bool: True if deleted, False if not found
         """
-        model = (
-            self.session.query(ProductoModel)
-            .filter(ProductoModel.codigo == codigo)
-            .first()
-        )
+        model = self.session.query(ProductoModel).filter(ProductoModel.codigo == codigo).first()
 
         if not model:
             return False
@@ -182,7 +175,7 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
             Tuple[list[ProductoEntity], int]:
                 - List of entities for current page
                 - Total count of matching items
-        ."""
+        """
         # Get pagination cache wrapper
         cache = get_pagination_cache()
 
@@ -226,7 +219,7 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
             Tuple[list[ProductoEntity], int]:
                 - List of entities for current page
                 - Total count of matching items
-        ."""
+        """
         # Base query
         query = self.session.query(ProductoModel)
 
@@ -245,9 +238,7 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
             query = query.filter(ProductoModel.pvp <= filters["pvp_max"])
 
         if filters.get("bc3_product_type"):
-            query = query.filter(
-                ProductoModel.bc3_product_type == filters["bc3_product_type"]
-            )
+            query = query.filter(ProductoModel.bc3_product_type == filters["bc3_product_type"])
 
         if filters.get("bc3_has_descripcion_corta") is not None:
             if filters["bc3_has_descripcion_corta"]:
@@ -311,3 +302,37 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
                 ProductoModel.bc3_descripcion_completa.ilike(pattern),
             )
         )
+
+    def get_private_by_codigo(self, codigo: str) -> ProductoEntity:
+        """Read a private BC3 product directly from the raw table."""
+        model = (
+            self.session.query(ProductoRawModel).filter(ProductoRawModel.codigo == codigo).first()
+        )
+        if not model:
+            raise ProductoNotFoundException(codigo)
+        return model.to_entity()
+
+    def buscar_productos_privado(self, dto: dict) -> Tuple[List[ProductoEntity], int]:
+        """Paginate private BC3 products from the raw ``productos`` table."""
+
+        query = self.session.query(ProductoRawModel)
+        filters = dto.get("filters", {})
+        if filters.get("marca"):
+            query = query.filter(ProductoRawModel.marca == filters["marca"])
+        if filters.get("familia"):
+            query = query.filter(ProductoRawModel.familia_web == filters["familia"])
+        if filters.get("buscar"):
+            pattern = f"%{filters['buscar']}%"
+            query = query.filter(
+                or_(
+                    ProductoRawModel.codigo.ilike(pattern),
+                    ProductoRawModel.descripcion.ilike(pattern),
+                    ProductoRawModel.marca.ilike(pattern),
+                    ProductoRawModel.familia_web.ilike(pattern),
+                    ProductoRawModel.bc3_descripcion_corta.ilike(pattern),
+                )
+            )
+
+        total_count = query.count()
+        models = query.offset(dto["offset"]).limit(dto["per_page"]).all()
+        return [model.to_entity() for model in models], total_count

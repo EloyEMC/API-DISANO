@@ -4,6 +4,7 @@ FastAPI router with dependency injection for product endpoints.
 """
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Body
+from fastapi.security import APIKeyHeader
 from typing import Any, List, Optional
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -15,11 +16,28 @@ from app.application.dto.pagination import (
     PaginationRequestDTO,
 )
 from app.application.dto.producto import (
+    ProductoBC3Page,
+    ProductoBC3Response,
     ProductoExternalPage,
     ProductoExternalResponse,
 )
 from app.domain.exceptions.not_found import ProductoNotFoundException
 from app.interfaces.http.response_serializers import ProductoResponseSerializer
+from app.config import get_settings
+
+
+_bc3_api_key = APIKeyHeader(
+    name=get_settings().api_key_header,
+    description="API key for private BC3 access",
+    auto_error=False,
+)
+
+
+async def verify_bc3_api_key(api_key: Optional[str] = Depends(_bc3_api_key)) -> str:
+    """Validate the private BC3 credential without exposing its value."""
+    if api_key is None or api_key not in get_settings().bc3_api_keys_list:
+        raise HTTPException(status_code=401, detail="API Key inválida")
+    return api_key
 
 
 # ============================================
@@ -207,6 +225,53 @@ async def get_product_v1(
     """Return one product in the external contract."""
     try:
         return _contract_item(service.obtener_producto(codigo))
+    except ProductoNotFoundException as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from None
+
+
+@router.get(
+    "/bc3/v1",
+    response_model=ProductoBC3Page,
+    dependencies=[Depends(verify_bc3_api_key)],
+    summary="List products for BC3",
+)
+async def list_products_bc3_v1(
+    page: int = Query(1, ge=1),
+    per_page: int = Query(20, ge=1, le=100),
+    buscar: Optional[str] = None,
+    marca: Optional[str] = None,
+    familia: Optional[str] = None,
+    service: ProductoService = Depends(get_producto_service),
+) -> dict:
+    """Return the private BC3 product contract."""
+    filters = _public_filters(buscar, marca, familia)
+    response = service.buscar_productos_privado(
+        PaginationRequestDTO(page=page, per_page=per_page, sort=None), filters
+    )
+    return {
+        "items": [
+            ProductoBC3Response.model_validate(item.model_dump()).model_dump(exclude_none=True)
+            for item in response.items
+        ],
+        "pagination": response.pagination.model_dump(),
+        "filters_applied": filters,
+        "sorting_applied": response.sorting_applied,
+    }
+
+
+@router.get(
+    "/bc3/v1/{codigo}",
+    response_model=ProductoBC3Response,
+    dependencies=[Depends(verify_bc3_api_key)],
+    summary="Get one product for BC3",
+)
+async def get_product_bc3_v1(
+    codigo: str, service: ProductoService = Depends(get_producto_service)
+) -> dict:
+    """Return one product in the private BC3 contract."""
+    try:
+        entity = service.obtener_producto_privado(codigo)
+        return ProductoBC3Response.model_validate(entity.model_dump()).model_dump(exclude_none=True)
     except ProductoNotFoundException as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from None
 
