@@ -13,7 +13,9 @@ def test_rate_limit_reader_uses_rate_limit_per_client(monkeypatch):
     monkeypatch.setenv("RATE_LIMIT_PER_MINUTE", "5")
 
     from app import middleware
+    from app.config import get_settings
 
+    get_settings.cache_clear()
     assert middleware.get_rate_limit() == 75
 
 

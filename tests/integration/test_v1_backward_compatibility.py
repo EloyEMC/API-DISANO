@@ -51,23 +51,21 @@ class TestV1BackwardCompatibility:
         TASK-3.4.4: Test V1 detail endpoint is accessible
         Acceptance Criteria: HTTP 200 OK for valid requests
         ."""
-        response = client.get("/api/productos/TEST001")
+        list_response = client.get("/api/productos/?limit=1")
+        assert list_response.status_code == 200
+        products = list_response.json()
+        assert products, "The integration fixture should provide a product"
+        codigo = products[0]["codigo"]
 
-        # Should NOT be 404 for missing endpoint
-        # Could be 200 (product exists), 404 (product not found), or 500 (service error)
-        assert (
-            response.status_code != 404
-            or "no encontrado" in response.json().get("detail", "").lower()
-            or "not found" in response.json().get("detail", "").lower()
-        ), "V1 detail endpoint should be accessible for backward compatibility"
+        response = client.get(f"/api/productos/{codigo}")
 
-        if response.status_code == 200:
-            data = response.json()
-            assert isinstance(
-                data, dict
-            ), "V1 detail endpoint should return dict format for backward compatibility"
-            assert "codigo" in data, "Product should have codigo field"
-            assert data["codigo"] == "TEST001", "Product codigo should match request"
+        assert response.status_code == 200, "V1 detail endpoint should be accessible"
+        data = response.json()
+        assert isinstance(
+            data, dict
+        ), "V1 detail endpoint should return dict format for backward compatibility"
+        assert "codigo" in data, "Product should have codigo field"
+        assert data["codigo"] == codigo, "Product codigo should match request"
 
     def test_v1_list_endpoint_legacy_format(self, client):
         """
@@ -101,19 +99,24 @@ class TestV1BackwardCompatibility:
         TASK-3.4.4: Test V1 detail endpoint returns legacy format
         Acceptance Criteria: Responses match legacy format (dict, not ProductoResponseDTO)
         ."""
-        response = client.get("/api/productos/TEST001")
+        list_response = client.get("/api/productos/?limit=1")
+        assert list_response.status_code == 200
+        products = list_response.json()
+        assert products, "The integration fixture should provide a product"
+        codigo = products[0]["codigo"]
 
-        if response.status_code == 200:
-            data = response.json()
+        response = client.get(f"/api/productos/{codigo}")
+        assert response.status_code == 200
+        data = response.json()
 
-            # V1 returns dict format (raw), not ProductoResponseDTO
-            assert isinstance(
-                data, dict
-            ), "V1 detail endpoint should return dict format for backward compatibility"
+        # V1 returns dict format (raw), not ProductoResponseDTO
+        assert isinstance(
+            data, dict
+        ), "V1 detail endpoint should return dict format for backward compatibility"
 
-            # Legacy format should have these fields
-            assert "codigo" in data, "Legacy format should have codigo field"
-            assert "descripcion" in data, "Legacy format should have descripcion field"
+        # Legacy format should have these fields
+        assert "codigo" in data, "Legacy format should have codigo field"
+        assert "descripcion" in data, "Legacy format should have descripcion field"
 
     def test_v1_endpoints_use_service_dependency(self):
         """

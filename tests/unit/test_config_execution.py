@@ -246,7 +246,7 @@ class TestConfigDefaultValues:
 
         # Assert
         assert settings.rate_limit_enabled is True
-        assert settings.rate_limit_per_client == 30
+        assert settings.rate_limit_per_client == 60
         assert settings.rate_limit_global == 1000
 
     def test_default_cors_configuration(self) -> None:

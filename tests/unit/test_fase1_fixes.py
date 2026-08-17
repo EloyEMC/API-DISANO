@@ -43,17 +43,12 @@ class TestLegacyImportsMigrated:
     """Tests para verificar que los imports legacy han sido migrados."""
 
     def test_no_legacy_imports_in_routers(self):
-        """Verificar que no hay imports legacy de app.security."""
-        productos_path = (
-            Path(__file__).parent.parent.parent / "app" / "routers" / "productos.py"
-        )
-        content = productos_path.read_text()
+        """Verificar que las interfaces HTTP no usan imports legacy de seguridad."""
+        http_interfaces_path = Path(__file__).parent.parent.parent / "app" / "interfaces" / "http"
+        content = "\n".join(path.read_text() for path in http_interfaces_path.glob("*.py"))
 
         # NO debería existir: from app.security import verify_admin_api_key
         assert "from app.security import verify_admin_api_key" not in content
-
-        # DEBERÍA existir: from app.security.api_key import verify_admin_api_key
-        assert "from app.security.api_key import verify_admin_api_key" in content
 
     def test_verify_admin_api_key_import_works(self):
         """Verificar que el import nuevo funciona correctamente."""

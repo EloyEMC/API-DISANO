@@ -1,301 +1,116 @@
-"""Integration tests for database indexes
+"""Integration checks for the production PostgreSQL indexes."""
 
-Tests to verify that strategic indexes are properly created and improve performance
-."""
+import os
 
-import time
+import pytest
 from sqlalchemy import text
+
+pytestmark = pytest.mark.skipif(
+    not os.environ.get("DATABASE_URL", "").startswith("postgresql"),
+    reason="PostgreSQL integration test",
+)
+
+EXPECTED_INDEXES = {
+    "idx_productos_codigo",
+    "idx_productos_descripcion",
+    "idx_productos_marca",
+    "idx_productos_familia",
+    "idx_productos_marca_familia",
+    "idx_productos_bc3_type",
+    "idx_productos_pvp",
+}
+
+
+def _index_rows(session):
+    return (
+        session.execute(
+            text(
+                """
+            SELECT indexname AS name, tablename AS tbl, indexdef AS sql
+            FROM pg_indexes
+            WHERE schemaname = current_schema() AND indexname LIKE 'idx_productos_%'
+            ORDER BY indexname
+            """
+            )
+        )
+        .mappings()
+        .all()
+    )
+
+
+def _ensure_production_indexes(session):
+    statements = {
+        "idx_productos_codigo": (
+            "CREATE INDEX IF NOT EXISTS idx_productos_codigo " 'ON "productos" ("CÓDIGO")'
+        ),
+        "idx_productos_descripcion": (
+            "CREATE INDEX IF NOT EXISTS idx_productos_descripcion " 'ON "productos" ("DESCRIPCION")'
+        ),
+        "idx_productos_marca": (
+            "CREATE INDEX IF NOT EXISTS idx_productos_marca " 'ON "productos" ("MARCA")'
+        ),
+        "idx_productos_familia": (
+            "CREATE INDEX IF NOT EXISTS idx_productos_familia " 'ON "productos" ("Familia_WEB")'
+        ),
+        "idx_productos_marca_familia": (
+            "CREATE INDEX IF NOT EXISTS idx_productos_marca_familia "
+            'ON "productos" ("MARCA", "Familia_WEB")'
+        ),
+        "idx_productos_bc3_type": (
+            "CREATE INDEX IF NOT EXISTS idx_productos_bc3_type "
+            'ON "productos" ("bc3_product_type")'
+        ),
+        "idx_productos_pvp": (
+            "CREATE INDEX IF NOT EXISTS idx_productos_pvp " 'ON "productos" ("PVP_26_01_26")'
+        ),
+    }
+    for statement in statements.values():
+        session.execute(text(statement))
+    session.commit()
 
 
 class TestDatabaseIndexes:
-    """Tests for database indexing optimization."""
-
-    def test_indexes_exist_on_frequently_queried_fields(self):
-        """Test that indexes exist on frequently queried fields."""
+    def test_production_indexes_exist_on_base_table(self):
         from app.infrastructure.database.connection import SessionLocal
 
-        session = SessionLocal()
-        try:
-            # Get all indexes
-            result = session.execute(text("SELECT name FROM sqlite_master WHERE type='index'"))
-            indexes = [row[0] for row in result.fetchall()]
+        with SessionLocal() as session:
+            _ensure_production_indexes(session)
+            rows = _index_rows(session)
 
-            # Verify indexes exist on key fields
-            index_names = " ".join(indexes)
+        assert {row["name"] for row in rows} >= EXPECTED_INDEXES
+        assert {row["tbl"] for row in rows if row["name"] in EXPECTED_INDEXES} == {"productos"}
 
-            # Should have indexes for frequently queried fields
-            # Note: SQLite creates indexes for primary keys automatically
-            assert len(indexes) >= 1, "Should have at least one index"
-
-            print(f"📊 Found {len(indexes)} indexes: {indexes}")
-
-        finally:
-            session.close()
-
-    def test_create_index_on_codigo_field(self):
-        """Test that we can create index on codigo field."""
+    def test_production_index_definitions_use_expected_columns(self):
         from app.infrastructure.database.connection import SessionLocal
 
-        session = SessionLocal()
-        try:
-            # Create index on codigo field
-            session.execute(
-                text(
-                    """
-                CREATE INDEX IF NOT EXISTS idx_producto_codigo
-                ON productos_clean(codigo)
-            """
-                )
-            )
-            session.commit()
+        with SessionLocal() as session:
+            _ensure_production_indexes(session)
+            definitions = {
+                row["name"]: row["sql"]
+                for row in _index_rows(session)
+                if row["name"] in EXPECTED_INDEXES
+            }
 
-            # Verify index exists
-            result = session.execute(
-                text(
-                    """
-                SELECT name FROM sqlite_master
-                WHERE type='index' AND name='idx_producto_codigo'
-            ."""
-                )
-            )
-            index_exists = result.fetchone() is not None
+        assert '"CÓDIGO"' in definitions["idx_productos_codigo"]
+        assert '"DESCRIPCION"' in definitions["idx_productos_descripcion"]
+        assert '"MARCA", "Familia_WEB"' in definitions["idx_productos_marca_familia"]
 
-            assert index_exists, "Index on codigo should exist"
-
-            print("✅ Index idx_producto_codigo created successfully")
-
-        finally:
-            session.close()
-
-    def test_create_index_on_descripcion_field(self):
-        """Test that we can create index on descripcion field for search optimization."""
+    def test_query_plans_reference_production_indexes(self):
         from app.infrastructure.database.connection import SessionLocal
 
-        session = SessionLocal()
-        try:
-            # Create index on descripcion field for LIKE queries
-            session.execute(
-                text(
-                    """
-                CREATE INDEX IF NOT EXISTS idx_producto_descripcion
-                ON productos_clean(descripcion)
-            """
+        with SessionLocal() as session:
+            _ensure_production_indexes(session)
+            plan = (
+                session.execute(
+                    text(
+                        'EXPLAIN (FORMAT TEXT) SELECT * FROM "productos" '
+                        'WHERE "CÓDIGO" = :codigo AND "MARCA" = :marca'
+                    ),
+                    {"codigo": "missing", "marca": "missing"},
                 )
+                .scalars()
+                .all()
             )
-            session.commit()
 
-            # Verify index exists
-            result = session.execute(
-                text(
-                    """
-                SELECT name FROM sqlite_master
-                WHERE type='index' AND name='idx_producto_descripcion'
-            ."""
-                )
-            )
-            index_exists = result.fetchone() is not None
-
-            assert index_exists, "Index on descripcion should exist"
-
-            print("✅ Index idx_producto_descripcion created successfully")
-
-        finally:
-            session.close()
-
-    def test_create_index_on_marca_field(self):
-        """Test that we can create index on marca field for filtering."""
-        from app.infrastructure.database.connection import SessionLocal
-
-        session = SessionLocal()
-        try:
-            # Create index on marca field
-            session.execute(
-                text(
-                    """
-                CREATE INDEX IF NOT EXISTS idx_producto_marca
-                ON productos_clean(marca)
-            """
-                )
-            )
-            session.commit()
-
-            # Verify index exists
-            result = session.execute(
-                text(
-                    """
-                SELECT name FROM sqlite_master
-                WHERE type='index' AND name='idx_producto_marca'
-            ."""
-                )
-            )
-            index_exists = result.fetchone() is not None
-
-            assert index_exists, "Index on marca should exist"
-
-            print("✅ Index idx_producto_marca created successfully")
-
-        finally:
-            session.close()
-
-    def test_create_index_on_familia_field(self):
-        """Test that we can create index on familia field for grouping."""
-        from app.infrastructure.database.connection import SessionLocal
-
-        session = SessionLocal()
-        try:
-            # Create index on familia field
-            session.execute(
-                text(
-                    """
-                CREATE INDEX IF NOT EXISTS idx_producto_familia
-                ON productos_clean(familia)
-            """
-                )
-            )
-            session.commit()
-
-            # Verify index exists
-            result = session.execute(
-                text(
-                    """
-                SELECT name FROM sqlite_master
-                WHERE type='index' AND name='idx_producto_familia'
-            ."""
-                )
-            )
-            index_exists = result.fetchone() is not None
-
-            assert index_exists, "Index on familia should exist"
-
-            print("✅ Index idx_producto_familia created successfully")
-
-        finally:
-            session.close()
-
-    def test_index_improves_query_performance(self):
-        """Test that indexes improve query performance."""
-        from app.infrastructure.database.connection import SessionLocal
-        from app.application.dto.producto import ProductoSearchDTO
-        from app.infrastructure.repositories.producto import (
-            SQLAlchemyProductoRepository,
-        )
-
-        session = SessionLocal()
-        repository = SQLAlchemyProductoRepository(session)
-
-        try:
-            # Measure query performance WITHOUT index
-            # (First run, no index yet)
-            dto = ProductoSearchDTO(buscar="test", limit=10, marca="", familia="")
-
-            start = time.time()
-            products_no_index = repository.buscar_productos(dto)
-            time_no_index = time.time() - start
-
-            # Create index
-            session.execute(
-                text(
-                    """
-                CREATE INDEX IF NOT EXISTS idx_producto_descripcion_search
-                ON productos_clean(descripcion)
-            ."""
-                )
-            )
-            session.commit()
-
-            # Measure query performance WITH index
-            start = time.time()
-            products_with_index = repository.buscar_productos(dto)
-            time_with_index = time.time() - start
-
-            # Results should be the same
-            assert len(products_no_index) == len(products_with_index)
-
-            print(f"⏱️ Time without index: {time_no_index:.4f}s")
-            print(f"⏱️ Time with index: {time_with_index:.4f}s")
-
-            # With index should be equal or faster
-            # (might not always be faster due to small dataset)
-            assert (
-                time_with_index <= time_no_index * 1.5
-            ), f"Index should improve performance: {time_with_index:.4f}s vs {time_no_index:.4f}s"
-
-        finally:
-            session.close()
-
-    def test_composite_index_for_common_queries(self):
-        """Test that we can create composite indexes for common query patterns."""
-        from app.infrastructure.database.connection import SessionLocal
-
-        session = SessionLocal()
-        try:
-            # Create composite index for marca + familia filtering
-            session.execute(
-                text(
-                    """
-                CREATE INDEX IF NOT EXISTS idx_producto_marca_familia
-                ON productos_clean(marca, familia)
-            """
-                )
-            )
-            session.commit()
-
-            # Verify composite index exists
-            result = session.execute(
-                text(
-                    """
-                SELECT name FROM sqlite_master
-                WHERE type='index' AND name='idx_producto_marca_familia'
-            ."""
-                )
-            )
-            index_exists = result.fetchone() is not None
-
-            assert index_exists, "Composite index should exist"
-
-            print("✅ Composite index idx_producto_marca_familia created successfully")
-
-        finally:
-            session.close()
-
-    def test_all_strategic_indexes_created(self):
-        """Test that all strategic indexes are created."""
-        from app.infrastructure.database.connection import SessionLocal
-
-        session = SessionLocal()
-        try:
-            # Create all strategic indexes
-            indexes = [
-                "idx_producto_codigo",
-                "idx_producto_descripcion",
-                "idx_producto_marca",
-                "idx_producto_familia",
-                "idx_producto_marca_familia",
-            ]
-
-            for index_name in indexes:
-                parts = index_name.split("_")[2:]  # Remove prefix
-                field = "_".join(parts)
-
-                if field == "marca_familia":
-                    create_sql = f"CREATE INDEX IF NOT EXISTS {index_name} ON productos_clean(marca, familia)"
-                else:
-                    create_sql = (
-                        f"CREATE INDEX IF NOT EXISTS {index_name} ON productos_clean({field})"
-                    )
-
-                session.execute(text(create_sql))
-
-            session.commit()
-
-            # Verify all indexes exist
-            result = session.execute(text("SELECT name FROM sqlite_master WHERE type='index'"))
-            existing_indexes = [row[0] for row in result.fetchall()]
-
-            for index_name in indexes:
-                assert index_name in existing_indexes, f"Index {index_name} should exist"
-
-            print(f"✅ All {len(indexes)} strategic indexes created successfully")
-
-        finally:
-            session.close()
+        assert plan
+        assert any("idx_productos" in line for line in plan)

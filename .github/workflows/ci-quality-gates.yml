@@ -38,6 +38,21 @@ jobs:
           pip install -r requirements.txt
           pip install -r requirements-test.txt
 
+      - name: Set up PostgreSQL
+        env:
+          POSTGRES_PASSWORD: test-password
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql postgresql-contrib
+          sudo systemctl start postgresql
+          sudo -u postgres psql -v ON_ERROR_STOP=1 \
+            -c "CREATE USER api_disano_test WITH PASSWORD '$POSTGRES_PASSWORD';" || true
+          sudo -u postgres psql -v ON_ERROR_STOP=1 \
+            -c "CREATE DATABASE api_disano_test OWNER api_disano_test;" || true
+          PGPASSWORD="$POSTGRES_PASSWORD" psql \
+            --host=127.0.0.1 --username=api_disano_test --dbname=api_disano_test \
+            -v ON_ERROR_STOP=1 --file=migration/04_postgres_schema.sql
+
       - name: Determine changed files
         id: changed-files
         env:
@@ -170,14 +185,14 @@ jobs:
 
       - name: Run tests with coverage
         env:
-          DATABASE_URL: sqlite:///testing/testing.db
+          DATABASE_URL: postgresql+psycopg://api_disano_test:test-password@127.0.0.1:5432/api_disano_test
           ENVIRONMENT: testing
           API_KEYS: test-api-key-1,test-api-key-2
           ADMIN_API_KEYS: test-admin-key-1
         run: |
           pip install pytest pytest-cov pytest-asyncio pytest-mock
-          pytest tests/unit/ --cov=app --cov-report=xml --cov-report=term --tb=short -v || true
-          pytest tests/integration/ --cov=app --cov-report=xml --cov-append --tb=short -v || true
+          pytest tests/unit/ --cov=app --cov-report=xml --cov-report=term --tb=short -v
+          pytest tests/integration/ --cov=app --cov-report=xml --cov-append --tb=short -v
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4

@@ -1,91 +1,49 @@
-"""
-Tests Unitarios - Código Simple (Aumenta coverage sin Settings import)
-=========================================================
+"""Structural checks for the current hexagonal application layout."""
 
-Tests que cubren código simple SIN importar Settings para evitar bloqueo.
-."""
+from pathlib import Path
 
-import pytest
+from sqlalchemy import inspect
 
 
-def test_app_init_exists():
-    """Verificar que app/__init__.py existe."""
-    import os
-    assert os.path.exists("app/__init__.py")
+APP_ROOT = Path(__file__).parents[2] / "app"
 
 
-def test_app_main_exists():
-    """Verificar que app/main.py existe."""
-    import os
-    assert os.path.exists("app/main.py")
+def test_hexagonal_application_modules_exist():
+    """The application exposes domain, application, infrastructure and HTTP layers."""
+    expected = (
+        "domain/entities/producto.py",
+        "domain/services/producto.py",
+        "application/dto/producto.py",
+        "infrastructure/database/connection.py",
+        "infrastructure/repositories/producto.py",
+        "interfaces/http/productos.py",
+        "main.py",
+    )
+    for relative_path in expected:
+        assert (APP_ROOT / relative_path).is_file()
 
 
-def test_app_models_exists():
-    """Verificar que app/models.py existe."""
-    import os
-    assert os.path.exists("app/models.py")
+def test_removed_legacy_modules_are_not_required_by_structure():
+    """The structure test does not assert deleted legacy app modules."""
+    assert not (APP_ROOT / "models.py").exists()
+    assert not (APP_ROOT / "database.py").exists()
 
 
-def test_app_routers_exist():
-    """Verificar que routers principales existen."""
-    import os
-    assert os.path.exists("app/routers/productos.py")
-    assert os.path.exists("app/routers/familias.py")
-    assert os.path.exists("app/routers/bc3.py")
+def test_security_and_middleware_modules_exist():
+    """Security and middleware remain part of the active application boundary."""
+    for relative_path in (
+        "security/api_key.py",
+        "security/logging_config.py",
+        "middleware.py",
+        "middleware_redis.py",
+    ):
+        assert (APP_ROOT / relative_path).is_file()
 
 
-def test_app_security_exists():
-    """Verificar que módulos security existen."""
-    import os
-    assert os.path.exists("app/security/api_key.py")
-    assert os.path.exists("app/security/otp_service.py")
-    assert os.path.exists("app/security/logging_config.py")
+def test_configured_database_exposes_product_table(test_db_path):
+    """The configured PostgreSQL schema exposes the product table."""
+    from app.infrastructure.database import connection
 
-
-def test_app_middleware_exists():
-    """Verificar que middleware existe."""
-    import os
-    assert os.path.exists("app/middleware.py")
-    assert os.path.exists("app/middleware_redis.py")
-
-
-def test_python_version_is_3_14():
-    """Verificar que Python 3.14 está instalado."""
-    import sys
-    version = sys.version_info
-    assert version.major == 3
-    assert version.minor == 14
-    assert "3.14.5" in sys.version
-
-
-def test_pytest_is_installed():
-    """Verificar que pytest está instalado."""
-    try:
-        import pytest
-        assert pytest.__version__ is not None
-    except ImportError:
-        pytest.fail("pytest no está instalado")
-
-
-def test_database_has_products_table():
-    """Verificar que database tiene tabla productos."""
-    import sqlite3
-
-    with sqlite3.connect("testing/testing.db") as conn:
-        cursor = conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='productos'")
-        tables = cursor.fetchall()
-        assert len(tables) == 1, f"Debe existir tabla productos, encontradas: {len(tables)}"
-
-
-def test_database_has_8288_products():
-    """Verificar que database tiene 8288 productos."""
-    import sqlite3
-
-    with sqlite3.connect("testing/testing.db") as conn:
-        cursor = conn.execute("SELECT COUNT(*) FROM productos")
-        count = cursor.fetchone()[0]
-        assert count == 8288, f"Debe haber 8288 productos, hay {count}"
-
-
-if __name__ == "__main__":
-    pytest.main([__file__])
+    assert test_db_path.startswith("postgresql")
+    assert connection.engine.url.drivername.startswith("postgresql")
+    assert inspect(connection.engine).has_table("productos", schema="public")

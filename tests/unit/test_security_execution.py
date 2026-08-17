@@ -132,15 +132,15 @@ class TestSecurityLoggingConfig:
 class TestSecurityRateLimiter:
     """Tests de rate limiter en app/security/rate_limiter.py (TDD + AAA)."""
 
-    def test_rate_limit_per_client_defaults_to_30(self):
+    def test_rate_limit_per_client_defaults_to_60(self):
         """
-        RED: Rate limit per client tiene default de 30.
+        Rate limit per client tiene default de 60.
         """
         # Arrange & Act
         from app.security.rate_limiter import RATE_LIMIT_PER_CLIENT
 
         # Assert
-        assert RATE_LIMIT_PER_CLIENT == 30
+        assert RATE_LIMIT_PER_CLIENT == 60
 
     def test_rate_limit_global_defaults_to_1000(self):
         """

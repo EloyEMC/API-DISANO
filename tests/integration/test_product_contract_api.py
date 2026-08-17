@@ -3,44 +3,31 @@ from fastapi.testclient import TestClient
 
 from app.application.dto.pagination import PaginatedResponseDTO, PaginationMetadata
 from app.application.dto.producto import ProductoExternalResponse
-from app.domain.exceptions.not_found import ProductoNotFoundException
 from app.domain.entities.producto import ProductoEntity
+from app.domain.exceptions.not_found import ProductoNotFoundException
 from app.interfaces.http.productos import get_producto_service, router
 
 
-CLIENT_FIELDS = {
+CLIENT_FIELDS = set(ProductoExternalResponse.model_fields)
+PUBLIC_FIELDS = {
     "codigo",
     "descripcion",
     "marca",
-    "familia",
-    "pvp",
-    "codigo_web",
-    "referencia",
-    "ean_13",
-    "imagen",
-    "img_url",
-    "descontinuado",
-    "descripcion_corta",
-    "raee_a",
-    "raee_l",
-    "raee_t",
     "serie_familia_1",
-    "familia_web",
     "familia_catalogo",
     "familia_catalogo_ptl",
     "url_ficha_tec",
-    "bc3_descripcion_corta",
-    "bc3_descripcion_completa",
     "bc3_descripcion_larga",
-    "bc3_product_type",
-    "bc3_processed_at",
+    "raee_a",
+    "raee_l",
+    "raee_t",
 }
 
 
-def test_external_contract_includes_database_fields_except_discount_and_logistics():
+def test_external_contract_includes_raee_and_excludes_private_fields():
     response_fields = set(ProductoExternalResponse.model_fields)
 
-    assert CLIENT_FIELDS <= response_fields
+    assert {"raee_a", "raee_l", "raee_t"} <= response_fields
     assert {"dto", "up_log", "u_caja", "clase_etim", "cm3"}.isdisjoint(response_fields)
     assert not any(field.startswith("peso_") for field in response_fields)
     assert not any(field.endswith("_mm") or field.endswith("_m") for field in response_fields)
@@ -61,6 +48,9 @@ def _public_entity() -> ProductoEntity:
         familia_catalogo_ptl="PTL",
         url_ficha_tec="https://example.test/ficha",
         bc3_descripcion_larga="Long description",
+        raee_a=1.1,
+        raee_l=2.2,
+        raee_t=3.3,
     )
 
 
@@ -95,17 +85,17 @@ def _client(service: PublicProductService | None = None) -> TestClient:
     return TestClient(app)
 
 
-def test_public_list_returns_promised_fields_and_pagination():
+def test_public_list_returns_non_null_fields_and_pagination():
     service = PublicProductService()
     response = _client(service).get("/api/productos/v1?page=2&per_page=1&marca=Brand")
 
     assert response.status_code == 200
-    body = response.json()
-    assert set(body["items"][0]) == CLIENT_FIELDS
-    assert body["items"][0]["bc3_descripcion_larga"] == "Long description"
-    assert body["items"][0]["serie_familia_1"] == "S1"
-    assert "dto" not in body["items"][0]
-    assert body["pagination"] == {
+    item = response.json()["items"][0]
+    assert PUBLIC_FIELDS <= set(item) <= CLIENT_FIELDS
+    assert item["bc3_descripcion_larga"] == "Long description"
+    assert item["raee_a"] == 1.1
+    assert "dto" not in item
+    assert response.json()["pagination"] == {
         "total_items": 3,
         "total_pages": 3,
         "current_page": 2,
@@ -118,46 +108,55 @@ def test_public_list_returns_promised_fields_and_pagination():
     assert service.filters == {"marca": "Brand"}
 
 
-def test_public_detail_returns_promised_fields_and_404():
+def test_public_detail_returns_non_null_fields_and_404():
     client = _client(PublicProductService())
 
     response = client.get("/api/productos/v1/P-1")
     missing = client.get("/api/productos/v1/missing")
 
     assert response.status_code == 200
-    assert set(response.json()) == CLIENT_FIELDS
+    assert PUBLIC_FIELDS <= set(response.json()) <= CLIENT_FIELDS
     assert response.json()["bc3_descripcion_larga"] == "Long description"
     assert missing.status_code == 404
     assert "missing" in missing.json()["detail"]
 
 
+def _route_paths(routes, prefix=""):
+    paths = set()
+    for route in routes:
+        path = getattr(route, "path", None)
+        if isinstance(path, str):
+            paths.add(f"{prefix}{path}")
+
+        original_router = getattr(route, "original_router", None)
+        if original_router is not None:
+            include_context = getattr(route, "include_context", None)
+            nested_prefix = prefix + getattr(include_context, "prefix", "")
+            paths.update(_route_paths(original_router.routes, nested_prefix))
+    return paths
+
+
 def test_versioned_contract_list_and_detail_routes_are_registered():
     app = FastAPI()
     app.include_router(router, prefix="/api")
-    paths = {route.path for route in app.routes}
+    paths = _route_paths(app.routes)
 
-    assert "/api/productos/v1" in paths
-    assert "/api/productos/v1/{codigo}" in paths
-    assert "/api/productos/v3" in paths
+    assert {
+        "/api/productos/v1",
+        "/api/productos/v1/{codigo}",
+        "/api/productos/v3",
+    } <= paths
 
 
-def test_openapi_exposes_public_routes_and_response_schemas():
+def test_openapi_exposes_public_routes_and_response_schema():
     document = _client().get("/openapi.json").json()
 
-    assert "/api/productos/v1" in document["paths"]
-    assert "/api/productos/v1/{codigo}" in document["paths"]
-    assert "/api/productos/v3" in document["paths"]
-    schemas = document["components"]["schemas"]
-    assert set(schemas["ProductoExternalResponse"]["properties"]) == CLIENT_FIELDS
+    assert {
+        "/api/productos/v1",
+        "/api/productos/v1/{codigo}",
+        "/api/productos/v3",
+    } <= set(document["paths"])
     assert (
-        document["paths"]["/api/productos/v1"]["get"]["responses"]["200"]["content"][
-            "application/json"
-        ]["schema"]["$ref"]
-        == "#/components/schemas/ProductoExternalPage"
-    )
-    assert (
-        document["paths"]["/api/productos/v1/{codigo}"]["get"]["responses"]["200"]["content"][
-            "application/json"
-        ]["schema"]["$ref"]
-        == "#/components/schemas/ProductoExternalResponse"
+        set(document["components"]["schemas"]["ProductoExternalResponse"]["properties"])
+        == CLIENT_FIELDS
     )

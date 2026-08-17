@@ -1,7 +1,3 @@
-import sqlite3
-from pathlib import Path
-
-import pytest
 from fastapi.testclient import TestClient
 
 
@@ -26,7 +22,7 @@ def test_private_bc3_uses_dedicated_credentials(client: TestClient, monkeypatch)
 def test_private_bc3_runtime_reads_raw_product_fields(
     client: TestClient,
     auth_headers: dict,
-    db_session: sqlite3.Connection,
+    db_session,
     monkeypatch,
 ) -> None:
     from app.config import Settings
@@ -40,19 +36,27 @@ def test_private_bc3_runtime_reads_raw_product_fields(
     monkeypatch.setattr(productos_module, "get_settings", lambda: settings)
     bc3_headers = {"X-API-Key": "test-bc3-key"}
 
-    row = db_session.execute(
-        """
-    SELECT "CÓDIGO" AS codigo
-    FROM productos
-    WHERE "DTO." IS NOT NULL
-      AND "U.P.LOG" IS NOT NULL
-      AND "U.CAJA" IS NOT NULL
-      AND "Peso bruto KG" IS NOT NULL
-      AND "Longitud M" IS NOT NULL
-      AND "CM3" IS NOT NULL
-    LIMIT 1
-    """
-    ).fetchone()
+    from sqlalchemy import text
+
+    row = (
+        db_session.execute(
+            text(
+                """
+            SELECT "CÓDIGO" AS codigo
+            FROM productos
+            WHERE "DTO." IS NOT NULL
+              AND "U.P.LOG" IS NOT NULL
+              AND "U.CAJA" IS NOT NULL
+              AND "Peso bruto KG" IS NOT NULL
+              AND "Longitud M" IS NOT NULL
+              AND "CM3" IS NOT NULL
+            LIMIT 1
+            """
+            )
+        )
+        .mappings()
+        .first()
+    )
     assert row is not None
     codigo = row["codigo"]
 

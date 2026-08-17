@@ -59,7 +59,7 @@ class TestSettingsManualCreation:
         settings = Settings(environment="testing")
 
         assert settings.rate_limit_global == 1000
-        assert settings.rate_limit_per_client == 30
+        assert settings.rate_limit_per_client == 60
         assert settings.rate_limit_burst == 10
 
     def test_settings_database_path(self):
@@ -79,7 +79,7 @@ class TestSettingsManualCreation:
         """Validación pasa en producción con valores válidos."""
         settings = Settings(
             environment="production",
-            secret_key="safe-key-32-char-minimum-length",
+            secret_key="safe-key-32-char-minimum-length!",
             api_keys=["production-key"],
         )
 
@@ -87,9 +87,7 @@ class TestSettingsManualCreation:
 
     def test_settings_validation_production_empty_secret(self):
         """Validación falla con SECRET_KEY vacío en producción."""
-        settings = Settings(
-            environment="production", secret_key="", api_keys=["production-key"]
-        )
+        settings = Settings(environment="production", secret_key="", api_keys=["production-key"])
 
         with pytest.raises(ValueError) as exc_info:
             settings.validate_required()
@@ -100,7 +98,7 @@ class TestSettingsManualCreation:
         """Validación falla con API_KEYS vacío en producción."""
         settings = Settings(
             environment="production",
-            secret_key="safe-key-32-char-minimum-length",
+            secret_key="safe-key-32-char-minimum-length!",
             api_keys=[],
         )
 

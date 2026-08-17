@@ -6,6 +6,7 @@ import argparse
 import hashlib
 import importlib
 import math
+import os
 import sqlite3
 from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
@@ -278,6 +279,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--postgres-backup", type=Path)
     parser.add_argument("--postgres-backup-manifest", type=Path)
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument(
+        "--ci",
+        action="store_true",
+        help="Allow import into an ephemeral CI database without a backup artifact",
+    )
     args = parser.parse_args(argv)
     if args.batch_size < 1:
         parser.error("--batch-size must be greater than zero")
@@ -341,7 +347,8 @@ def require_verified_postgres_backup(
 ) -> None:
     if backup is None or manifest_path is None:
         raise BackupError(
-            "a verified PostgreSQL backup artifact and manifest are required before migration writes"
+            "a verified PostgreSQL backup artifact and manifest are required "
+            "before migration writes"
         )
     try:
         verify(backup, manifest_path)
@@ -403,9 +410,11 @@ def import_products(
     batch_size: int,
     postgres_backup: Path | None = None,
     postgres_backup_manifest: Path | None = None,
+    allow_ephemeral_ci: bool = False,
 ) -> int:
     validate_local_postgres_url(postgres_url)
-    require_verified_postgres_backup(postgres_backup, postgres_backup_manifest)
+    if not allow_ephemeral_ci:
+        require_verified_postgres_backup(postgres_backup, postgres_backup_manifest)
     pg_connection = _connect_postgres(postgres_url)
     try:
         with (
@@ -417,7 +426,8 @@ def import_products(
             placeholders = ", ".join(["%s"] * len(PRODUCT_COLUMNS))
             columns_sql = ", ".join(f'"{column}"' for column in PRODUCT_COLUMNS)
             statement = (
-                f'INSERT INTO "productos" ({columns_sql}) VALUES ({placeholders}) ON CONFLICT ("CÓDIGO") DO UPDATE SET '
+                f'INSERT INTO "productos" ({columns_sql}) VALUES ({placeholders}) '
+                'ON CONFLICT ("CÓDIGO") DO UPDATE SET '
                 + ", ".join(
                     f'"{column}" = EXCLUDED."{column}"'
                     for column in PRODUCT_COLUMNS
@@ -454,13 +464,16 @@ def main(argv: list[str] | None = None) -> int:
             f"Dry run: source contains {source_count} productos rows and {len(columns)} columns"
         )
         return 0
-    imported = import_products(
-        args.sqlite_path,
-        args.postgres_url,
-        args.batch_size,
-        args.postgres_backup,
-        args.postgres_backup_manifest,
-    )
+        if args.ci and os.environ.get("CI", "").lower() != "true":
+            raise ValueError("--ci is only permitted when CI=true")
+        imported = import_products(
+            args.sqlite_path,
+            args.postgres_url,
+            args.batch_size,
+            args.postgres_backup,
+            args.postgres_backup_manifest,
+            allow_ephemeral_ci=args.ci,
+        )
     print(f"Imported {imported} productos rows into local PostgreSQL")
     return 0
 

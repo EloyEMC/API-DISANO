@@ -12,8 +12,18 @@ from app.config import Settings
 class TestSettingsBasic:
     """Tests básicos de Settings sin carga de .env."""
 
-    def test_settings_default_values(self):
-        """Verificar valores por defecto de Settings."""
+    def test_settings_default_values(self, monkeypatch):
+        """Verificar valores por defecto de Settings sin variables externas."""
+        for variable in (
+            "ENVIRONMENT",
+            "SECRET_KEY",
+            "API_KEYS",
+            "ADMIN_API_KEYS",
+            "DATABASE_URL",
+            "RATE_LIMIT_PER_CLIENT",
+        ):
+            monkeypatch.delenv(variable, raising=False)
+
         settings = Settings()
 
         # Valores por defecto esperados
@@ -23,7 +33,7 @@ class TestSettingsBasic:
         assert settings.admin_api_keys == []
         assert settings.database_path == "database/tarifa_disano.db"
         assert settings.rate_limit_global == 1000
-        assert settings.rate_limit_per_client == 30
+        assert settings.rate_limit_per_client == 60
         assert settings.rate_limit_burst == 10
 
     def test_settings_with_manual_values(self):
@@ -70,7 +80,7 @@ class TestSettingsBasic:
         settings = Settings()
 
         assert settings.rate_limit_global == 1000
-        assert settings.rate_limit_per_client == 30
+        assert settings.rate_limit_per_client == 60
         assert settings.rate_limit_burst == 10
 
     def test_database_url_defaults(self):
@@ -101,7 +111,7 @@ class TestSecurityValidation:
         """Validación pasa en producción con valores válidos."""
         settings = Settings(
             environment="production",
-            secret_key="safe-key-32-char-minimum-length",
+            secret_key="safe-key-32-char-minimum-length!",
             api_keys=["production-key"],
         )
 
@@ -123,7 +133,7 @@ class TestSecurityValidation:
         """API_KEYS no puede estar vacío en producción."""
         settings = Settings(
             environment="production",
-            secret_key="safe-key-32-char-minimum-length",
+            secret_key="safe-key-32-char-minimum-length!",
             api_keys=[],
         )
 

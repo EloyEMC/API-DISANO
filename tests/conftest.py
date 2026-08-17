@@ -10,20 +10,15 @@ from typing import Generator
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 from unittest.mock import AsyncMock, Mock
-import sqlite3
 import os
-import shutil
 import sys
-import tempfile
+from urllib.parse import urlparse
 
 # FIX: Asegurar que importamos el proyecto API-DISANO correcto
 # y no otro proyecto 'app' que pueda estar en sys.path
 PROJECT_ROOT = Path(__file__).parent.parent.resolve()
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
-
-# Import explícito del proyecto actual
-import app.config as config_module  # noqa: E402
 
 # Force import for coverage measurement
 
@@ -38,153 +33,92 @@ os.environ["SECRET_KEY"] = "test-secret-key-placeholder"
 os.environ["API_KEYS"] = "test-api-key-placeholder,test-api-key-placeholder-2"
 os.environ["ADMIN_API_KEYS"] = '["test-admin-api-key-placeholder"]'
 
-# Copy and repair the tracked fixture in a process-local directory. The
-# tracked database must remain immutable during the test session.
-_test_database_tmpdir = tempfile.TemporaryDirectory(prefix="api-disano-tests-")
-_test_database_path = Path(_test_database_tmpdir.name) / "testing.db"
-_tracked_database_path = PROJECT_ROOT / "testing" / "testing.db"
-shutil.copy2(_tracked_database_path, _test_database_path)
-
-_database = sqlite3.connect(_test_database_path)
-_database.execute("DROP VIEW IF EXISTS productos_clean")
-_database.execute(
-    """
-CREATE VIEW productos_clean AS
-SELECT
-[CÓDIGO] AS codigo,
-DESCRIPCION AS descripcion,
-MARCA AS marca,
-Familia_WEB AS familia,
-[CÓDIGO WEB] AS codigo_web,
-REFERENCIA AS referencia,
-[EAN 13] AS ean_13,
-imagen AS imagen,
-img_url AS img_url,
-descripcion_corta AS descripcion_corta,
-[PVP_26_01_26] AS pvp,
-bc3_descripcion_corta AS bc3_descripcion_corta,
-bc3_descripcion_completa AS bc3_descripcion_completa,
-bc3_descripcion_larga AS bc3_descripcion_larga,
-bc3_product_type AS bc3_product_type,
-bc3_processed_at AS bc3_processed_at,
-RAEE_A AS raee_a,
-RAEE_L AS raee_l,
-RAEE_T AS raee_t
-FROM productos
-"""
-)
-_database.commit()
-_database.close()
-
-# STEP 3: Parchear get_settings ANTES de importar app.main
-_original_get_settings = None
-
-
-def _patch_get_settings():
-    """Parchear get_settings para retornar Settings manual en tests."""
-    from app.config import Settings
-
-    return Settings(
-        environment="testing",
-        api_keys="test-api-key-placeholder",
-        admin_api_keys=["test-admin-api-key-placeholder"],
-        database_path=str(_test_database_path),
+_database_url = os.environ.get("DATABASE_URL")
+if not _database_url or not urlparse(_database_url).scheme.startswith("postgresql"):
+    raise RuntimeError(
+        "Tests require DATABASE_URL to point to PostgreSQL; "
+        "SQLite is not supported by the test backend."
     )
+os.environ["DATABASE_URL"] = _database_url
 
-
-# Importar app.config y parchear
-
-_original_get_settings = config_module.get_settings
-config_module.get_settings = _patch_get_settings
-
-
-# STEP 4: Parchear get_database_path para usar la copia temporal reparada
-def _patch_get_database_path():
-    """Parchear get_database_path para retornar la base temporal de tests."""
-    return _test_database_path
-
-
-# Importar y parchear connection.py
 import app.infrastructure.database.connection as connection_module  # noqa: E402
-
-_original_get_database_path = connection_module.get_database_path
-connection_module.get_database_path = _patch_get_database_path
-
-# Recrear engine con la base de datos correcta
-from sqlalchemy import create_engine  # noqa: E402
 from sqlalchemy.orm import sessionmaker  # noqa: E402
-from sqlalchemy.pool import StaticPool  # noqa: E402
-
-connection_module.engine = create_engine(
-    f"sqlite:///{_test_database_path}",
-    connect_args={"check_same_thread": False},
-    poolclass=StaticPool,
-    echo=False,
-)
-connection_module.SessionFactory = sessionmaker(
-    bind=connection_module.engine, expire_on_commit=False
-)
-connection_module.SessionLocal = sessionmaker(bind=connection_module.engine, expire_on_commit=False)
 
 
 @pytest.fixture(scope="session", autouse=True)
-def test_db_path() -> Path:
-    """Path a la base de datos de testing SQLite.
+def postgres_product_seed() -> None:
+    """Seed one sanitized product for schema-only PostgreSQL test runs."""
+    from sqlalchemy import text
 
-    Returns:
-        Path: Ruta a testing/testing.db
+    with connection_module.engine.begin() as connection:
+        connection.execute(
+            text(
+                """
+                INSERT INTO "productos" (
+                    "CÓDIGO", "MARCA", "DESCRIPCION", "Familia_WEB",
+                    "DTO.", "U.P.LOG", "U.CAJA", "Peso bruto KG",
+                    "Longitud M", "CM3", "PVP_26_01_26", "bc3_descripcion_corta",
+                    "bc3_descripcion_larga", "bc3_descripcion_completa", "bc3_product_type"
+                )
+                SELECT
+                    :codigo, :marca, :descripcion, :familia,
+                    :dto, :up_log, :u_caja, :peso_bruto_kg,
+                    :longitud_m, :cm3, :pvp, :bc3_descripcion_corta,
+                    :bc3_descripcion_larga, :bc3_descripcion_completa, :bc3_product_type
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM "productos"
+                    WHERE "DTO." IS NOT NULL
+                      AND "U.P.LOG" IS NOT NULL
+                      AND "U.CAJA" IS NOT NULL
+                      AND "Peso bruto KG" IS NOT NULL
+                      AND "Longitud M" IS NOT NULL
+                      AND "CM3" IS NOT NULL
+                )
+                ON CONFLICT ("CÓDIGO") DO NOTHING
+                """
+            ),
+            {
+                "codigo": "33036139",
+                "marca": "Test Brand",
+                "descripcion": "Sanitized BC3 integration fixture",
+                "familia": "Test Family",
+                "dto": "0",
+                "up_log": 1.0,
+                "u_caja": 1,
+                "peso_bruto_kg": 0.5,
+                "longitud_m": 0.1,
+                "cm3": 1.0,
+                "pvp": 1.0,
+                "bc3_descripcion_corta": "Sanitized fixture",
+                "bc3_descripcion_larga": "Sanitized fixture long description",
+                "bc3_descripcion_completa": "Sanitized fixture complete description",
+                "bc3_product_type": "sanitized-test-product",
+            },
+        )
 
-    ⚠️ IMPORTANTE: Nunca usa database/tarifa_disano.db desde tests!
 
-    """
-    return _test_database_path
+@pytest.fixture(scope="session", autouse=True)
+def test_db_path() -> str:
+    """Return the PostgreSQL URL configured for the test session."""
+    return _database_url
 
 
 @pytest.fixture
-def db_session(test_db_path: Path) -> Generator[sqlite3.Connection, None, None]:
-    """Database session con SQLite in-memory.
-
-    Siempre usa testing/testing.db, nunca producción.
-
-    Args:
-        test_db_path: Path a la base de datos de testing
-
-    Yields:
-        sqlite3.Connection: Sesión de base de datos
-
-    """
-    connection = sqlite3.connect(test_db_path)
-    connection.row_factory = sqlite3.Row
-    yield connection
-    connection.close()
+def db_session():
+    """Provide a raw connection to the configured PostgreSQL test database."""
+    connection = connection_module.engine.connect()
+    try:
+        yield connection
+    finally:
+        connection.close()
 
 
 @pytest.fixture
-def sqlalchemy_session(
-    test_db_path: Path,
-) -> Generator[Session, None, None]:
-    """Sqlalchemy ORM Session para tests de repository.
-
-    Usa la misma base de datos de testing/testing.db que db_session.
-
-    Args:
-        test_db_path: Path a la base de datos de testing
-
-    Yields:
-        Session: SQLAlchemy ORM session
-
-    """
-    from sqlalchemy import create_engine
+def sqlalchemy_session() -> Generator[Session, None, None]:
+    """Provide a SQLAlchemy ORM session for repository tests."""
     from sqlalchemy.orm import sessionmaker
-    from app.infrastructure.models.producto_clean import (
-        ProductoModelClean as ProductoModel,
-    )
 
-    # Crear engine usando la misma base de datos
-    engine = create_engine(f"sqlite:///{test_db_path}")
-    ProductoModel.metadata.create_all(engine)
-
-    # Crear sesión
+    engine = connection_module.engine
     SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
     session = SessionLocal()
 
@@ -196,11 +130,15 @@ def sqlalchemy_session(
 
 @pytest.fixture(autouse=True)
 def clear_app_dependency_overrides() -> Generator[None, None, None]:
-    """Clear shared FastAPI dependency overrides after each test."""
+    """Clear shared FastAPI overrides and cached settings after each test."""
+    from app.config import get_settings
+
+    get_settings.cache_clear()
     yield
     from app.main import app
 
     app.dependency_overrides.clear()
+    get_settings.cache_clear()
 
 
 @pytest.fixture
@@ -277,7 +215,7 @@ def mock_disano_api_client() -> Mock:
 
 @pytest.fixture
 def sample_producto_row() -> Mock:
-    """Mock de fila SQLite de producto para tests."""
+    """Mock de fila de producto para tests."""
     row = Mock()
     row.keys.return_value = [
         "CÓDIGO",

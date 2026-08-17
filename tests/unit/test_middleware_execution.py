@@ -64,15 +64,13 @@ class TestMiddlewareGetApiKeys:
 class TestMiddlewareGetEnvironment:
     """Tests de get_environment() en app/middleware.py (TDD + AAA)."""
 
-    def test_get_environment_default_development(self):
+    def test_get_environment_default_development(self, monkeypatch):
         """
         RED: get_environment() retorna 'development' por defecto.
         ."""
         # Arrange
-        import os
-
         # Limpiar variable si existe
-        os.environ.pop("ENVIRONMENT", None)
+        monkeypatch.delenv("ENVIRONMENT", raising=False)
 
         # Act
         from app.middleware import get_environment
@@ -82,14 +80,12 @@ class TestMiddlewareGetEnvironment:
         # Assert
         assert result == "development"
 
-    def test_get_environment_returns_production_when_set(self):
+    def test_get_environment_returns_production_when_set(self, monkeypatch):
         """
         GREEN: get_environment() retorna 'production' cuando está configurado.
         ."""
         # Arrange
-        import os
-
-        os.environ["ENVIRONMENT"] = "production"
+        monkeypatch.setenv("ENVIRONMENT", "production")
 
         # Act
         from app.middleware import get_environment
@@ -103,9 +99,9 @@ class TestMiddlewareGetEnvironment:
 class TestMiddlewareGetRateLimit:
     """Tests de get_rate_limit() en app/middleware.py (TDD + AAA)."""
 
-    def test_get_rate_limit_default_30(self):
+    def test_get_rate_limit_default_60(self):
         """
-        RED: get_rate_limit() retorna 30 por defecto.
+        get_rate_limit() retorna 30 por defecto.
         ."""
         # Arrange
         import os
@@ -185,14 +181,12 @@ class TestMiddlewareGetAdminKeys:
 class TestMiddlewareVerifyAdminApiKey:
     """Tests de verify_admin_api_key() en app/middleware.py (TDD + AAA)."""
 
-    def test_verify_admin_api_key_always_true_in_development(self) -> None:
+    def test_verify_admin_api_key_always_true_in_development(self, monkeypatch) -> None:
         """
         RED: verify_admin_api_key() retorna True siempre en development.
         ."""
         # Arrange
-        import os
-
-        os.environ["ENVIRONMENT"] = "development"
+        monkeypatch.setenv("ENVIRONMENT", "development")
 
         from unittest.mock import Mock
 
@@ -206,15 +200,13 @@ class TestMiddlewareVerifyAdminApiKey:
         # Assert
         assert result is True
 
-    def test_verify_admin_api_key_checks_in_production(self) -> None:
+    def test_verify_admin_api_key_checks_in_production(self, monkeypatch) -> None:
         """
         GREEN: verify_admin_api_key() verifica headers en production.
         ."""
         # Arrange
-        import os
-
-        os.environ["ENVIRONMENT"] = "production"
-        os.environ["ADMIN_API_KEYS"] = "admin-test-key"
+        monkeypatch.setenv("ENVIRONMENT", "production")
+        monkeypatch.setenv("ADMIN_API_KEYS", "admin-test-key")
 
         from unittest.mock import Mock
 
@@ -320,8 +312,10 @@ class TestMiddlewareApiKeyScopes:
         monkeypatch.setenv("API_KEYS", "general-key")
         monkeypatch.setenv("BC3_API_KEYS", "bc3-key")
 
+        from app.config import get_settings
         from app.middleware import APIKeyMiddleware
 
+        get_settings.cache_clear()
         middleware = APIKeyMiddleware(None)
         for path in ("/api/productos/bc3/v1", "/api/productos/bc3/v1/items"):
             response = asyncio.run(

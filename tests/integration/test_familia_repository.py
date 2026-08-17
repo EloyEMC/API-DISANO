@@ -3,6 +3,7 @@
 Tests repository implementation with real database
 ."""
 
+import os
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -18,11 +19,14 @@ class TestSQLAlchemyFamiliaRepositoryIntegration:
     @pytest.fixture
     def db_session(self):
         """Create test database session."""
-        engine = create_engine(
-            "sqlite:///testing/testing.db",
-            connect_args={"check_same_thread": False},
-            poolclass=StaticPool,
-        )
+        database_url = os.environ.get("DATABASE_URL", "sqlite:///testing/testing.db")
+        engine_kwargs = {}
+        if database_url.startswith("sqlite"):
+            engine_kwargs = {
+                "connect_args": {"check_same_thread": False},
+                "poolclass": StaticPool,
+            }
+        engine = create_engine(database_url, **engine_kwargs)
         TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
         session = TestingSessionLocal()
         yield session

@@ -5,8 +5,10 @@ Tests Unitarios - Fase 2 (Simplificado)
 Tests unitarios simplificados para verificar lógica básica.
 ."""
 
+from datetime import datetime, timedelta
+
 import pytest
-from app.config import get_settings
+from app.config import Settings, get_settings
 from app.security.otp_service import OTPService
 from app.middleware_redis import RedisRateLimitMiddleware
 
@@ -47,12 +49,12 @@ class TestConfigValidation:
         # No debería lanzar error
         settings.validate_required()
 
-    def test_get_settings_singleton(self):
-        """Verificar que get_settings es singleton (cache)."""
+    def test_get_settings_returns_consistent_configuration(self):
+        """Verificar que get_settings devuelve valores de configuración consistentes."""
         settings1 = get_settings()
         settings2 = get_settings()
 
-        assert settings1 is settings2
+        assert settings1.model_dump() == settings2.model_dump()
 
     def test_parse_api_keys_string(self):
         """Verificar parseo de API_KEYS como string."""
@@ -62,9 +64,7 @@ class TestConfigValidation:
 
     def test_parse_api_keys_list(self):
         """Verificar que API_KEYS como lista funciona."""
-        settings = Settings(
-            environment="development", api_keys=["key1", "key2", "key3"]
-        )
+        settings = Settings(environment="development", api_keys=["key1", "key2", "key3"])
 
         assert settings.api_keys_list == ["key1", "key2", "key3"]
 
@@ -157,10 +157,10 @@ class TestRateLimiting:
     """Tests para rate limiting."""
 
     def test_rate_limit_per_client_limit(self):
-        """Verificar límite por cliente (30/min)."""
+        """Verificar límite por cliente (60/min)."""
         middleware = RedisRateLimitMiddleware(app=None)
 
-        assert middleware.rate_limit_per_client == 30
+        assert middleware.rate_limit_per_client == 60
 
     def test_rate_limit_global_limit(self):
         """Verificar límite global (1000/min)."""

@@ -1,115 +1,63 @@
-"""Database optimization script using SQLite ANALYZE."
-
-Updates query planner statistics for improved performance.
-."""
+"""Database statistics helpers for SQLite and PostgreSQL."""
 
 from sqlalchemy import text
+
 from app.infrastructure.database.connection import SessionLocal
 
 
 def analyze_database():
-    """
-    Run SQLite ANALYZE command to update query planner statistics
-
-    ANALYZE collects statistics about tables and indexes to help
-    the query optimizer make better decisions about query execution plans.
-    ."""
-
+    """Run ANALYZE and return the number of available table statistics."""
     session = SessionLocal()
-
     try:
-        print("🔍 Running ANALYZE on database...")
-
-        # Run ANALYZE on all tables
         session.execute(text("ANALYZE"))
         session.commit()
-
-        # Verify statistics were updated
-        result = session.execute(
-            text(
-                """
-            SELECT COUNT(*) as stat_count
-            FROM sqlite_stat1
-        ."""
-            )
-        )
-        stat_count = result.fetchone()[0]
-
-        print("✅ ANALYZE completed successfully")
-        print(f"📊 Statistics updated: {stat_count} entries")
-
-        if stat_count > 0:
-            # Show some statistics
-            result = session.execute(
-                text(
-                    """
-                SELECT tbl, stat
-                FROM sqlite_stat1
-                LIMIT 5
-            ."""
-                )
-            )
-
-            print("📈 Sample statistics:")
-            for row in result.fetchall():
-                print(f"   {row[0]}: {row[1]}")
-
-        return stat_count
-
-    except Exception as e:
+        if session.bind.dialect.name == "postgresql":
+            count = session.execute(
+                text("SELECT COUNT(*) FROM pg_stat_user_tables WHERE reltuples >= 0")
+            ).scalar_one()
+        else:
+            count = session.execute(text("SELECT COUNT(*) FROM sqlite_stat1")).scalar_one()
+        return int(count)
+    except Exception:
         session.rollback()
-        print(f"❌ Error running ANALYZE: {e}")
         raise
     finally:
         session.close()
 
 
+def _postgres_setting_bytes(value: str) -> int:
+    units = {"kB": 1024, "MB": 1024**2, "GB": 1024**3}
+    value = value.strip()
+    for suffix, multiplier in units.items():
+        if value.endswith(suffix):
+            return int(float(value[: -len(suffix)].strip()) * multiplier)
+    return int(value)
+
+
 def get_query_planner_info():
-    """
-    Get query planner information for optimization analysis
-    ."""
+    """Return backend-appropriate query planner settings."""
     session = SessionLocal()
-
     try:
-        # Get compile options
-        result = session.execute(text("PRAGMA compile_options"))
-        compile_options = [row[0] for row in result.fetchall()]
-
-        print("🔧 SQLite Compile Options:")
-        for opt in compile_options:
-            print(f"   - {opt}")
-
-        # Get database settings
-        result = session.execute(text("PRAGMA page_size"))
-        page_size = result.fetchone()[0]
-
-        result = session.execute(text("PRAGMA cache_size"))
-        cache_size = result.fetchone()[0]
-
-        print("💾 Database Settings:")
-        print(f"   - Page size: {page_size} bytes")
-        print(f"   - Cache size: {cache_size} pages")
-
+        if session.bind.dialect.name == "postgresql":
+            page_size = int(session.execute(text("SHOW block_size")).scalar_one())
+            cache_size = _postgres_setting_bytes(
+                str(session.execute(text("SHOW shared_buffers")).scalar_one())
+            )
+            compile_options = []
+        else:
+            compile_options = [
+                row[0] for row in session.execute(text("PRAGMA compile_options")).fetchall()
+            ]
+            page_size = int(session.execute(text("PRAGMA page_size")).scalar_one())
+            cache_size = int(session.execute(text("PRAGMA cache_size")).scalar_one())
         return {
             "compile_options": compile_options,
             "page_size": page_size,
             "cache_size": cache_size,
         }
-
     finally:
         session.close()
 
 
 if __name__ == "__main__":
-    print("🚀 Optimizing database query planner...")
-
-    # Show current settings
-    print("\n📊 Current Database Configuration:")
-    get_query_planner_info()
-
-    # Run ANALYZE
-    print("\n🔍 Updating Query Statistics...")
-    stat_count = analyze_database()
-
-    print("\n✅ Database optimization complete!")
-    print(f"📈 {stat_count} statistics entries for query optimization")
+    print(f"Statistics updated: {analyze_database()}")

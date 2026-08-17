@@ -10,8 +10,8 @@ os.environ["ENVIRONMENT"] = "testing"
 os.environ["SECRET_KEY"] = "test-secret-key-32-chars-safe-testing"
 os.environ["API_KEYS"] = "test-api-key-1,test-api-key-2"
 os.environ["ADMIN_API_KEYS"] = "test-admin-key-1"
-os.environ["DATABASE_URL"] = "sqlite:///testing/testing.db"  # Configurar database para tests
-# Paso 1: Limpiar variables de problema EXCEPTO ADMIN_API_KEYS y DATABASE_URL
+# Preserve DATABASE_URL supplied by CI; local pytest falls back in conftest.py.
+# Paso 1: Limpiar variables de problema
 problematic_vars = [
     "CORS_ORIGINS",
     "REDIS_URL",
@@ -24,6 +24,7 @@ for var in problematic_vars:
     os.environ.pop(var, None)
 print("🔧 Entorno configurado para testing:")
 print(f"  ENVIRONMENT: {os.environ['ENVIRONMENT']}")
+print(f"  DATABASE_URL: {os.environ.get('DATABASE_URL', 'local SQLite fallback')}")
 print("  Test credentials: configured")
 print()
 # Paso 3: Ejecutar pytest con arguments
@@ -31,9 +32,18 @@ pytest_args = (
     sys.argv[1:]
     if len(sys.argv) > 1
     else [
-        "tests/unit/test_fase1_fixes.py::TestRateLimitBugFixed::test_rate_limit_variable_correctly_named",
-        "tests/unit/test_fase1_fixes.py::TestLegacyImportsMigrated::test_no_legacy_imports_in_routers",
-        "tests/unit/test_fase1_fixes.py::TestSecurityHeadersAdded::test_content_security_policy_header_exists",
+        (
+            "tests/unit/test_fase1_fixes.py::TestRateLimitBugFixed::"
+            "test_rate_limit_variable_correctly_named"
+        ),
+        (
+            "tests/unit/test_fase1_fixes.py::TestLegacyImportsMigrated::"
+            "test_no_legacy_imports_in_routers"
+        ),
+        (
+            "tests/unit/test_fase1_fixes.py::TestSecurityHeadersAdded::"
+            "test_content_security_policy_header_exists"
+        ),
         "-v",
     ]
 )

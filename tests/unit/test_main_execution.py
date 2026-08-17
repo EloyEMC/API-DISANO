@@ -10,6 +10,27 @@ import pytest
 from pathlib import Path
 
 
+def _route_paths(routes, prefix=""):
+    """Return paths from routes, including FastAPI router include prefixes."""
+    paths = []
+    for route in routes:
+        path = getattr(route, "path", None)
+        if isinstance(path, str):
+            paths.append(f"{prefix}{path}")
+
+        original_router = getattr(route, "original_router", None)
+        if original_router is not None:
+            include_context = getattr(route, "include_context", None)
+            nested_prefix = prefix + getattr(include_context, "prefix", "")
+            paths.extend(_route_paths(original_router.routes, nested_prefix))
+            continue
+
+        nested_routes = getattr(route, "routes", None)
+        if nested_routes is not None:
+            paths.extend(_route_paths(nested_routes, prefix))
+    return paths
+
+
 class TestMainModuleWithSettings:
     """Tests que importan Settings con main.py (TDD)."""
 
@@ -37,13 +58,19 @@ class TestMainModuleWithSettings:
 
         assert isinstance(app, FastAPI)
 
-    def test_main_module_has_router_attribute(self):
-        """GREEN: Verificar que app tiene router."""
-        # Arrange & Act
+    def test_main_module_composes_http_interfaces(self):
+        """Verify main composes the current HTTP interface routers."""
+        from app.interfaces.http import bc3, familias, productos
         import app.main as main
 
-        # Assert
-        assert hasattr(main, "router")
+        assert main.productos_http is productos
+        assert main.familias_http is familias
+        assert main.bc3_http is bc3
+
+        route_paths = set(_route_paths(main.app.routes))
+        assert any(path.startswith("/api/productos") for path in route_paths)
+        assert any(path.startswith("/api/familias") for path in route_paths)
+        assert any(path.startswith("/api/bc3") for path in route_paths)
 
     def test_main_module_has_root_endpoint(self):
         """GREEN: Verificar que main.py tiene root endpoint."""
@@ -51,7 +78,7 @@ class TestMainModuleWithSettings:
         from app.main import app
 
         # Assert - Verificar routes disponibles
-        routes = [route.path for route in app.routes]
+        routes = _route_paths(app.routes)
         assert "/" in routes, f"Debe tener route root, tiene: {routes}"
 
     def test_main_module_has_health_endpoint(self):
@@ -60,10 +87,10 @@ class TestMainModuleWithSettings:
         from app.main import app
 
         # Assert - Verificar routes disponibles
-        routes = [route.path for route in app.routes]
-        assert "/health" in routes or "/health_check" in routes, (
-            f"Debe tener health endpoint, tiene: {routes}"
-        )
+        routes = _route_paths(app.routes)
+        assert (
+            "/health" in routes or "/health_check" in routes
+        ), f"Debe tener health endpoint, tiene: {routes}"
 
 
 class TestMainModuleCORSConfiguration:
