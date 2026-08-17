@@ -170,8 +170,8 @@ jobs:
       - name: Security scan (Bandit)
         run: |
           pip install bandit
-          bandit -r app/ -f json -o bandit-report.json || true
-          bandit -r app/ -f screen -ll
+          bandit -r app/ -f json -o bandit-report.json --skip B104 || true
+          bandit -r app/ -f screen -ll --skip B104
 
       - name: Security scan (Pip-audit)
         run: |

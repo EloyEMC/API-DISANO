@@ -101,7 +101,7 @@ class TestMiddlewareGetRateLimit:
 
     def test_get_rate_limit_default_60(self):
         """
-        get_rate_limit() retorna 30 por defecto.
+        get_rate_limit() retorna 60 por defecto.
         ."""
         # Arrange
         import os
@@ -115,7 +115,7 @@ class TestMiddlewareGetRateLimit:
 
         # Assert
         assert isinstance(result, int)
-        assert result == 30
+        assert result == 60
 
     def test_get_rate_limit_custom_value(self):
         """
