@@ -66,3 +66,8 @@ htmlcov/
 *~
 # Local Pi runtime state
 .atl/
+
+# Local and sensitive artifacts
+backups/*.db
+*.bak
+*.backup
