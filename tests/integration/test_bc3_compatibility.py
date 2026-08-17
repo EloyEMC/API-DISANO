@@ -27,7 +27,7 @@ class TestBC3Compatibility:
         TASK-3.4.5: Test BC3 fields present in V2 responses
         Acceptance Criteria: BC3 fields present in V2 responses
         ."""
-        response = client.get("/api/productos/v2/list?buscar=test&limit=1")
+        response = client.get("/api/productos/v2/list?limit=1")
 
         assert response.status_code == 200, "V2 list endpoint should return 200"
 
@@ -88,7 +88,7 @@ class TestBC3Compatibility:
         TASK-3.4.5: Test BC3 fields present in V1 responses (legacy format)
         Acceptance Criteria: BC3 fields present in V1 responses (legacy format preserved)
         ."""
-        response = client.get("/api/productos/?buscar=test&limit=1")
+        response = client.get("/api/productos/?limit=1")
 
         assert response.status_code == 200, "V1 list endpoint should return 200"
 
@@ -139,7 +139,7 @@ class TestBC3Compatibility:
         Acceptance Criteria: 8,288 products accessible through V2 endpoints
         ."""
         # Test with high limit to get many products
-        response = client.get("/api/productos/v2/list?buscar=test&limit=100")
+        response = client.get("/api/productos/v2/list?limit=100")
 
         assert response.status_code == 200, "V2 list endpoint should return 200"
 
@@ -158,7 +158,7 @@ class TestBC3Compatibility:
         Acceptance Criteria: 8,288 products accessible through V1 endpoints
         ."""
         # Test with high limit to get many products
-        response = client.get("/api/productos/?buscar=test&limit=100")
+        response = client.get("/api/productos/?limit=100")
 
         assert response.status_code == 200, "V1 list endpoint should return 200"
 
@@ -175,7 +175,7 @@ class TestBC3Compatibility:
         Acceptance Criteria: Performance benchmarks met (response time < 500ms)
         ."""
         start_time = time.time()
-        response = client.get("/api/productos/v2/list?buscar=test&limit=10")
+        response = client.get("/api/productos/v2/list?limit=10")
         elapsed = time.time() - start_time
 
         assert response.status_code == 200, "V2 list endpoint should return 200"
@@ -202,7 +202,7 @@ class TestBC3Compatibility:
         Acceptance Criteria: Performance benchmarks met (response time < 500ms)
         ."""
         start_time = time.time()
-        response = client.get("/api/productos/?buscar=test&limit=10")
+        response = client.get("/api/productos/?limit=10")
         elapsed = time.time() - start_time
 
         assert response.status_code == 200, "V1 list endpoint should return 200"

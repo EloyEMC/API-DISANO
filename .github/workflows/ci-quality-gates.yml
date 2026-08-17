@@ -53,6 +53,11 @@ jobs:
             --host=127.0.0.1 --username=api_disano_test --dbname=api_disano_test \
             -v ON_ERROR_STOP=1 --file=migration/04_postgres_schema.sql
 
+      - name: Initialize PostgreSQL indexes
+        env:
+          DATABASE_URL: postgresql+psycopg://api_disano_test:test-password@127.0.0.1:5432/api_disano_test
+        run: python app/infrastructure/database/create_indexes.py
+
       - name: Determine changed files
         id: changed-files
         env:
@@ -176,8 +181,8 @@ jobs:
       - name: Security scan (Pip-audit)
         run: |
           pip install pip-audit
-          pip-audit --format=json --output pip-audit-report.json || true
-          pip-audit
+          pip-audit -r requirements.txt --format=json --output pip-audit-report.json || true
+          pip-audit -r requirements.txt
 
       - name: Python syntax check
         run: |

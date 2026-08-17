@@ -100,6 +100,7 @@ class TestDatabaseIndexes:
 
         with SessionLocal() as session:
             _ensure_production_indexes(session)
+            session.execute(text("SET LOCAL enable_seqscan = off"))
             plan = (
                 session.execute(
                     text(

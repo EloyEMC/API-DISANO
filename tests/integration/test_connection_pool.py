@@ -18,13 +18,15 @@ class TestConnectionPoolConfigRed:
         """Test that connection pool is properly configured for development."""
         from app.infrastructure.database.connection import engine, get_pool_stats
 
-        # Verify pool settings for SQLite (development)
-        assert engine.pool is not None
+        from sqlalchemy.pool import QueuePool
+
+        # The configured CI/test backend is PostgreSQL, which uses QueuePool.
+        assert isinstance(engine.pool, QueuePool)
 
         # Use get_pool_stats for consistent pool information
         stats = get_pool_stats()
         assert stats["size"] > 0  # Pool should exist
-        assert stats["pool_type"] == "StaticPool"  # SQLite uses StaticPool
+        assert stats["pool_type"] == "QueuePool"
 
     def test_connection_pool_configured_for_production(self):
         """Test that connection pool can be configured for production."""
@@ -196,23 +198,13 @@ class TestProductionPoolConfigurationRed:
     """RED Phase: Failing tests for production pool configuration."""
 
     def test_production_pool_uses_queuepool(self):
-        """Test that production uses QueuePool instead of StaticPool."""
-        from app.infrastructure.database.connection import (
-            create_production_engine,
-            get_database_path,
-        )
-        from sqlalchemy.pool import QueuePool, StaticPool
+        """Test that production uses PostgreSQL QueuePool."""
+        from app.infrastructure.database.connection import create_production_engine
+        from sqlalchemy.pool import QueuePool
 
-        # Create production engine (defaults to SQLite in this environment)
+        # Production uses the configured PostgreSQL backend.
         engine = create_production_engine()
-
-        # For SQLite, should use StaticPool (correct for SQLite)
-        # For PostgreSQL/MySQL, should use QueuePool
-        database_url = f"sqlite:///{get_database_path()}"
-        if database_url.startswith("sqlite"):
-            assert isinstance(engine.pool, StaticPool)  # SQLite uses StaticPool
-        else:
-            assert isinstance(engine.pool, QueuePool)  # Others use QueuePool
+        assert isinstance(engine.pool, QueuePool)
 
     def test_production_pool_size_is_reasonable(self):
         """Test that production pool size is reasonable for typical deployment."""

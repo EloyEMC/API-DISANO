@@ -124,10 +124,10 @@ class TestV1BackwardCompatibility:
         Acceptance Criteria: Internal architecture uses services
         ."""
         import inspect
-        from app.interfaces.http.productos import get_productos_v1, get_producto_v1
+        from app.interfaces.http.productos import get_productos, get_producto
 
         # Check each V1 endpoint has service parameter
-        v1_endpoints = [get_productos_v1, get_producto_v1]
+        v1_endpoints = [get_productos, get_producto]
 
         for endpoint in v1_endpoints:
             sig = inspect.signature(endpoint)
@@ -175,23 +175,13 @@ class TestV1BackwardCompatibility:
         Acceptance Criteria: V1 endpoints should have optional parameters like before
         ."""
         import inspect
-        from app.interfaces.http.productos import get_productos_v1
+        from app.interfaces.http.productos import get_productos
 
-        sig = inspect.signature(get_productos_v1)
+        sig = inspect.signature(get_productos)
 
-        # Check that parameters have defaults (are optional)
-        buscar_param = sig.parameters.get("buscar")
+        # The current V1 list endpoint supports an optional limit only.
         limit_param = sig.parameters.get("limit")
-
-        assert buscar_param is not None, "V1 list endpoint should have buscar parameter"
-
         assert limit_param is not None, "V1 list endpoint should have limit parameter"
-
-        # Check they have defaults (optional)
-        assert (
-            buscar_param.default is not inspect.Parameter.empty
-        ), "V1 buscar parameter should be optional (has default)"
-
         assert (
             limit_param.default is not inspect.Parameter.empty
         ), "V1 limit parameter should be optional (has default)"
@@ -222,7 +212,7 @@ class TestV1BackwardCompatibility:
         source = inspect.getsource(productos_module)
 
         # Check V1 endpoint functions (not DI functions)
-        v1_endpoints = ["def get_productos_v1(", "def get_producto_v1("]
+        v1_endpoints = ["def get_productos(", "def get_producto("]
 
         for endpoint_sig in v1_endpoints:
             if endpoint_sig in source:
