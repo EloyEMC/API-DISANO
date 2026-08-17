@@ -296,9 +296,7 @@ def validate_local_postgres_url(postgres_url: str) -> None:
     try:
         normalize_local_postgres_url(postgres_url)
     except BackupError as exc:
-        raise ValueError(
-            f"--postgres-url is invalid for local PostgreSQL: {exc}"
-        ) from exc
+        raise ValueError(f"--postgres-url is invalid for local PostgreSQL: {exc}") from exc
 
 
 def discover_source_metadata(sqlite_path: Path) -> list[str]:
@@ -342,9 +340,7 @@ def _load_source(sqlite_path: Path) -> tuple[list[str], int]:
         return columns, count
 
 
-def require_verified_postgres_backup(
-    backup: Path | None, manifest_path: Path | None
-) -> None:
+def require_verified_postgres_backup(backup: Path | None, manifest_path: Path | None) -> None:
     if backup is None or manifest_path is None:
         raise BackupError(
             "a verified PostgreSQL backup artifact and manifest are required "
@@ -378,23 +374,15 @@ def _connect_postgres(postgres_url: str) -> Any:
 def _read_batches(
     connection: sqlite3.Connection, batch_size: int
 ) -> Iterator[list[tuple[Any, ...]]]:
-    columns_sql = ", ".join(
-        _quote_sqlite_identifier(column) for column in PRODUCT_COLUMNS
-    )
+    columns_sql = ", ".join(_quote_sqlite_identifier(column) for column in PRODUCT_COLUMNS)
     cursor = connection.execute(f"SELECT {columns_sql} FROM productos")
     while batch := cursor.fetchmany(batch_size):
         yield batch
 
 
-def _read_sorted_rows(
-    connection: sqlite3.Connection, batch_size: int
-) -> Iterator[tuple[Any, ...]]:
-    columns_sql = ", ".join(
-        _quote_sqlite_identifier(column) for column in PRODUCT_COLUMNS
-    )
-    cursor = connection.execute(
-        f'SELECT {columns_sql} FROM productos ORDER BY "CÓDIGO"'
-    )
+def _read_sorted_rows(connection: sqlite3.Connection, batch_size: int) -> Iterator[tuple[Any, ...]]:
+    columns_sql = ", ".join(_quote_sqlite_identifier(column) for column in PRODUCT_COLUMNS)
+    cursor = connection.execute(f'SELECT {columns_sql} FROM productos ORDER BY "CÓDIGO"')
     while batch := cursor.fetchmany(batch_size):
         yield from batch
 
@@ -460,9 +448,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     columns, source_count = _load_source(args.sqlite_path)
     if args.dry_run:
-        print(
-            f"Dry run: source contains {source_count} productos rows and {len(columns)} columns"
-        )
+        print(f"Dry run: source contains {source_count} productos rows and {len(columns)} columns")
         return 0
         if args.ci and os.environ.get("CI", "").lower() != "true":
             raise ValueError("--ci is only permitted when CI=true")

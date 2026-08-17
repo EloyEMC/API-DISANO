@@ -35,7 +35,7 @@ class Settings(BaseSettings):
 
     # Security - Rate Limiting
     rate_limit_enabled: bool = True
-    rate_limit_per_client: int = 30
+    rate_limit_per_client: int = 60
     rate_limit_global: int = 1000
     rate_limit_burst: int = 10
     rate_limit_listings: int = 10

@@ -11,7 +11,7 @@ Usa slowapi (wrapper de slowapi para FastAPI) con almacenamiento en memoria.
 Para producción con múltiples workers, se recomienda usar Redis.
 
 Configuración:
-    RATE_LIMIT_PER_CLIENT: 30 peticiones/minuto por API key
+    RATE_LIMIT_PER_CLIENT: 60 peticiones/minuto por API key
     RATE_LIMIT_GLOBAL: 1000 peticiones/minuto totales
     RATE_LIMIT_BURST: 10 peticiones máximas en burst
 
@@ -23,14 +23,14 @@ Uso:
     app.state.limiter = limiter
 
     @app.get("/productos")
-    @limiter.limit("30/minute")
+    @limiter.limit("60/minute")
     async def get_productos():
         pass
 """
 
 from fastapi import Request
 
-RATE_LIMIT_PER_CLIENT = 30
+RATE_LIMIT_PER_CLIENT = 60
 RATE_LIMIT_GLOBAL = 1000
 RATE_LIMIT_BURST = 10
 RATE_LIMIT_LISTINGS = 10
@@ -114,7 +114,7 @@ def get_api_key_identifier(request: Request) -> str:
 limiter = Limiter(
     key_func=get_api_key_identifier,
     default_limits=[
-        f"{settings.rate_limit_per_client}/minute",  # 30 peticiones/minuto
+        f"{settings.rate_limit_per_client}/minute",  # 60 peticiones/minuto
         f"{settings.rate_limit_burst}/10seconds",  # 10 peticiones/10segundos
     ],
     storage_uri="memory://",  # En producción usar: "redis://localhost:6379"

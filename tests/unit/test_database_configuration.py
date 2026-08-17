@@ -3,7 +3,7 @@
 from pathlib import Path
 
 import pytest
-from sqlalchemy.pool import StaticPool
+from sqlalchemy.pool import QueuePool, StaticPool
 
 from app.config import Settings
 from app.infrastructure.database import connection
@@ -82,6 +82,6 @@ def test_production_engine_preserves_sqlite_static_pool(
 
 
 def test_application_engine_uses_factory_configuration() -> None:
-    assert connection.engine.url.drivername == "sqlite"
-    assert isinstance(connection.engine.pool, StaticPool)
+    assert connection.engine.url.drivername == "postgresql+psycopg"
+    assert isinstance(connection.engine.pool, QueuePool)
     assert connection.SessionFactory.kw["bind"] is connection.engine
