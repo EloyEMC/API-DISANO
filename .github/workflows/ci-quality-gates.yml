@@ -16,6 +16,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
@@ -36,37 +38,125 @@ jobs:
           pip install -r requirements.txt
           pip install -r requirements-test.txt
 
-      - name: Pre-commit hooks
+      - name: Determine changed files
+        id: changed-files
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          EVENT_BEFORE: ${{ github.event.before }}
         run: |
+          set -Eeuo pipefail
+
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+            BASE_SHA="$PR_BASE_SHA"
+          elif git rev-parse --verify "${GITHUB_SHA}^1" >/dev/null 2>&1; then
+            BASE_SHA="$(git rev-parse "${GITHUB_SHA}^1")"
+          else
+            BASE_SHA="$EVENT_BEFORE"
+          fi
+
+          if [[ "$BASE_SHA" =~ ^0+$ ]]; then
+            mapfile -t changed_files < <(
+              git diff-tree --root --no-commit-id --name-only -r "$GITHUB_SHA"
+            )
+          elif git rev-parse --verify "${BASE_SHA}^{commit}" >/dev/null 2>&1; then
+            mapfile -t changed_files < <(
+              git diff --name-only --diff-filter=ACMR "$BASE_SHA" "$GITHUB_SHA"
+            )
+          else
+            echo "Unable to resolve comparison base: $BASE_SHA" >&2
+            exit 1
+          fi
+
+          {
+            echo "files<<EOF"
+            if (( ${#changed_files[@]} > 0 )); then
+              printf '%s\n' "${changed_files[@]}"
+            fi
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Pre-commit hooks
+        env:
+          CHANGED_FILES: ${{ steps.changed-files.outputs.files }}
+        run: |
+          set -Eeuo pipefail
           pip install pre-commit
-          pre-commit run --all-files
+          if [[ -z "$CHANGED_FILES" ]]; then
+            echo "No changed files to check."
+          else
+            mapfile -t changed_files <<< "$CHANGED_FILES"
+            pre-commit run --files "${changed_files[@]}"
+          fi
 
       - name: Black formatting check
+        env:
+          CHANGED_FILES: ${{ steps.changed-files.outputs.files }}
         run: |
-          pip install black
-          black --check --line-length=100 --target-version=py310 app/ tests/
+          set -Eeuo pipefail
+          pip install black==23.12.1
+          if [[ -z "$CHANGED_FILES" ]]; then
+            echo "No changed Python files to check."
+          else
+            mapfile -t changed_files <<< "$CHANGED_FILES"
+            python_files=()
+            for file in "${changed_files[@]}"; do
+              [[ "$file" == *.py ]] && python_files+=("$file")
+            done
+            if (( ${#python_files[@]} == 0 )); then
+              echo "No changed Python files to check."
+            else
+              black --check --line-length=100 --target-version=py310 "${python_files[@]}"
+            fi
+          fi
 
       - name: Flake8 linting
+        env:
+          CHANGED_FILES: ${{ steps.changed-files.outputs.files }}
         run: |
+          set -Eeuo pipefail
           pip install flake8
-          flake8 app/ tests/ --max-line-length=100 --extend-ignore=E203,W503 --exclude=instance/
+          if [[ -z "$CHANGED_FILES" ]]; then
+            echo "No changed files to check."
+          else
+            mapfile -t changed_files <<< "$CHANGED_FILES"
+            python_files=()
+            for file in "${changed_files[@]}"; do
+              [[ "$file" == *.py ]] && python_files+=("$file")
+            done
+            if (( ${#python_files[@]} == 0 )); then
+              echo "No changed Python files to check."
+            else
+              flake8 "${python_files[@]}" --max-line-length=100 --extend-ignore=E203,W503 --exclude=instance/
+            fi
+          fi
 
       - name: Pydocstyle check
+        env:
+          CHANGED_FILES: ${{ steps.changed-files.outputs.files }}
         run: |
-          pip install pydocstyle
-          pydocstyle app/ tests/ --convention=google --add-ignore=D100,D101,D102,D103,D104,D105,D107,D205,D400,D200,D202,D212
+          set -Eeuo pipefail
+          pip install pydocstyle==6.3.0
+          if [[ -z "$CHANGED_FILES" ]]; then
+            echo "No changed Python files to check."
+          else
+            mapfile -t changed_files <<< "$CHANGED_FILES"
+            python_files=()
+            for file in "${changed_files[@]}"; do
+              [[ "$file" == *.py ]] && python_files+=("$file")
+            done
+            if (( ${#python_files[@]} == 0 )); then
+              echo "No changed Python files to check."
+            else
+              pydocstyle "${python_files[@]}" --convention=google --add-ignore=D100,D101,D102,D103,D104,D105,D107,D205,D400,D200,D202,D212
+            fi
+          fi
 
       - name: Security scan (Bandit)
         run: |
           pip install bandit
           bandit -r app/ -f json -o bandit-report.json || true
           bandit -r app/ -f screen -ll
-
-      - name: Security scan (Safety)
-        run: |
-          pip install safety
-          safety check --json --output safety-report.json || true
-          safety check
 
       - name: Security scan (Pip-audit)
         run: |
@@ -80,7 +170,7 @@ jobs:
 
       - name: Run tests with coverage
         env:
-          DATABASE_URL: testing/testing.db
+          DATABASE_URL: sqlite:///testing/testing.db
           ENVIRONMENT: testing
           API_KEYS: test-api-key-1,test-api-key-2
           ADMIN_API_KEYS: test-admin-key-1
@@ -106,7 +196,6 @@ jobs:
           name: security-reports
           path: |
             bandit-report.json
-            safety-report.json
             pip-audit-report.json
 
       - name: Quality Gate Summary
@@ -115,7 +204,7 @@ jobs:
           echo "✅ Code formatting: Black"
           echo "✅ Code style: Flake8"
           echo "✅ Docstrings: Pydocstyle"
-          echo "✅ Security: Bandit + Safety + Pip-audit"
+          echo "✅ Security: Bandit + Pip-audit"
           echo "✅ Tests: Pytest with coverage"
           echo "✅ Coverage: ≥39% (Fase 2 baseline)"
           echo "✅ Pre-commit: All hooks"

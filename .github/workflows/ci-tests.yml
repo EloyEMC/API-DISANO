@@ -39,7 +39,7 @@ jobs:
 
       - name: Run unit tests
         env:
-          DATABASE_URL: testing/testing.db
+          DATABASE_URL: sqlite:///testing/testing.db
           ENVIRONMENT: testing
           API_KEYS: test-api-key-1,test-api-key-2
           ADMIN_API_KEYS: test-admin-key-1
@@ -48,7 +48,7 @@ jobs:
 
       - name: Run integration tests
         env:
-          DATABASE_URL: testing/testing.db
+          DATABASE_URL: sqlite:///testing/testing.db
           ENVIRONMENT: testing
           API_KEYS: test-api-key-1,test-api-key-2
           ADMIN_API_KEYS: test-admin-key-1

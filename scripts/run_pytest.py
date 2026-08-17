@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-"""
-Ejecutar pytest con entorno limpio para evitar pydantic-settings bloqueo
-"""
+"""Ejecutar pytest con entorno limpio para evitar pydantic-settings bloqueo."""
 
 import os
 import subprocess
@@ -12,7 +10,7 @@ os.environ["ENVIRONMENT"] = "testing"
 os.environ["SECRET_KEY"] = "test-secret-key-32-chars-safe-testing"
 os.environ["API_KEYS"] = "test-api-key-1,test-api-key-2"
 os.environ["ADMIN_API_KEYS"] = "test-admin-key-1"
-os.environ["DATABASE_URL"] = "testing/testing.db"  # Configurar database para tests
+os.environ["DATABASE_URL"] = "sqlite:///testing/testing.db"  # Configurar database para tests
 # Paso 1: Limpiar variables de problema EXCEPTO ADMIN_API_KEYS y DATABASE_URL
 problematic_vars = [
     "CORS_ORIGINS",
@@ -42,7 +40,7 @@ pytest_args = (
 print(f"🚀 Ejecutando: pytest {' '.join(pytest_args)}")
 print("=" * 60)
 result = subprocess.run(
-    ["python3", "-m", "pytest"] + pytest_args,
+    [sys.executable, "-m", "pytest"] + pytest_args,
     cwd=os.getcwd(),
     capture_output=False,
 )
