@@ -8,7 +8,9 @@ PROJECT_ROOT = Path(__file__).parents[2]
 SCRIPT = PROJECT_ROOT / "scripts" / "export-openapi.py"
 
 
-def test_export_openapi_writes_deterministic_documentation_schema(tmp_path: Path) -> None:
+def test_export_openapi_writes_deterministic_documentation_schema(
+    tmp_path: Path,
+) -> None:
     output_path = tmp_path / "openapi.json"
     environment = os.environ.copy()
     environment.pop("ENVIRONMENT", None)
