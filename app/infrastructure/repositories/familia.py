@@ -3,14 +3,15 @@
 Repository implementation using SQLAlchemy ORM for data access.
 """
 
-from typing import List, Dict, Any, Tuple
-from sqlalchemy import func, case, asc, desc, or_
+from typing import Any
+
+from sqlalchemy import asc, case, desc, func, or_
 from sqlalchemy.orm import Session
 
-from app.domain.repositories.familia import FamiliaRepositoryInterface
 from app.domain.entities.familia import FamiliaEntity
-from app.infrastructure.models.producto_clean import ProductoModelClean as ProductoModel
+from app.domain.repositories.familia import FamiliaRepositoryInterface
 from app.infrastructure.cache.pagination_cache import get_pagination_cache
+from app.infrastructure.models.producto_clean import ProductoModelClean as ProductoModel
 
 
 class SQLAlchemyFamiliaRepository(FamiliaRepositoryInterface):
@@ -24,7 +25,7 @@ class SQLAlchemyFamiliaRepository(FamiliaRepositoryInterface):
         """
         self.session = session
 
-    def get_all(self) -> List[FamiliaEntity]:
+    def get_all(self) -> list[FamiliaEntity]:
         """Get all families with BC3 statistics from productos_clean view.
 
         Returns:
@@ -101,7 +102,7 @@ class SQLAlchemyFamiliaRepository(FamiliaRepositoryInterface):
             descontinuados=0,  # Not in clean view
         )
 
-    def get_statistics(self) -> Dict:
+    def get_statistics(self) -> dict:
         """Get aggregate statistics across all families.
 
         Returns:
@@ -135,7 +136,7 @@ class SQLAlchemyFamiliaRepository(FamiliaRepositoryInterface):
             "bc3_coverage": round(bc3_coverage, 2),
         }
 
-    def buscar_familias_paginado(self, dto: dict) -> Tuple[List[FamiliaEntity], int]:
+    def buscar_familias_paginado(self, dto: dict) -> tuple[list[FamiliaEntity], int]:
         """Search families with pagination, sorting, and filtering.
 
         This method wraps the actual query with caching logic to improve
@@ -179,7 +180,7 @@ class SQLAlchemyFamiliaRepository(FamiliaRepositoryInterface):
 
         return entities, total_count
 
-    def _execute_pagination_query(self, dto: dict) -> Tuple[List[FamiliaEntity], int]:
+    def _execute_pagination_query(self, dto: dict) -> tuple[list[FamiliaEntity], int]:
         """Execute the actual pagination query (without caching).
 
         This is the internal query execution method that can be reused
