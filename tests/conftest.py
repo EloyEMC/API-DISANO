@@ -4,15 +4,16 @@ Fixtures compartidos para tests siguiendo patrones BC3-Suite.
 Parchea get_settings() para evitar bloqueo de pydantic-settings.
 """
 
-import pytest
-from pathlib import Path
-from typing import Generator
-from fastapi.testclient import TestClient
-from sqlalchemy.orm import Session
-from unittest.mock import AsyncMock, Mock
 import os
 import sys
+from collections.abc import Generator
+from pathlib import Path
+from unittest.mock import AsyncMock, Mock
 from urllib.parse import urlparse
+
+import pytest
+from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
 
 # FIX: Asegurar que importamos el proyecto API-DISANO correcto
 # y no otro proyecto 'app' que pueda estar en sys.path
@@ -41,8 +42,9 @@ if not _database_url or not urlparse(_database_url).scheme.startswith("postgresq
     )
 os.environ["DATABASE_URL"] = _database_url
 
-import app.infrastructure.database.connection as connection_module  # noqa: E402
 from sqlalchemy.orm import sessionmaker  # noqa: E402
+
+import app.infrastructure.database.connection as connection_module  # noqa: E402
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -116,7 +118,6 @@ def db_session():
 @pytest.fixture
 def sqlalchemy_session() -> Generator[Session, None, None]:
     """Provide a SQLAlchemy ORM session for repository tests."""
-    from sqlalchemy.orm import sessionmaker
 
     engine = connection_module.engine
     SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)

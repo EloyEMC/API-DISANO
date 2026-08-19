@@ -127,7 +127,11 @@ class ResponseSerializer:
         """
         # Serialize items
         if hasattr(paginated_response, "items"):
-            items = cls.serialize_entities(paginated_response.items, entity_type)
+            items = (
+                [cls.serialize_producto(item) for item in paginated_response.items]
+                if entity_type == "producto" and hasattr(cls, "serialize_producto")
+                else cls.serialize_entities(paginated_response.items, entity_type)
+            )
         else:
             items = []
 
@@ -310,25 +314,6 @@ class ProductoResponseSerializer(ResponseSerializer):
     EXTERNAL_FIELDS = frozenset(ProductoExternalResponse.model_fields)
     BC3_FIELDS = frozenset(ProductoBC3Response.model_fields)
 
-    PRODUCTO_FIELDS_ORDER = [
-        "codigo",
-        "descripcion",
-        "marca",
-        "familia",
-        "pvp",
-        "bc3_descripcion_corta",
-        "bc3_descripcion_completa",
-        "bc3_descripcion_larga",
-        "bc3_product_type",
-        "bc3_processed_at",
-        "codigo_web",
-        "referencia",
-        "ean_13",
-        "imagen",
-        "img_url",
-        "descontinuado",
-    ]
-
     @classmethod
     def serialize_producto(cls, producto: Any, detailed: bool = False) -> Dict[str, Any]:
         """Serialize a producto entity with field ordering.
@@ -352,10 +337,10 @@ class ProductoResponseSerializer(ResponseSerializer):
                 "marca": data.get("marca"),
                 "familia": data.get("familia"),
                 "pvp": data.get("pvp"),
-                "bc3_descripcion_corta": data.get("bc3_descripcion_corta"),
-                "bc3_descripcion_completa": data.get("bc3_descripcion_completa"),
-                "bc3_descripcion_larga": data.get("bc3_descripcion_larga"),
-                "bc3_product_type": data.get("bc3_product_type"),
+                "bc3_descripcion_corta": data.get("bc3_descripcion_corta") or "",
+                "bc3_descripcion_completa": data.get("bc3_descripcion_completa") or "",
+                "bc3_descripcion_larga": data.get("bc3_descripcion_larga") or "",
+                "bc3_product_type": data.get("bc3_product_type") or "",
                 "bc3_processed_at": data.get("bc3_processed_at"),
                 "codigo_web": data.get("codigo_web"),
                 "referencia": data.get("referencia"),
@@ -368,7 +353,19 @@ class ProductoResponseSerializer(ResponseSerializer):
                 "raee_l": data.get("RAEE_L") or data.get("raee_l"),
                 "raee_t": data.get("RAEE_T") or data.get("raee_t"),
             }
-            return {k: v for k, v in essential_fields.items() if v is not None}
+            # BC3 clients rely on the contract keys even when a product has
+            # no enrichment value yet; omit unrelated optional fields only.
+            required_bc3_fields = {
+                "bc3_descripcion_corta",
+                "bc3_descripcion_completa",
+                "bc3_descripcion_larga",
+                "bc3_product_type",
+            }
+            return {
+                key: value
+                for key, value in essential_fields.items()
+                if value is not None or key in required_bc3_fields
+            }
 
         return data
 

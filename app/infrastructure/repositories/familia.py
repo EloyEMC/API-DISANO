@@ -223,7 +223,7 @@ class SQLAlchemyFamiliaRepository(FamiliaRepositoryInterface):
         if sort_string:
             base_query = self._apply_sorting(base_query, sort_string)
         else:
-            base_query = base_query.order_by(asc(ProductoModel.familia))
+            base_query = base_query.order_by(asc(self._family_order_expression()))
 
         # Apply pagination
         base_query = base_query.offset(dto["offset"]).limit(dto["per_page"])
@@ -266,7 +266,19 @@ class SQLAlchemyFamiliaRepository(FamiliaRepositoryInterface):
             if isinstance(mapped_field, str):
                 # Aggregated fields need different handling
                 return query.order_by(order_func(mapped_field))
-            else:
-                return query.order_by(order_func(mapped_field))
+            if field in {"nombre", "familia"}:
+                mapped_field = self._family_order_expression()
+            return query.order_by(order_func(mapped_field))
 
         return query
+
+    def _family_order_expression(self) -> Any:
+        """Use Python-compatible case-sensitive family ordering on PostgreSQL."""
+        field = ProductoModel.familia
+        try:
+            dialect_name = self.session.get_bind().dialect.name
+        except Exception:
+            dialect_name = ""
+        if dialect_name == "postgresql":
+            field = field.collate("C")
+        return field
