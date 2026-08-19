@@ -57,6 +57,16 @@ jobs:
           DATABASE_URL: postgresql+psycopg://api_disano_test:test-password@127.0.0.1:5432/api_disano_test
         run: python app/infrastructure/database/create_indexes.py
 
+      - name: Generate and verify OpenAPI schema
+        env:
+          DATABASE_URL: postgresql+psycopg://api_disano_test:test-password@127.0.0.1:5432/api_disano_test
+          ENVIRONMENT: testing
+          API_KEYS: test-api-key-1,test-api-key-2
+          ADMIN_API_KEYS: test-admin-key-1
+        run: |
+          python scripts/export-openapi.py
+          git diff --exit-code -- docs/openapi.json
+
       - name: Run unit tests
         env:
           DATABASE_URL: postgresql+psycopg://api_disano_test:test-password@127.0.0.1:5432/api_disano_test
