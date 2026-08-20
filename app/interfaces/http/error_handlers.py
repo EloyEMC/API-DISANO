@@ -1,25 +1,25 @@
-"""FastAPI exception handlers for API-DISANO V2 endpoints
+"""FastAPI exception handlers for API-DISANO V2 endpoints.
 
 Provides centralized error handling with standardized error responses
 and proper HTTP status codes for different error types.
-."""
+"""
 
-from fastapi import Request, status
-from fastapi.exceptions import RequestValidationError, HTTPException
-from typing import Any, Optional
 import logging
+from typing import Any
+
+from fastapi import FastAPI, Request, status
+from fastapi.exceptions import HTTPException, RequestValidationError
 from fastapi.responses import JSONResponse
 
 from app.interfaces.http.exceptions import (
     APIException,
     BadRequestException,
+    CacheException,
+    DatabaseException,
     NotFoundException,
     ValidationException,
-    DatabaseException,
-    CacheException,
     wrap_exception,
 )
-
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -27,15 +27,15 @@ logger = logging.getLogger(__name__)
 
 async def api_exception_handler(request: Request, exc: APIException) -> JSONResponse:
     """
-    Handle custom API exceptions with standardized responses
+    Handle custom API exceptions with standardized responses.
 
     Args:
         request: FastAPI request object
         exc: Custom API exception
 
     Returns:
-        JSONResponse with standardized error format
-    ."""
+        JSONResponse with standardized error format.
+    """
     # Log the error
     logger.error(
         f"API Exception: {exc.error_code.value} - {exc.message}",
@@ -50,7 +50,7 @@ async def api_exception_handler(request: Request, exc: APIException) -> JSONResp
     )
 
     # Build error response
-    error_response = {
+    error_response: dict[str, Any] = {
         "error": exc.message,
         "error_code": exc.error_code.value,
         "status_code": exc.status_code,
@@ -80,15 +80,15 @@ async def api_exception_handler(request: Request, exc: APIException) -> JSONResp
 
 async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
     """
-    Handle FastAPI HTTP exceptions
+    Handle FastAPI HTTP exceptions.
 
     Args:
         request: FastAPI request object
         exc: FastAPI HTTP exception
 
     Returns:
-        JSONResponse with standardized error format
-    ."""
+        JSONResponse with standardized error format.
+    """
     # Log the error
     logger.warning(
         f"HTTP Exception: {exc.status_code} - {exc.detail}",
@@ -100,8 +100,10 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> JSONRe
     )
 
     # Build error response
-    error_response = {
+    error_response: dict[str, Any] = {
         "error": exc.detail,
+        # Preserve FastAPI's legacy response key for V1 clients.
+        "detail": exc.detail,
         "error_code": "HTTP_EXCEPTION",
         "status_code": exc.status_code,
         "path": request.url.path,
@@ -116,15 +118,15 @@ async def validation_exception_handler(
     request: Request, exc: RequestValidationError
 ) -> JSONResponse:
     """
-    Handle request validation errors from FastAPI/Pydantic
+    Handle request validation errors from FastAPI/Pydantic.
 
     Args:
         request: FastAPI request object
         exc: Request validation exception
 
     Returns:
-        JSONResponse with validation error details
-    ."""
+        JSONResponse with validation error details.
+    """
     # Log the validation error
     logger.warning(
         f"Validation Error: {len(exc.errors())} field(s) failed validation",
@@ -149,7 +151,7 @@ async def validation_exception_handler(
         )
 
     # Build error response
-    error_response = {
+    error_response: dict[str, Any] = {
         "error": "Request validation failed",
         "error_code": "VALIDATION_ERROR",
         "status_code": 422,
@@ -162,22 +164,20 @@ async def validation_exception_handler(
         },
     }
 
-    return JSONResponse(
-        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, content=error_response
-    )
+    return JSONResponse(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, content=error_response)
 
 
 async def generic_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     """
-    Handle all other unexpected exceptions
+    Handle all other unexpected exceptions.
 
     Args:
         request: FastAPI request object
         exc: Unexpected exception
 
     Returns:
-        JSONResponse with internal server error
-    ."""
+        JSONResponse with internal server error.
+    """
     # Log the unexpected error
     logger.exception(
         f"Unexpected Exception: {type(exc).__name__} - {str(exc)}",
@@ -197,7 +197,7 @@ async def generic_exception_handler(request: Request, exc: Exception) -> JSONRes
     )
 
     # Build error response
-    error_response = {
+    error_response: dict[str, Any] = {
         "error": wrapped_exc.message,
         "error_code": wrapped_exc.error_code.value,
         "status_code": wrapped_exc.status_code,
@@ -223,24 +223,26 @@ async def generic_exception_handler(request: Request, exc: Exception) -> JSONRes
     return JSONResponse(status_code=wrapped_exc.status_code, content=error_response)
 
 
-def register_exception_handlers(app) -> None:
+def register_exception_handlers(app: FastAPI) -> None:
     """
-    Register all exception handlers with FastAPI application
+    Register all exception handlers with FastAPI application.
 
     Args:
         app: FastAPI application instance
     """
     # Register custom API exception handler
-    app.add_exception_handler(APIException, api_exception_handler)
+    app.add_exception_handler(APIException, api_exception_handler)  # type: ignore[arg-type]
 
     # Register FastAPI HTTP exception handler
-    app.add_exception_handler(HTTPException, http_exception_handler)
+    app.add_exception_handler(HTTPException, http_exception_handler)  # type: ignore[arg-type]
 
     # Register request validation exception handler
-    app.add_exception_handler(RequestValidationError, validation_exception_handler)
+    app.add_exception_handler(
+        RequestValidationError, validation_exception_handler
+    )  # type: ignore[arg-type]
 
     # Register generic exception handler (catch-all)
-    app.add_exception_handler(Exception, generic_exception_handler)
+    app.add_exception_handler(Exception, generic_exception_handler)  # type: ignore[arg-type]
 
 
 # ==============================================================================
@@ -248,7 +250,7 @@ def register_exception_handlers(app) -> None:
 # ==============================================================================
 
 
-def datetime_utc_now():
+def datetime_utc_now() -> str:
     """Get current UTC datetime as ISO string."""
     from datetime import datetime, timezone
 
@@ -257,11 +259,11 @@ def datetime_utc_now():
 
 def is_development_mode() -> bool:
     """
-    Check if application is running in development mode
+    Check if application is running in development mode.
 
     Returns:
-        True if development mode, False otherwise
-    ."""
+        True if development mode, False otherwise.
+    """
     import os
 
     return os.getenv("ENVIRONMENT", "development").lower() == "development"
@@ -271,11 +273,11 @@ def create_error_response(
     message: str,
     error_code: str,
     status_code: int,
-    details: Optional[dict[str, Any]] = None,
-    debug_info: Optional[dict[str, Any]] = None,
+    details: dict[str, Any] | None = None,
+    debug_info: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """
-    Create a standardized error response dictionary
+    Create a standardized error response dictionary.
 
     Args:
         message: Error message
@@ -285,8 +287,8 @@ def create_error_response(
         debug_info: Optional debug information (development only)
 
     Returns:
-        Standardized error response dictionary
-    ."""
+        Standardized error response dictionary.
+    """
     response = {
         "error": message,
         "error_code": error_code,
@@ -307,17 +309,17 @@ def log_error(
     logger_instance: logging.Logger,
     error: Exception,
     request: Request,
-    additional_context: Optional[dict[str, Any]] = None,
+    additional_context: dict[str, Any] | None = None,
 ) -> None:
     """
-    Log an error with standardized format
+    Log an error with standardized format.
 
     Args:
         logger_instance: Logger instance to use
         error: Exception that occurred
         request: FastAPI request object
         additional_context: Optional additional context
-    ."""
+    """
     context = {
         "path": request.url.path,
         "method": request.method,

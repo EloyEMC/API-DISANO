@@ -55,7 +55,7 @@ jobs:
       - name: Initialize PostgreSQL indexes
         env:
           DATABASE_URL: postgresql+psycopg://api_disano_test:test-password@127.0.0.1:5432/api_disano_test
-        run: python app/infrastructure/database/create_indexes.py
+        run: python -m app.infrastructure.database.create_indexes
 
       - name: Run unit tests
         env:
