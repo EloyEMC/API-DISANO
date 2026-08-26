@@ -3,7 +3,7 @@
 FastAPI router with dependency injection for product endpoints.
 """
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Query
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Response
 from fastapi.security import APIKeyHeader
 from typing import Any, List, Optional
 from pydantic import BaseModel
@@ -489,17 +489,37 @@ async def buscar_productos_list_v2(
 
 @router.get("/")
 async def get_productos(
-    limit: int = Query(50, ge=1, le=500, description="Maximum number of products"),
+    response: Response,
+    page: int = Query(1, ge=1, description="1-based page number"),
+    limit: int | None = Query(None, ge=1, le=500, description="Items per page (legacy alias)"),
+    per_page: int | None = Query(None, ge=1, le=500, description="Items per page"),
     service: ProductoService = Depends(get_producto_service),
-) -> List:
-    """
-    Get all products with BC3 statistics.
+) -> list:
+    """Return one stable, backward-compatible page of products.
 
-    **V1 Backward Compatible** - Returns same format as legacy router
+    The JSON body remains the legacy ``list[dict]`` contract. Pagination totals
+    are exposed in headers so existing consumers do not need to change their
+    decoder: ``X-Total`` and ``X-Total-Pages``. Use ``per_page`` or its legacy
+    ``limit`` alias, but not both.
     """
+    if limit is not None and per_page is not None:
+        raise HTTPException(
+            status_code=422,
+            detail="Use only one of the pagination parameters: limit or per_page",
+        )
+
+    page_size = per_page if per_page is not None else limit or 50
+    skip = (page - 1) * page_size
+
     try:
-        productos = service.get_all_productos()
-        return [producto.model_dump() for producto in productos[:limit]]
+        productos = service.get_all_productos(skip=skip, limit=page_size)
+        total = service.count_productos()
+        total_pages = (total + page_size - 1) // page_size
+        response.headers["X-Total"] = str(total)
+        response.headers["X-Total-Pages"] = str(total_pages)
+        response.headers["X-Page"] = str(page)
+        response.headers["X-Per-Page"] = str(page_size)
+        return [producto.model_dump() for producto in productos]
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}") from None
 

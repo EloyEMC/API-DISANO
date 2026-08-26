@@ -20,6 +20,26 @@ The general `API_KEYS` credential is not valid for BC3 routes.
 
 ## Product endpoints
 
+### Legacy full-catalog pagination
+
+`GET /api/productos/` remains a backward-compatible JSON array and now honors
+pagination. Use exactly one page-size parameter:
+
+```http
+GET /api/productos/?page=2&limit=100
+GET /api/productos/?page=2&per_page=100
+```
+
+`page` is 1-based (default `1`); `limit` and `per_page` are aliases (default
+`50`, maximum `500`). The response body is `list[dict]` containing only that
+page, ordered by `codigo`. `page=2` therefore starts at item 101 when the
+page size is 100. The response includes `X-Total`, `X-Total-Pages`, `X-Page`,
+and `X-Per-Page` headers. Supplying both aliases returns `422`.
+
+To retrieve the complete catalog, request pages until `page == X-Total-Pages`.
+For a typed envelope with JSON pagination metadata, use the versioned endpoint
+below (`/v1`) instead.
+
 ### List products
 
 ```http
