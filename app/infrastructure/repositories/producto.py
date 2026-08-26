@@ -131,7 +131,12 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
         Returns:
             List[ProductoEntity]: Products in specified range
         """
-        query = self.session.query(ProductoModel).offset(skip).limit(limit)
+        query = (
+            self.session.query(ProductoModel)
+            .order_by(asc(ProductoModel.codigo))
+            .offset(skip)
+            .limit(limit)
+        )
         return [model.to_entity() for model in query.all()]
 
     def save(self, producto: ProductoEntity) -> ProductoEntity:
