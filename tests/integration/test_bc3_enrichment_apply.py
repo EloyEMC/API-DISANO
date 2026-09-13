@@ -25,6 +25,7 @@ class ApplyRepository:
                 bc3_descripcion_larga=None,
                 bc3_descripcion_completa=None,
                 bc3_product_type=None,
+                bc3_processed_at="existing-timestamp",
             ),
             "BC3-002": SimpleNamespace(
                 codigo="BC3-002",
@@ -32,6 +33,7 @@ class ApplyRepository:
                 bc3_descripcion_larga=None,
                 bc3_descripcion_completa=None,
                 bc3_product_type=None,
+                bc3_processed_at="existing-timestamp",
             ),
         }
         self.jobs: dict[str, dict[str, Any]] = {}
@@ -62,10 +64,21 @@ class ApplyRepository:
                     result["missing_codes"].append(item["codigo"])
                     continue
                 values = {field: item.get(field) for field in BC3_ENRICHMENT_FIELDS}
-                if all(getattr(product, field) == value for field, value in values.items()):
+                long_description = values["bc3_descripcion_completa"]
+                long_description_canonical = values["bc3_descripcion_larga"]
+                if long_description is not None and long_description_canonical is None:
+                    values["bc3_descripcion_larga"] = long_description
+                elif long_description_canonical is not None and long_description is None:
+                    values["bc3_descripcion_completa"] = long_description_canonical
+                values_to_persist = {
+                    field: value for field, value in values.items() if value is not None
+                }
+                if all(
+                    getattr(product, field) == value for field, value in values_to_persist.items()
+                ):
                     result["unchanged_codes"].append(item["codigo"])
                 else:
-                    for field, value in values.items():
+                    for field, value in values_to_persist.items():
                         setattr(product, field, value)
                     result["updated_codes"].append(item["codigo"])
                 if self.fail:
@@ -137,6 +150,27 @@ def test_apply_updates_unchanged_and_missing_items(
         "status",
     }
     assert repository.products["BC3-001"].bc3_descripcion_corta == "new"
+
+
+@pytest.mark.parametrize(
+    "long_field",
+    ["bc3_descripcion_completa", "bc3_descripcion_larga"],
+)
+def test_apply_persists_both_long_description_representations_and_preserves_processed_at(
+    client: TestClient, bc3_headers: dict[str, str], long_field: str
+) -> None:
+    repository = ApplyRepository()
+    response = _client(client, repository).post(
+        "/api/productos/bc3/v1/enrichment/apply",
+        headers={**bc3_headers, "Idempotency-Key": f"long-{long_field}"},
+        json={"items": [{"codigo": "BC3-001", long_field: "long-value"}]},
+    )
+
+    assert response.status_code == 200
+    product = repository.products["BC3-001"]
+    assert product.bc3_descripcion_completa == "long-value"
+    assert product.bc3_descripcion_larga == "long-value"
+    assert product.bc3_processed_at == "existing-timestamp"
 
 
 def test_apply_replays_same_key_and_rejects_different_hash(

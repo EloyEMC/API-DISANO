@@ -372,11 +372,21 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
                     result_status = "missing"
                     missing_codes.append(item["codigo"])
                 else:
+                    long_description = values["bc3_descripcion_completa"]
+                    long_description_canonical = values["bc3_descripcion_larga"]
+                    if long_description is not None and long_description_canonical is None:
+                        values["bc3_descripcion_larga"] = long_description
+                    elif long_description_canonical is not None and long_description is None:
+                        values["bc3_descripcion_completa"] = long_description_canonical
+                    values_to_persist = {
+                        field: value for field, value in values.items() if value is not None
+                    }
                     changed = any(
-                        getattr(product, field) != value for field, value in values.items()
+                        getattr(product, field) != value
+                        for field, value in values_to_persist.items()
                     )
                     if changed:
-                        for field, value in values.items():
+                        for field, value in values_to_persist.items():
                             setattr(product, field, value)
                         result_status = "updated"
                         updated_codes.append(item["codigo"])
