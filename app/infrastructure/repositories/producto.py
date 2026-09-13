@@ -384,6 +384,7 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
         }
         preview_id = str(uuid4())
         settings = get_settings()
+        approval_mode = getattr(settings, "bc3_approval_mode", "github_review")
         preview = BC3EnrichmentPreviewModel(
             preview_id=preview_id,
             payload_hash=hash_bc3_enrichment_items(items),
@@ -391,6 +392,7 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
             source_snapshot_id=source_snapshot_id,
             actor_id=actor_id,
             scope=settings.bc3_approval_scope,
+            approval_mode=approval_mode,
             status="pending",
             github_repository=github_pr.repository,
             github_pr_number=github_pr.pull_request_number,
@@ -417,6 +419,7 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
             "request_hash": preview.payload_hash,
             "expires_at": preview.expires_at,
             "missing_codes": [code for code in codes if code not in products],
+            "github_approval_mode": approval_mode,
         }
 
     def approve_bc3_preview(
@@ -446,11 +449,13 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
                 or preview.github_pr_number != github_pr.pull_request_number
                 or preview.github_head_sha != github_pr.head_sha
                 or preview.source_snapshot_id != github_pr.head_sha
+                or (preview.approval_mode or "github_review") != evidence.approval_mode
             ):
                 raise ValueError("preview is not eligible for approval")
             preview.status = "approved"
             preview.approved_at = now
             preview.approval_actor_id = actor_id
+            preview.approval_mode = evidence.approval_mode
             preview.github_approval_count = evidence.approval_count
             preview.github_approval_verified_at = evidence.verified_at
 
@@ -463,7 +468,10 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
         github_pr: GitHubApprovalReference,
     ) -> dict[str, object]:
         """Apply only an approved snapshot; all checks precede product writes."""
+        from app.config import get_settings
+
         request_hash = hash_bc3_enrichment_items(items)
+        approval_mode = getattr(get_settings(), "bc3_approval_mode", "github_review")
         with self.session.begin():
             preview = (
                 self.session.query(BC3EnrichmentPreviewModel)
@@ -477,6 +485,7 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
                 or preview.github_pr_number != github_pr.pull_request_number
                 or preview.github_head_sha != github_pr.head_sha
                 or preview.source_snapshot_id != github_pr.head_sha
+                or (preview.approval_mode or "github_review") != approval_mode
             ):
                 raise ValueError(
                     "approved preview is invalid, expired, used, or does not match payload"
@@ -732,6 +741,9 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
         rejected: list[dict[str, str]],
     ) -> dict[str, Any]:
         """Persist a catalog import preview and its row audit records."""
+        from app.config import get_settings
+
+        approval_mode = getattr(get_settings(), "bc3_approval_mode", "github_review")
         snapshot = CatalogImportSnapshot(
             snapshot_id=snapshot_id,
             idempotency_key=f"preview:{snapshot_id}",
@@ -740,6 +752,7 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
             payload_hash=catalog_payload_hash(request.rows),
             canonical_payload=canonical_catalog_payload(request.rows),
             actor_id=actor_id,
+            approval_mode=approval_mode,
             status="pending",
             github_repository=request.github_pr.repository,
             github_pr_number=request.github_pr.pull_request_number,
@@ -773,6 +786,7 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
             "source_hash": request.source_hash,
             "accepted_count": len(accepted),
             "rejected_count": len(rejected),
+            "github_approval_mode": approval_mode,
         }
 
     def catalog_import_approve(
@@ -797,11 +811,14 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
                 or snapshot.github_repository != github_pr.repository
                 or snapshot.github_pr_number != github_pr.pull_request_number
                 or snapshot.github_head_sha != github_pr.head_sha
+                or (snapshot.approval_mode or "github_review") != evidence.approval_mode
             ):
                 raise ValueError("catalog import snapshot is not eligible for approval")
             snapshot.status = "approved"
             snapshot.approved_at = datetime.now(timezone.utc).replace(tzinfo=None)
+            snapshot.approval_mode = evidence.approval_mode
             snapshot.github_approval_count = evidence.approval_count
+            snapshot.github_approval_verified_at = evidence.verified_at.replace(tzinfo=None)
 
     def catalog_import_apply(
         self,
@@ -813,6 +830,9 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
         expected_payload_hash: str,
     ) -> dict[str, Any]:
         """Apply an approved catalog snapshot idempotently."""
+        from app.config import get_settings
+
+        approval_mode = getattr(get_settings(), "bc3_approval_mode", "github_review")
         with self.session.begin():
             prior = (
                 self.session.query(CatalogImportSnapshot)
@@ -825,6 +845,7 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
                     prior.snapshot_id != snapshot_id
                     or prior.payload_hash != expected_payload_hash
                     or prior.actor_id != actor_id
+                    or (prior.approval_mode or "github_review") != approval_mode
                 ):
                     raise ValueError(
                         "idempotency key has already been used with a different request"
@@ -855,6 +876,7 @@ class SQLAlchemyProductoRepository(ProductoRepositoryInterface):
             )
             if (
                 snapshot is None
+                or (snapshot.approval_mode or "github_review") != approval_mode
                 or snapshot.status != "approved"
                 or snapshot.actor_id != actor_id
                 or snapshot.payload_hash != expected_payload_hash

@@ -103,6 +103,7 @@ def get_producto_service(session: Session = Depends(get_db_session)) -> Producto
         expected_repository=getattr(settings, "github_expected_repository", None),
         api_base_url=getattr(settings, "github_api_url", "https://api.github.com"),
         required_approvals=getattr(settings, "github_required_approvals", 1),
+        approval_mode=getattr(settings, "bc3_approval_mode", "github_review"),
     )
     return ProductoService(SQLAlchemyProductoRepository(session), verifier)
 
@@ -345,6 +346,7 @@ async def approve_bc3_enrichment(
         status="approved",
         github_pr=request.github_pr,
         github_approval_count=evidence.approval_count,
+        github_approval_mode=evidence.approval_mode,
     )
 
 

@@ -138,6 +138,9 @@ def test_preview_response_exposes_approval_bound_contract() -> None:
         "github_pr",
         "github_approval_status",
         "github_approval_count",
+        "github_approval_mode",
     }
     assert response.model_dump()["missing_codes"] == ["BC3-404"]
     assert response.model_dump()["items"][0]["codigo"] == "BC3-001"
+    assert response.github_approval_count is None
+    assert response.github_approval_mode == "github_review"

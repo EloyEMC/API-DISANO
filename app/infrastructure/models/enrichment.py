@@ -43,6 +43,7 @@ class BC3EnrichmentPreviewModel(Base):
     github_repository = Column(String, nullable=False)
     github_pr_number = Column(Integer, nullable=False)
     github_head_sha = Column(String, nullable=False)
+    approval_mode = Column(String, nullable=True)
     github_approval_count = Column(Integer, nullable=True)
     github_approval_verified_at = Column(DateTime, nullable=True)
     used_at = Column(DateTime, nullable=True)

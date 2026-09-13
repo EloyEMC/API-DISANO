@@ -4,6 +4,7 @@ Uses pydantic-settings for validation and type safety.
 """
 
 from functools import lru_cache
+from typing import Literal
 
 from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -31,6 +32,7 @@ class Settings(BaseSettings):
     bc3_approval_keys: str | list[str] = Field(default_factory=list)
     bc3_preview_ttl_seconds: int = Field(default=900, ge=60, le=86400)
     bc3_approval_scope: str = "bc3-enrichment"
+    bc3_approval_mode: Literal["github_review", "sole_maintainer"] = "github_review"
     github_api_token: str | None = None
     github_expected_repository: str | None = None
     github_api_url: str = "https://api.github.com"
