@@ -7,21 +7,27 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
+
+from app.config import get_settings
+from app.infrastructure.database.connection import engine
 from app.interfaces.http import (
-    productos as productos_http,
-    familias as familias_http,
     bc3 as bc3_http,
 )
+from app.interfaces.http import (
+    familias as familias_http,
+)
+from app.interfaces.http import (
+    productos as productos_http,
+)
+from app.interfaces.http.catalog_import import router as catalog_import_router
+from app.interfaces.http.error_handlers import register_exception_handlers
 from app.middleware import (
     APIKeyMiddleware,
     RateLimitMiddleware,
-    UserAgentMiddleware,
     SecurityHeadersMiddleware,
+    UserAgentMiddleware,
 )
-from app.interfaces.http.error_handlers import register_exception_handlers
 from app.security.logging_config import setup_logging
-from app.infrastructure.database.connection import engine
-from app.config import get_settings
 
 settings = get_settings()
 setup_logging()
@@ -80,6 +86,7 @@ if ENVIRONMENT == "production":
 app.include_router(productos_http.router, prefix="/api", tags=["productos"])
 app.include_router(familias_http.router, prefix="/api", tags=["familias"])
 app.include_router(bc3_http.router, prefix="/api", tags=["bc3"])
+app.include_router(catalog_import_router, prefix="/api", tags=["catalog-import"])
 
 # Registrar manejadores de excepciones V2
 register_exception_handlers(app)

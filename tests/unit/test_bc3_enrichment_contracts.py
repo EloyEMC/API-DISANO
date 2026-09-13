@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from typing import Any
 
 import pytest
@@ -27,7 +28,12 @@ def _item_payload(codigo: str = "BC3-001") -> dict[str, str]:
 
 def test_preview_request_normalizes_codigo_before_contract_use() -> None:
     request = BC3EnrichmentPreviewRequest(
-        items=[BC3EnrichmentItem(codigo="  BC3-001  ", bc3_descripcion_corta="Short description")]
+        items=[BC3EnrichmentItem(codigo="  BC3-001  ", bc3_descripcion_corta="Short description")],
+        github_pr={
+            "repository": "acme/catalog",
+            "pull_request_number": 42,
+            "head_sha": "a" * 40,
+        },
     )
 
     assert request.items[0].codigo == "BC3-001"
@@ -39,7 +45,12 @@ def test_preview_request_rejects_codes_duplicate_after_normalization() -> None:
             items=[
                 _item("BC3-001"),
                 _item(" BC3-001 "),
-            ]
+            ],
+            github_pr={
+                "repository": "acme/catalog",
+                "pull_request_number": 42,
+                "head_sha": "a" * 40,
+            },
         )
 
 
@@ -91,8 +102,17 @@ def test_request_hash_is_deterministic_for_equivalent_mapping_order() -> None:
     assert hash_bc3_enrichment_items(first) == hash_bc3_enrichment_items(second)
 
 
-def test_preview_response_exposes_only_items_and_missing_codes() -> None:
+def test_preview_response_exposes_approval_bound_contract() -> None:
     response = BC3EnrichmentPreviewResponse(
+        preview_id="preview-001",
+        status="pending",
+        expires_at=datetime.now(timezone.utc),
+        request_hash="hash-001",
+        github_pr={
+            "repository": "acme/catalog",
+            "pull_request_number": 42,
+            "head_sha": "a" * 40,
+        },
         items=[
             BC3EnrichmentPreviewItem(
                 codigo="BC3-001",
@@ -108,6 +128,16 @@ def test_preview_response_exposes_only_items_and_missing_codes() -> None:
         missing_codes=["BC3-404"],
     )
 
-    assert set(response.model_dump()) == {"items", "missing_codes"}
+    assert set(response.model_dump()) == {
+        "preview_id",
+        "status",
+        "expires_at",
+        "request_hash",
+        "items",
+        "missing_codes",
+        "github_pr",
+        "github_approval_status",
+        "github_approval_count",
+    }
     assert response.model_dump()["missing_codes"] == ["BC3-404"]
     assert response.model_dump()["items"][0]["codigo"] == "BC3-001"

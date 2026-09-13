@@ -10,7 +10,6 @@ from app.infrastructure.models.enrichment import (
     BC3EnrichmentJobModel,
 )
 
-
 MIGRATION_PATH = Path(__file__).parents[2] / "migration" / "03_add_bc3_enrichment_jobs.sql"
 
 
@@ -27,6 +26,8 @@ def test_enrichment_models_define_expected_tables_and_constraints() -> None:
         "status",
         "source_snapshot_id",
         "requested_by",
+        "preview_id",
+        "actor_id",
         "total_items",
         "updated_items",
         "unchanged_items",

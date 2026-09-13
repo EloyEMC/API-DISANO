@@ -2,15 +2,24 @@
 
 import hashlib
 import json
+from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from app.application.services.github_approval import GitHubApprovalReference
 
 BC3_ENRICHMENT_FIELDS: tuple[str, ...] = (
+    "imagen",
+    "img_url",
+    "url_ficha_tec",
     "bc3_descripcion_corta",
     "bc3_descripcion_larga",
     "bc3_descripcion_completa",
     "bc3_product_type",
+    "bc3_descripcion_corta_ca",
+    "bc3_descripcion_larga_ca",
+    "bc3_descripcion_corta_gl",
+    "bc3_descripcion_larga_gl",
 )
 MAX_BC3_ENRICHMENT_BATCH_SIZE = 100
 
@@ -21,10 +30,17 @@ class BC3EnrichmentItem(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     codigo: str = Field(..., min_length=1, max_length=100)
+    imagen: str | None = None
+    img_url: str | None = None
+    url_ficha_tec: str | None = None
     bc3_descripcion_corta: str | None = None
     bc3_descripcion_larga: str | None = None
     bc3_descripcion_completa: str | None = None
     bc3_product_type: str | None = None
+    bc3_descripcion_corta_ca: str | None = None
+    bc3_descripcion_larga_ca: str | None = None
+    bc3_descripcion_corta_gl: str | None = None
+    bc3_descripcion_larga_gl: str | None = None
 
     @field_validator("codigo")
     @classmethod
@@ -44,6 +60,7 @@ class BC3EnrichmentPreviewRequest(BaseModel):
     items: list[BC3EnrichmentItem] = Field(
         ..., min_length=1, max_length=MAX_BC3_ENRICHMENT_BATCH_SIZE
     )
+    github_pr: GitHubApprovalReference
 
     @model_validator(mode="after")
     def reject_duplicate_codes(self) -> "BC3EnrichmentPreviewRequest":
@@ -55,7 +72,29 @@ class BC3EnrichmentPreviewRequest(BaseModel):
 
 
 class BC3EnrichmentApplyRequest(BC3EnrichmentPreviewRequest):
-    """Bounded batch of BC3 enrichment values to persist atomically."""
+    """Apply only a previously approved, immutable preview snapshot."""
+
+    preview_id: str = Field(..., min_length=1, max_length=100)
+
+
+class BC3EnrichmentApprovalRequest(BaseModel):
+    """Explicit approval of a durable preview snapshot."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    preview_id: str = Field(..., min_length=1, max_length=100)
+    github_pr: GitHubApprovalReference
+
+
+class BC3EnrichmentApprovalResponse(BaseModel):
+    """Safe acknowledgement containing the exact approval reference."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    preview_id: str
+    status: str
+    github_pr: GitHubApprovalReference | None = None
+    github_approval_count: int | None = None
 
 
 class BC3EnrichmentChange(BaseModel):
@@ -78,12 +117,19 @@ class BC3EnrichmentPreviewItem(BaseModel):
 
 
 class BC3EnrichmentPreviewResponse(BaseModel):
-    """Read-only BC3 enrichment preview response."""
+    """Durable preview response; values are intentionally not exposed by status."""
 
     model_config = ConfigDict(extra="forbid")
 
+    preview_id: str
+    status: str
+    expires_at: datetime
+    request_hash: str
     items: list[BC3EnrichmentPreviewItem]
     missing_codes: list[str]
+    github_pr: GitHubApprovalReference
+    github_approval_status: str = "pending"
+    github_approval_count: int = 0
 
 
 class BC3EnrichmentJobItemStatus(BaseModel):
@@ -107,8 +153,8 @@ class BC3EnrichmentJobStatusResponse(BaseModel):
     updated_items: int
     unchanged_items: int
     missing_items: int
-    created_at: object
-    completed_at: object | None = None
+    created_at: datetime
+    completed_at: datetime | None = None
     items: list[BC3EnrichmentJobItemStatus]
 
 
@@ -127,7 +173,11 @@ class BC3EnrichmentApplyResponse(BaseModel):
 def canonicalize_bc3_enrichment_items(items: list[dict]) -> str:
     """Return a deterministic representation of normalized enrichment items."""
     normalized = [
-        {field: item.get(field) for field in ("codigo", *BC3_ENRICHMENT_FIELDS)} for item in items
+        {
+            "codigo": item["codigo"],
+            **{field: item[field] for field in BC3_ENRICHMENT_FIELDS if field in item},
+        }
+        for item in items
     ]
     return json.dumps(normalized, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 

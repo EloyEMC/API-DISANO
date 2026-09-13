@@ -16,31 +16,30 @@ class Settings(BaseSettings):
         env_file=".env", env_file_encoding="utf-8", case_sensitive=False, extra="ignore"
     )
 
-    # API Configuration
     api_title: str = "API Disano"
     api_description: str = "API REST para consultar productos y tarifas de Disano"
     api_version: str = "1.0.0"
     api_host: str = "0.0.0.0"
     api_port: int = 8000
-
-    # Environment
     environment: str = "development"
     secret_key: str = ""
-
-    # Security - API Keys (accept string or list, normalize to list)
     api_keys: str | list[str] = Field(default_factory=list)
     api_key_header: str = "X-API-Key"
     admin_api_keys: str | list[str] = Field(default_factory=list)
     bc3_api_keys: str | list[str] = Field(default_factory=list)
-
-    # Security - Rate Limiting
+    # Approval is deliberately separate: normal processing keys never authorize writes.
+    bc3_approval_keys: str | list[str] = Field(default_factory=list)
+    bc3_preview_ttl_seconds: int = Field(default=900, ge=60, le=86400)
+    bc3_approval_scope: str = "bc3-enrichment"
+    github_api_token: str | None = None
+    github_expected_repository: str | None = None
+    github_api_url: str = "https://api.github.com"
+    github_required_approvals: int = Field(default=1, ge=1, le=100)
     rate_limit_enabled: bool = True
     rate_limit_per_client: int = 60
     rate_limit_global: int = 1000
     rate_limit_burst: int = 10
     rate_limit_listings: int = 10
-
-    # Security - User-Agent Filtering
     blocked_user_agents: list[str] = [
         "python-requests",
         "curl",
@@ -53,66 +52,40 @@ class Settings(BaseSettings):
         "phantom",
         "selenium",
     ]
-
-    # Security - CORS (accept string or list, normalize to list)
     cors_origins: str | list[str] = ["*"]
     cors_allow_credentials: bool = True
     cors_allow_methods: list[str] = ["*"]
     cors_allow_headers: list[str] = ["*"]
-
-    # Security - HTTPS
     https_enabled: bool = True
     https_hsts_max_age: int = 31536000
     https_hsts_include_subdomains: bool = True
     https_hsts_preload: bool = True
-
-    # Security - Documentation
     docs_enabled: bool | None = None
-
-    # Security - Scraping Detection
     scraping_detection_enabled: bool = True
     ban_enabled: bool = True
     ban_duration_first_offense: int = 3600
     ban_duration_second_offense: int = 86400
-
-    # Logging
     log_level: str = "INFO"
     log_file: str = "logs/api.log"
     log_rotation: str = "500 MB"
     log_retention: str = "10 days"
     security_log_enabled: bool = True
-
-    # Database
     database_url: str | None = None
     database_path: str = "database/tarifa_disano.db"
 
     @model_validator(mode="after")
     def set_docs_default(self) -> "Settings":
-        """Keep local documentation convenient but disable it by default in production."""
+        """Set the documentation default according to the environment."""
         if self.docs_enabled is None:
             self.docs_enabled = not self.is_production()
         return self
 
-    @field_validator("api_keys", mode="before")
+    @field_validator(
+        "api_keys", "admin_api_keys", "bc3_api_keys", "bc3_approval_keys", mode="before"
+    )
     @classmethod
-    def parse_api_keys(cls, v: str | list[str]) -> list[str]:
-        """Parse api_keys from string or list."""
-        if isinstance(v, str):
-            return [key.strip() for key in v.split(",") if key.strip()]
-        return v if isinstance(v, list) else []
-
-    @field_validator("admin_api_keys", mode="before")
-    @classmethod
-    def parse_admin_api_keys(cls, v: str | list[str]) -> list[str]:
-        """Parse admin_api_keys from string or list."""
-        if isinstance(v, str):
-            return [key.strip() for key in v.split(",") if key.strip()]
-        return v if isinstance(v, list) else []
-
-    @field_validator("bc3_api_keys", mode="before")
-    @classmethod
-    def parse_bc3_api_keys(cls, v: str | list[str]) -> list[str]:
-        """Parse bc3_api_keys from string or list."""
+    def parse_key_lists(cls, v: str | list[str]) -> list[str]:
+        """Parse comma-separated credentials into a list."""
         if isinstance(v, str):
             return [key.strip() for key in v.split(",") if key.strip()]
         return v if isinstance(v, list) else []
@@ -120,38 +93,53 @@ class Settings(BaseSettings):
     @field_validator("cors_origins", mode="before")
     @classmethod
     def parse_cors_origins(cls, v: str | list[str]) -> list[str]:
-        """Parse cors_origins from string or list."""
+        """Parse comma-separated CORS origins into a list."""
         if isinstance(v, str):
             return [origin.strip() for origin in v.split(",") if origin.strip()]
         return v if isinstance(v, list) else ["*"]
 
     @property
     def api_keys_list(self) -> list[str]:
-        """Return api_keys as a list for compatibility."""
-        if isinstance(self.api_keys, list):
-            return self.api_keys
-        return [self.api_keys] if self.api_keys else []
+        """Return the general API credentials as a list."""
+        return (
+            self.api_keys
+            if isinstance(self.api_keys, list)
+            else ([self.api_keys] if self.api_keys else [])
+        )
 
     @property
     def bc3_api_keys_list(self) -> list[str]:
-        """Return bc3_api_keys as a list for private BC3 authentication."""
-        if isinstance(self.bc3_api_keys, list):
-            return self.bc3_api_keys
-        return [self.bc3_api_keys] if self.bc3_api_keys else []
+        """Return the private BC3 API credentials as a list."""
+        return (
+            self.bc3_api_keys
+            if isinstance(self.bc3_api_keys, list)
+            else ([self.bc3_api_keys] if self.bc3_api_keys else [])
+        )
+
+    @property
+    def bc3_approval_keys_list(self) -> list[str]:
+        """Return the dedicated BC3 approval credentials as a list."""
+        return (
+            self.bc3_approval_keys
+            if isinstance(self.bc3_approval_keys, list)
+            else ([self.bc3_approval_keys] if self.bc3_approval_keys else [])
+        )
 
     @property
     def cors_origins_list(self) -> list[str]:
-        """Return cors_origins as a list for compatibility."""
-        if isinstance(self.cors_origins, list):
-            return self.cors_origins
-        return [self.cors_origins] if self.cors_origins else ["*"]
+        """Return configured CORS origins as a list."""
+        return (
+            self.cors_origins
+            if isinstance(self.cors_origins, list)
+            else ([self.cors_origins] if self.cors_origins else ["*"])
+        )
 
     def is_production(self) -> bool:
-        """Verifica si estamos en producción."""
+        """Return whether the settings target production."""
         return self.environment.lower() == "production"
 
     def validate_required(self) -> None:
-        """Validate settings that are mandatory in production."""
+        """Validate settings required for production."""
         if not self.is_production():
             return
         missing = []
@@ -165,8 +153,5 @@ class Settings(BaseSettings):
 
 @lru_cache
 def get_settings() -> Settings:
-    """
-    Retorna instancia caché de Settings.
-    Usa lru_cache para solo cargar una vez.
-    """
+    """Return the cached application settings."""
     return Settings()
