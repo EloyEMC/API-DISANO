@@ -1,0 +1,27 @@
+name: Feature request
+description: Propose an improvement for API-DISANO
+title: "[Feature]: "
+labels:
+  - type:feature
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: Briefly describe the proposed feature.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Explain the need, use case, or supporting evidence.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance criteria
+      description: Describe the observable result that would satisfy this request.
+    validations:
+      required: true
