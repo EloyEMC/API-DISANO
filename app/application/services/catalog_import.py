@@ -64,6 +64,7 @@ class CatalogImportService:
             "snapshot_id": snapshot_id,
             "status": "approved",
             "github_approval_count": evidence.approval_count,
+            "github_approval_mode": evidence.approval_mode,
         }
 
     def apply(
