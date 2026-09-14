@@ -95,6 +95,7 @@ class BC3EnrichmentApprovalResponse(BaseModel):
     status: str
     github_pr: GitHubApprovalReference | None = None
     github_approval_count: int | None = None
+    github_approval_mode: str = "github_review"
 
 
 class BC3EnrichmentChange(BaseModel):
@@ -129,7 +130,8 @@ class BC3EnrichmentPreviewResponse(BaseModel):
     missing_codes: list[str]
     github_pr: GitHubApprovalReference
     github_approval_status: str = "pending"
-    github_approval_count: int = 0
+    github_approval_count: int | None = None
+    github_approval_mode: str = "github_review"
 
 
 class BC3EnrichmentJobItemStatus(BaseModel):

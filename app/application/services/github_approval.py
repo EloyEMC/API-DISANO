@@ -6,7 +6,7 @@ import json
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Literal
 from urllib.error import HTTPError, URLError
 from urllib.parse import quote, urlparse
 from urllib.request import Request, urlopen
@@ -51,8 +51,9 @@ class GitHubApprovalEvidence:
     repository: str
     pull_request_number: int
     head_sha: str
-    approval_count: int
+    approval_count: int | None
     verified_at: datetime
+    approval_mode: Literal["github_review", "sole_maintainer"] = "github_review"
 
 
 class GitHubApprovalVerifier:
@@ -65,7 +66,10 @@ class GitHubApprovalVerifier:
         api_base_url: str = "https://api.github.com",
         opener: Callable[..., Any] = urlopen,
         required_approvals: int = 1,
+        approval_mode: Literal["github_review", "sole_maintainer"] = "github_review",
     ) -> None:
+        if approval_mode not in {"github_review", "sole_maintainer"}:
+            raise ValueError("Unsupported GitHub approval mode")
         self.token = token.strip() if token else None
         self.expected_repository = expected_repository.strip() if expected_repository else None
         parsed_api_url = urlparse(api_base_url)
@@ -74,6 +78,7 @@ class GitHubApprovalVerifier:
         self.api_base_url = api_base_url.rstrip("/")
         self.opener = opener
         self.required_approvals = required_approvals
+        self.approval_mode = approval_mode
 
     def verify(self, reference: GitHubApprovalReference) -> GitHubApprovalEvidence:
         """Verify the immutable PR identity and configured approval policy."""
@@ -93,13 +98,20 @@ class GitHubApprovalVerifier:
         head_sha = pull_request.get("head", {}).get("sha")
         if (
             repository != reference.repository
-            or (
-                pull_request_number is not None
-                and pull_request_number != reference.pull_request_number
-            )
+            or pull_request_number != reference.pull_request_number
             or head_sha != reference.head_sha
         ):
             raise GitHubApprovalUnavailable("GitHub pull request identity does not match preview")
+
+        if self.approval_mode == "sole_maintainer":
+            return GitHubApprovalEvidence(
+                repository=reference.repository,
+                pull_request_number=reference.pull_request_number,
+                head_sha=reference.head_sha,
+                approval_count=None,
+                verified_at=datetime.now(timezone.utc),
+                approval_mode=self.approval_mode,
+            )
 
         reviews = self._get_json(
             f"{self.api_base_url}/repos/{quote(reference.repository, safe='/')}/pulls/"
@@ -127,6 +139,7 @@ class GitHubApprovalVerifier:
             head_sha=reference.head_sha,
             approval_count=approval_count,
             verified_at=datetime.now(timezone.utc),
+            approval_mode=self.approval_mode,
         )
 
     @staticmethod

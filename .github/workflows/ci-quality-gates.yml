@@ -4,7 +4,7 @@ on:
   push:
     branches: [main, develop]
   pull_request:
-    branches: [main, develop]
+    branches: [main, develop, fix/bc3-approval-recovery]
 
 jobs:
   quality-gates:
@@ -58,6 +58,9 @@ jobs:
           PGPASSWORD="$POSTGRES_PASSWORD" psql \
             --host=127.0.0.1 --username=api_disano_test --dbname=api_disano_test \
             -v ON_ERROR_STOP=1 --file=migration/08_catalog_import.sql
+          PGPASSWORD="$POSTGRES_PASSWORD" psql \
+            --host=127.0.0.1 --username=api_disano_test --dbname=api_disano_test \
+            -v ON_ERROR_STOP=1 --file=migration/09_bc3_approval_mode.sql
           PGPASSWORD="$POSTGRES_PASSWORD" psql \
             --host=127.0.0.1 --username=api_disano_test --dbname=api_disano_test \
             -v ON_ERROR_STOP=1 --file=migration/10_product_bc3_translations.sql

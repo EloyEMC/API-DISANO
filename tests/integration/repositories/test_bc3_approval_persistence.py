@@ -27,6 +27,7 @@ from app.infrastructure.repositories.producto import SQLAlchemyProductoRepositor
 
 
 MIGRATION_07 = Path(__file__).resolve().parents[3] / "migration" / "07_bc3_approval_snapshots.sql"
+MIGRATION_09 = Path(__file__).resolve().parents[3] / "migration" / "09_bc3_approval_mode.sql"
 
 
 @pytest.mark.skipif(
@@ -179,6 +180,214 @@ def test_migration_07_upgrades_legacy_ids_and_job_description_columns():
                     connection.execute(text(f"DROP DATABASE {quoted_database_name}"))
         finally:
             admin_engine.dispose()
+
+
+@pytest.fixture
+def migration09_engine():
+    """Create an isolated PostgreSQL database for migration 09 regressions."""
+    if not os.environ.get("DISANO_MIGRATION_TEST_DATABASE_URL"):
+        pytest.skip("requires an explicitly disposable PostgreSQL database")
+    disposable_url = make_url(os.environ["DISANO_MIGRATION_TEST_DATABASE_URL"])
+    database_name = f"disano_migration_{uuid4().hex}"
+    admin_engine = create_engine(
+        disposable_url.set(database="postgres"), isolation_level="AUTOCOMMIT"
+    )
+    quoted_database_name = admin_engine.dialect.identifier_preparer.quote(database_name)
+    database_created = False
+    engine = None
+    try:
+        with admin_engine.connect() as connection:
+            connection.execute(text(f"CREATE DATABASE {quoted_database_name}"))
+        database_created = True
+        engine = create_engine(disposable_url.set(database=database_name))
+        yield engine
+    finally:
+        if engine is not None:
+            engine.dispose()
+        if database_created:
+            with admin_engine.connect() as connection:
+                connection.execute(text(f"DROP DATABASE {quoted_database_name}"))
+        admin_engine.dispose()
+
+
+@pytest.mark.skipif(
+    not os.environ.get("DISANO_MIGRATION_TEST_DATABASE_URL"),
+    reason="requires an explicitly disposable PostgreSQL database",
+)
+def test_migration_09_adds_github_review_default_on_fresh_tables(migration09_engine):
+    with migration09_engine.begin() as connection:
+        connection.execute(
+            text(
+                "CREATE TABLE bc3_enrichment_previews ("
+                "preview_id TEXT PRIMARY KEY, github_approval_count INTEGER)"
+            )
+        )
+        connection.execute(
+            text(
+                "CREATE TABLE catalog_import_snapshots ("
+                "snapshot_id TEXT PRIMARY KEY, github_approval_count INTEGER)"
+            )
+        )
+        connection.execute(text(MIGRATION_09.read_text()))
+        connection.execute(
+            text(
+                """
+            INSERT INTO bc3_enrichment_previews (preview_id) VALUES ('fresh-bc3')
+        """
+            )
+        )
+        connection.execute(
+            text(
+                """
+            INSERT INTO catalog_import_snapshots (snapshot_id) VALUES ('fresh-catalog')
+        """
+            )
+        )
+        assert (
+            connection.execute(
+                text(
+                    "SELECT approval_mode FROM bc3_enrichment_previews "
+                    "WHERE preview_id = 'fresh-bc3'"
+                )
+            ).scalar_one()
+            == "github_review"
+        )
+        assert (
+            connection.execute(
+                text(
+                    "SELECT approval_mode FROM catalog_import_snapshots "
+                    "WHERE snapshot_id = 'fresh-catalog'"
+                )
+            ).scalar_one()
+            == "github_review"
+        )
+
+
+@pytest.mark.skipif(
+    not os.environ.get("DISANO_MIGRATION_TEST_DATABASE_URL"),
+    reason="requires an explicitly disposable PostgreSQL database",
+)
+def test_migration_09_backfills_null_preserves_sole_mode_and_is_repeatable(migration09_engine):
+    with migration09_engine.begin() as connection:
+        connection.execute(
+            text(
+                """
+            CREATE TABLE bc3_enrichment_previews (
+                preview_id TEXT PRIMARY KEY, approval_mode TEXT,
+                github_approval_count INTEGER
+            )
+        """
+            )
+        )
+        connection.execute(
+            text(
+                """
+            CREATE TABLE catalog_import_snapshots (
+                snapshot_id TEXT PRIMARY KEY, approval_mode TEXT,
+                github_approval_count INTEGER
+            )
+        """
+            )
+        )
+        connection.execute(
+            text(
+                """
+            INSERT INTO bc3_enrichment_previews VALUES
+                ('null-bc3', NULL, NULL), ('sole-bc3', 'sole_maintainer', NULL),
+                ('count-bc3', NULL, 3)
+        """
+            )
+        )
+        connection.execute(
+            text(
+                """
+            INSERT INTO catalog_import_snapshots VALUES
+                ('null-catalog', NULL, NULL), ('sole-catalog', 'sole_maintainer', NULL),
+                ('count-catalog', NULL, 3)
+        """
+            )
+        )
+        migration = text(MIGRATION_09.read_text())
+        connection.execute(migration)
+        connection.execute(migration)
+
+        assert (
+            connection.execute(
+                text(
+                    "SELECT approval_mode FROM bc3_enrichment_previews "
+                    "WHERE preview_id = 'null-bc3'"
+                )
+            ).scalar_one()
+            == "github_review"
+        )
+        assert connection.execute(
+            text(
+                "SELECT approval_mode, github_approval_count "
+                "FROM bc3_enrichment_previews WHERE preview_id = 'sole-bc3'"
+            )
+        ).one() == ("sole_maintainer", None)
+        assert connection.execute(
+            text(
+                "SELECT approval_mode, github_approval_count "
+                "FROM bc3_enrichment_previews WHERE preview_id = 'count-bc3'"
+            )
+        ).one() == ("github_review", 3)
+        assert (
+            connection.execute(
+                text(
+                    "SELECT approval_mode FROM catalog_import_snapshots "
+                    "WHERE snapshot_id = 'null-catalog'"
+                )
+            ).scalar_one()
+            == "github_review"
+        )
+        assert connection.execute(
+            text(
+                "SELECT approval_mode, github_approval_count "
+                "FROM catalog_import_snapshots WHERE snapshot_id = 'sole-catalog'"
+            )
+        ).one() == ("sole_maintainer", None)
+        assert connection.execute(
+            text(
+                "SELECT approval_mode, github_approval_count "
+                "FROM catalog_import_snapshots WHERE snapshot_id = 'count-catalog'"
+            )
+        ).one() == ("github_review", 3)
+
+
+def test_real_repository_rejects_mode_mismatch_before_bc3_writes(approval_context, monkeypatch):
+    sqlalchemy_session, codigo, original = approval_context
+    items = [{"codigo": codigo, "bc3_descripcion_corta": "mode mismatch"}]
+    preview = _create_preview(sqlalchemy_session, items)
+    _approve(sqlalchemy_session, preview["preview_id"])
+    before_job_count = sqlalchemy_session.query(BC3EnrichmentJobModel).count()
+    before_audit_count = sqlalchemy_session.query(BC3EnrichmentJobItemModel).count()
+
+    settings = get_settings()
+    monkeypatch.setattr(settings, "bc3_approval_mode", "sole_maintainer")
+    action = _new_session(sqlalchemy_session)
+    try:
+        with pytest.raises(ValueError, match="approved preview"):
+            SQLAlchemyProductoRepository(action).apply_bc3_enrichment(
+                items,
+                "isolated-mode-mismatch-key",
+                preview["preview_id"],
+                "isolated-test-actor",
+                _reference(),
+            )
+    finally:
+        action.close()
+
+    observation = _new_session(sqlalchemy_session)
+    try:
+        persisted_preview = observation.get(BC3EnrichmentPreviewModel, preview["preview_id"])
+        product = observation.query(ProductoRawModel).filter_by(codigo=codigo).one()
+        assert persisted_preview.status == "approved"
+        assert product.bc3_descripcion_corta == original["bc3_descripcion_corta"]
+        assert observation.query(BC3EnrichmentJobModel).count() == before_job_count
+        assert observation.query(BC3EnrichmentJobItemModel).count() == before_audit_count
+    finally:
+        observation.close()
 
 
 @pytest.fixture

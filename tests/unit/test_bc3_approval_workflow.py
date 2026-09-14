@@ -244,6 +244,18 @@ def test_apply_replays_idempotency_and_conflicts_on_different_payload() -> None:
         service.apply_bc3_enrichment(_apply(preview.preview_id, "other"), "key-1", "actor-a")
 
 
+def test_settings_default_to_github_review_mode() -> None:
+    settings = Settings()
+
+    assert settings.bc3_approval_mode == "github_review"
+
+
+def test_settings_accept_only_supported_approval_modes() -> None:
+    assert Settings(bc3_approval_mode="sole_maintainer").bc3_approval_mode == "sole_maintainer"
+    with pytest.raises(ValueError):
+        Settings(bc3_approval_mode="disabled")
+
+
 def test_settings_keep_processing_keys_separate_from_approval_keys() -> None:
     settings = Settings(api_keys="processing", bc3_api_keys="bc3", bc3_approval_keys="approval")
     assert settings.api_keys_list == ["processing"]

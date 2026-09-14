@@ -186,6 +186,7 @@ def test_openapi_documents_enrichment_requests_responses_security_and_replay_con
         "github_pr",
         "github_approval_status",
         "github_approval_count",
+        "github_approval_mode",
     }
     assert set(approve_request["properties"]) == {"preview_id", "github_pr"}
     assert set(approve_request["required"]) == {"preview_id", "github_pr"}
@@ -194,6 +195,7 @@ def test_openapi_documents_enrichment_requests_responses_security_and_replay_con
         "status",
         "github_pr",
         "github_approval_count",
+        "github_approval_mode",
     }
     assert set(apply_request["properties"]) == {"items", "github_pr", "preview_id"}
     assert set(apply_request["required"]) == {"items", "github_pr", "preview_id"}

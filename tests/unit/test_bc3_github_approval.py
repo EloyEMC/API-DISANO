@@ -155,6 +155,41 @@ def test_github_verifier_rejects_wrong_repo_pr_or_head(
         _verifier(responses).verify(reference)
 
 
+def test_sole_maintainer_verifier_rejects_response_missing_pr_number() -> None:
+    reference = GitHubApprovalReference(
+        repository="acme/catalog", pull_request_number=42, head_sha="a" * 40
+    )
+    pull_request = _pull_request()
+    del pull_request["number"]
+
+    with pytest.raises(GitHubApprovalUnavailable, match="identity"):
+        GitHubApprovalVerifier(
+            token="t" * 20,
+            expected_repository="acme/catalog",
+            approval_mode="sole_maintainer",
+            opener=lambda *args, **kwargs: _Response(pull_request),
+        ).verify(reference)
+
+
+def test_sole_maintainer_verifier_keeps_identity_evidence_without_review_count() -> None:
+    reference = GitHubApprovalReference(
+        repository="acme/catalog", pull_request_number=42, head_sha="a" * 40
+    )
+
+    evidence = GitHubApprovalVerifier(
+        token="t" * 20,
+        expected_repository="acme/catalog",
+        approval_mode="sole_maintainer",
+        opener=lambda *args, **kwargs: _Response(_pull_request()),
+    ).verify(reference)
+
+    assert evidence.approval_mode == "sole_maintainer"
+    assert evidence.approval_count is None
+    assert evidence.repository == reference.repository
+    assert evidence.pull_request_number == reference.pull_request_number
+    assert evidence.head_sha == reference.head_sha
+
+
 def test_unconfigured_verifier_fails_closed() -> None:
     verifier = GitHubApprovalVerifier()
 

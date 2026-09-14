@@ -24,6 +24,7 @@ def get_service() -> CatalogImportService:
         expected_repository=getattr(settings, "github_expected_repository", None),
         api_base_url=getattr(settings, "github_api_url", "https://api.github.com"),
         required_approvals=getattr(settings, "github_required_approvals", 1),
+        approval_mode=getattr(settings, "bc3_approval_mode", "github_review"),
     )
     session = SessionLocal()
     return CatalogImportService(SQLAlchemyProductoRepository(session), verifier)
