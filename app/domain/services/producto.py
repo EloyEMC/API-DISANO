@@ -14,7 +14,22 @@ from app.application.dto.bc3_enrichment import (
     BC3EnrichmentPreviewRequest,
     BC3EnrichmentPreviewResponse,
 )
-
+from app.application.dto.pagination import (
+    PaginatedResponseDTO,
+    PaginationMetadata,
+    PaginationRequestDTO,
+)
+from app.application.dto.producto import (
+    ProductoCreateDTO,
+    ProductoSearchDTO,
+    ProductoUpdateDTO,
+)
+from app.application.services.github_approval import (
+    GitHubApprovalEvidence,
+    GitHubApprovalReference,
+    GitHubApprovalVerifier,
+    UnconfiguredGitHubApprovalVerifier,
+)
 from app.domain.entities.producto import ProductoEntity
 from app.domain.exceptions.not_found import (
     ProductoNotFoundException,
@@ -22,16 +37,6 @@ from app.domain.exceptions.not_found import (
     ValidationException,
 )
 from app.domain.repositories.producto import ProductoRepositoryInterface
-from app.application.dto.producto import (
-    ProductoCreateDTO,
-    ProductoSearchDTO,
-    ProductoUpdateDTO,
-)
-from app.application.dto.pagination import (
-    PaginationRequestDTO,
-    PaginatedResponseDTO,
-    PaginationMetadata,
-)
 
 
 class ProductoService:
@@ -43,14 +48,16 @@ class ProductoService:
     dependency inversion and testability.
     """
 
-    def __init__(self, repository: ProductoRepositoryInterface):
-        """
-        Initialize service with repository.
-
-        Args:
-            repository: Producto repository implementation
-        """
+    def __init__(
+        self,
+        repository: ProductoRepositoryInterface,
+        github_approval_verifier: GitHubApprovalVerifier | None = None,
+    ):
+        """Initialize service with repository and injectable GitHub verifier."""
         self.repository = repository
+        self.github_approval_verifier = (
+            github_approval_verifier or UnconfiguredGitHubApprovalVerifier()
+        )
 
     def crear_producto(self, dto: ProductoCreateDTO) -> ProductoEntity:
         """
@@ -237,26 +244,48 @@ class ProductoService:
             items=items,
             pagination=metadata,
             filters_applied={},
-            sorting_applied={
-                "field": request_dto.sort.split(":")[0] if request_dto.sort else None,
-                "order": request_dto.sort.split(":")[1]
-                if request_dto.sort and ":" in request_dto.sort
-                else "asc",
-            }
-            if request_dto.sort
-            else None,
+            sorting_applied=(
+                {
+                    "field": request_dto.sort.split(":")[0] if request_dto.sort else None,
+                    "order": (
+                        request_dto.sort.split(":")[1]
+                        if request_dto.sort and ":" in request_dto.sort
+                        else "asc"
+                    ),
+                }
+                if request_dto.sort
+                else None
+            ),
         )
 
     def apply_bc3_enrichment(
-        self, request: BC3EnrichmentApplyRequest, idempotency_key: str
+        self, request: BC3EnrichmentApplyRequest, idempotency_key: str, actor_id: str
     ) -> BC3EnrichmentApplyResponse:
         """Persist a BC3 enrichment request through one repository transaction."""
         return cast(
             BC3EnrichmentApplyResponse,
             cast(Any, self.repository).apply_bc3_enrichment(
-                [item.model_dump() for item in request.items], idempotency_key
+                [item.model_dump(exclude_unset=True) for item in request.items],
+                idempotency_key,
+                request.preview_id,
+                actor_id,
+                request.github_pr,
             ),
         )
+
+    def approve_bc3_preview(
+        self,
+        preview_id: str,
+        actor_id: str,
+        scope: str,
+        github_pr: GitHubApprovalReference,
+    ) -> GitHubApprovalEvidence:
+        """Verify and persist approval for a BC3 preview."""
+        evidence = self.github_approval_verifier.verify(github_pr)
+        cast(Any, self.repository).approve_bc3_preview(
+            preview_id, actor_id, scope, github_pr, evidence
+        )
+        return evidence
 
     def obtener_estado_enriquecimiento_bc3(self, job_id: str) -> dict | None:
         """Return the safe durable status projection for a BC3 job."""
@@ -297,7 +326,7 @@ class ProductoService:
         )
 
     def preview_bc3_enrichment(
-        self, request: BC3EnrichmentPreviewRequest
+        self, request: BC3EnrichmentPreviewRequest, actor_id: str
     ) -> BC3EnrichmentPreviewResponse:
         """Compare BC3 proposals with raw products without writing anything."""
         products = cast(
@@ -320,7 +349,23 @@ class ProductoService:
                     proposed_value=getattr(item, field),
                 )
                 for field in BC3_ENRICHMENT_FIELDS
-                if getattr(product, field) != getattr(item, field)
+                if field in item.model_fields_set
+                and getattr(product, field) != getattr(item, field)
             ]
             preview_items.append(BC3EnrichmentPreviewItem(codigo=item.codigo, changes=changes))
-        return BC3EnrichmentPreviewResponse(items=preview_items, missing_codes=missing_codes)
+        snapshot = cast(Any, self.repository).create_bc3_preview(
+            [item.model_dump(exclude_unset=True) for item in request.items],
+            actor_id,
+            source_snapshot_id=request.github_pr.head_sha,
+            github_pr=request.github_pr,
+        )
+
+        return BC3EnrichmentPreviewResponse(
+            preview_id=snapshot["preview_id"],
+            status="pending",
+            expires_at=snapshot["expires_at"],
+            request_hash=snapshot["request_hash"],
+            items=preview_items,
+            missing_codes=missing_codes,
+            github_pr=request.github_pr,
+        )

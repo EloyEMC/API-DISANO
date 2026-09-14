@@ -10,6 +10,7 @@ from sqlalchemy import (
     Float,
     Integer,
     DateTime,
+    Text,
 )
 from sqlalchemy.orm import declarative_base, synonym
 
@@ -328,6 +329,10 @@ class ProductoRawModel(Base):
     bc3_product_type = Column("bc3_product_type", String, nullable=True)
     bc3_processed_at = Column("bc3_processed_at", DateTime, nullable=True)
     bc3_descripcion_completa = Column("bc3_descripcion_completa", String, nullable=True)
+    bc3_descripcion_corta_ca = Column("bc3_descripcion_corta_ca", Text, nullable=True)
+    bc3_descripcion_larga_ca = Column("bc3_descripcion_larga_ca", Text, nullable=True)
+    bc3_descripcion_corta_gl = Column("bc3_descripcion_corta_gl", Text, nullable=True)
+    bc3_descripcion_larga_gl = Column("bc3_descripcion_larga_gl", Text, nullable=True)
 
     def to_entity(self):
         """Map the raw row to the domain entity's stable field names."""

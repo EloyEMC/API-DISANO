@@ -51,6 +51,15 @@ jobs:
           PGPASSWORD="$POSTGRES_PASSWORD" psql \
             --host=127.0.0.1 --username=api_disano_test --dbname=api_disano_test \
             -v ON_ERROR_STOP=1 --file=migration/04_postgres_schema.sql
+          PGPASSWORD="$POSTGRES_PASSWORD" psql \
+            --host=127.0.0.1 --username=api_disano_test --dbname=api_disano_test \
+            -v ON_ERROR_STOP=1 --file=migration/07_bc3_approval_snapshots.sql
+          PGPASSWORD="$POSTGRES_PASSWORD" psql \
+            --host=127.0.0.1 --username=api_disano_test --dbname=api_disano_test \
+            -v ON_ERROR_STOP=1 --file=migration/08_catalog_import.sql
+          PGPASSWORD="$POSTGRES_PASSWORD" psql \
+            --host=127.0.0.1 --username=api_disano_test --dbname=api_disano_test \
+            -v ON_ERROR_STOP=1 --file=migration/10_product_bc3_translations.sql
 
       - name: Initialize PostgreSQL indexes
         env:

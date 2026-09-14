@@ -3,18 +3,18 @@
 FastAPI router with dependency injection for product endpoints.
 """
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Query
+from typing import Any
+
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Response
 from fastapi.security import APIKeyHeader
-from typing import Any, List, Optional
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from app.domain.services.producto import ProductoService
-from app.infrastructure.repositories.producto import SQLAlchemyProductoRepository
-from app.infrastructure.database.connection import SessionLocal
 from app.application.dto.bc3_enrichment import (
     BC3EnrichmentApplyRequest,
     BC3EnrichmentApplyResponse,
+    BC3EnrichmentApprovalRequest,
+    BC3EnrichmentApprovalResponse,
     BC3EnrichmentJobStatusResponse,
     BC3EnrichmentPreviewRequest,
     BC3EnrichmentPreviewResponse,
@@ -28,10 +28,16 @@ from app.application.dto.producto import (
     ProductoExternalPage,
     ProductoExternalResponse,
 )
-from app.domain.exceptions.not_found import ProductoNotFoundException
-from app.interfaces.http.response_serializers import ProductoResponseSerializer
+from app.application.services.github_approval import (
+    GitHubApprovalUnavailable,
+    GitHubApprovalVerifier,
+)
 from app.config import get_settings
-
+from app.domain.exceptions.not_found import ProductoNotFoundException
+from app.domain.services.producto import ProductoService
+from app.infrastructure.database.connection import SessionLocal
+from app.infrastructure.repositories.producto import SQLAlchemyProductoRepository
+from app.interfaces.http.response_serializers import ProductoResponseSerializer
 
 _bc3_api_key = APIKeyHeader(
     name=get_settings().api_key_header,
@@ -40,7 +46,7 @@ _bc3_api_key = APIKeyHeader(
 )
 
 
-async def verify_bc3_api_key(api_key: Optional[str] = Depends(_bc3_api_key)) -> str:
+async def verify_bc3_api_key(api_key: str | None = Depends(_bc3_api_key)) -> str:
     """Validate the private BC3 credential without exposing its value."""
     if api_key is None or api_key not in get_settings().bc3_api_keys_list:
         raise HTTPException(status_code=401, detail="API Key inválida")
@@ -58,10 +64,10 @@ class BuscarProductosRequest(BaseModel):
     Compatible with BC3-Suite frontend JSON payload.
     """
 
-    termino: Optional[str] = None
+    termino: str | None = None
     limit: int = 20
-    marca: Optional[str] = None
-    familia: Optional[str] = None
+    marca: str | None = None
+    familia: str | None = None
     con_bc3: bool = False
 
     class Config:
@@ -88,8 +94,17 @@ def get_db_session() -> Session:
 
 
 def get_producto_service(session: Session = Depends(get_db_session)) -> ProductoService:
-    """DI function to create ProductoService with repository."""
-    return ProductoService(SQLAlchemyProductoRepository(session))
+    """DI function to create ProductoService with repository and verifier."""
+    settings = get_settings()
+    verifier = GitHubApprovalVerifier(
+        # Keep ordinary service construction compatible with lightweight test settings;
+        # missing approval configuration still fails closed when approval is attempted.
+        token=getattr(settings, "github_api_token", None),
+        expected_repository=getattr(settings, "github_expected_repository", None),
+        api_base_url=getattr(settings, "github_api_url", "https://api.github.com"),
+        required_approvals=getattr(settings, "github_required_approvals", 1),
+    )
+    return ProductoService(SQLAlchemyProductoRepository(session), verifier)
 
 
 def _contract_item(entity: Any) -> dict:
@@ -98,7 +113,7 @@ def _contract_item(entity: Any) -> dict:
     return ProductoExternalResponse.model_validate(data).model_dump(exclude_none=True)
 
 
-def _public_filters(buscar: Optional[str], marca: Optional[str], familia: Optional[str]) -> dict:
+def _public_filters(buscar: str | None, marca: str | None, familia: str | None) -> dict:
     return {
         key: value
         for key, value in {
@@ -188,9 +203,9 @@ async def _list_public_contract(
     service: ProductoService,
     page: int,
     per_page: int,
-    buscar: Optional[str],
-    marca: Optional[str],
-    familia: Optional[str],
+    buscar: str | None,
+    marca: str | None,
+    familia: str | None,
 ) -> dict:
     filters = _public_filters(buscar, marca, familia)
     response = service.buscar_productos_paginado(
@@ -212,9 +227,9 @@ async def _list_public_contract(
 async def list_products_v1(
     page: int = Query(1, ge=1),
     per_page: int = Query(20, ge=1, le=100),
-    buscar: Optional[str] = None,
-    marca: Optional[str] = None,
-    familia: Optional[str] = None,
+    buscar: str | None = None,
+    marca: str | None = None,
+    familia: str | None = None,
     service: ProductoService = Depends(get_producto_service),
 ) -> dict:
     """Return the stable external product contract."""
@@ -245,9 +260,9 @@ async def get_product_v1(
 async def list_products_bc3_v1(
     page: int = Query(1, ge=1),
     per_page: int = Query(20, ge=1, le=100),
-    buscar: Optional[str] = None,
-    marca: Optional[str] = None,
-    familia: Optional[str] = None,
+    buscar: str | None = None,
+    marca: str | None = None,
+    familia: str | None = None,
     service: ProductoService = Depends(get_producto_service),
 ) -> dict:
     """Return the private BC3 product contract."""
@@ -291,10 +306,46 @@ async def get_product_bc3_v1(
 )
 async def preview_bc3_enrichment(
     request: BC3EnrichmentPreviewRequest,
+    actor_id: str = Header(..., alias="X-BC3-Actor", min_length=1),
     service: ProductoService = Depends(get_producto_service),
 ) -> BC3EnrichmentPreviewResponse:
-    """Return BC3 field differences without persisting proposals."""
-    return service.preview_bc3_enrichment(request)
+    """Create a durable, read-only preview snapshot."""
+    return service.preview_bc3_enrichment(request, actor_id)
+
+
+@router.post(
+    "/bc3/v1/enrichment/approve",
+    response_model=BC3EnrichmentApprovalResponse,
+    dependencies=[Depends(verify_bc3_api_key)],
+    summary="Explicitly approve a BC3 enrichment preview",
+)
+async def approve_bc3_enrichment(
+    request: BC3EnrichmentApprovalRequest,
+    actor_id: str = Header(..., alias="X-BC3-Actor", min_length=1),
+    approval_key: str | None = Header(None, alias="X-BC3-Approval-Key"),
+    service: ProductoService = Depends(get_producto_service),
+) -> BC3EnrichmentApprovalResponse:
+    """Approve a BC3 enrichment preview."""
+    settings = get_settings()
+    if not settings.bc3_approval_keys_list or approval_key not in settings.bc3_approval_keys_list:
+        raise HTTPException(status_code=403, detail="Dedicated BC3 approval credential required")
+    try:
+        evidence = service.approve_bc3_preview(
+            request.preview_id,
+            actor_id,
+            settings.bc3_approval_scope,
+            request.github_pr,
+        )
+    except GitHubApprovalUnavailable as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from None
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from None
+    return BC3EnrichmentApprovalResponse(
+        preview_id=request.preview_id,
+        status="approved",
+        github_pr=request.github_pr,
+        github_approval_count=evidence.approval_count,
+    )
 
 
 @router.post(
@@ -306,15 +357,18 @@ async def preview_bc3_enrichment(
 async def apply_bc3_enrichment(
     request: BC3EnrichmentApplyRequest,
     idempotency_key: str = Header(..., alias="Idempotency-Key", min_length=1),
+    actor_id: str = Header(..., alias="X-BC3-Actor", min_length=1),
+    approval_key: str | None = Header(None, alias="X-BC3-Approval-Key"),
     service: ProductoService = Depends(get_producto_service),
 ) -> BC3EnrichmentApplyResponse:
     """Apply BC3 enrichment atomically with durable idempotency."""
+    settings = get_settings()
+    if not settings.bc3_approval_keys_list or approval_key not in settings.bc3_approval_keys_list:
+        raise HTTPException(status_code=403, detail="Dedicated BC3 approval credential required")
     try:
-        return service.apply_bc3_enrichment(request, idempotency_key)
+        return service.apply_bc3_enrichment(request, idempotency_key, actor_id)
     except ValueError as exc:
-        if str(exc) == "idempotency key has already been used with a different request":
-            raise HTTPException(status_code=409, detail=str(exc)) from None
-        raise
+        raise HTTPException(status_code=409, detail=str(exc)) from None
 
 
 @router.get(
@@ -358,9 +412,9 @@ async def get_bc3_enrichment_job_status(
 async def list_products_v3(
     page: int = Query(1, ge=1),
     per_page: int = Query(20, ge=1, le=100),
-    buscar: Optional[str] = None,
-    marca: Optional[str] = None,
-    familia: Optional[str] = None,
+    buscar: str | None = None,
+    marca: str | None = None,
+    familia: str | None = None,
     service: ProductoService = Depends(get_producto_service),
 ) -> dict:
     """Compatibility alias for the stable external product contract."""
@@ -489,17 +543,37 @@ async def buscar_productos_list_v2(
 
 @router.get("/")
 async def get_productos(
-    limit: int = Query(50, ge=1, le=500, description="Maximum number of products"),
+    response: Response,
+    page: int = Query(1, ge=1, description="1-based page number"),
+    limit: int | None = Query(None, ge=1, le=500, description="Items per page (legacy alias)"),
+    per_page: int | None = Query(None, ge=1, le=500, description="Items per page"),
     service: ProductoService = Depends(get_producto_service),
-) -> List:
-    """
-    Get all products with BC3 statistics.
+) -> list:
+    """Return one stable, backward-compatible page of products.
 
-    **V1 Backward Compatible** - Returns same format as legacy router
+    The JSON body remains the legacy ``list[dict]`` contract. Pagination totals
+    are exposed in headers so existing consumers do not need to change their
+    decoder: ``X-Total`` and ``X-Total-Pages``. Use ``per_page`` or its legacy
+    ``limit`` alias, but not both.
     """
+    if limit is not None and per_page is not None:
+        raise HTTPException(
+            status_code=422,
+            detail="Use only one of the pagination parameters: limit or per_page",
+        )
+
+    page_size = per_page if per_page is not None else limit or 50
+    skip = (page - 1) * page_size
+
     try:
-        productos = service.get_all_productos()
-        return [producto.model_dump() for producto in productos[:limit]]
+        productos = service.get_all_productos(skip=skip, limit=page_size)
+        total = service.count_productos()
+        total_pages = (total + page_size - 1) // page_size
+        response.headers["X-Total"] = str(total)
+        response.headers["X-Total-Pages"] = str(total_pages)
+        response.headers["X-Page"] = str(page)
+        response.headers["X-Per-Page"] = str(page_size)
+        return [producto.model_dump() for producto in productos]
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}") from None
 
