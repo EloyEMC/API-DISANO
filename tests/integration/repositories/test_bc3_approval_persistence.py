@@ -104,7 +104,8 @@ def test_migration_07_upgrades_legacy_ids_and_job_description_columns():
             connection.execute(
                 text(
                     """
-                INSERT INTO bc3_enrichment_jobs VALUES ('job-legacy', 'key-legacy', 'hash', 'pending')
+                INSERT INTO bc3_enrichment_jobs
+                VALUES ('job-legacy', 'key-legacy', 'hash', 'pending')
             """
                 )
             )
