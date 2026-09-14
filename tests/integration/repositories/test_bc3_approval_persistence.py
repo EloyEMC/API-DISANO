@@ -105,7 +105,8 @@ def test_migration_07_upgrades_legacy_ids_and_job_description_columns():
             connection.execute(
                 text(
                     """
-                INSERT INTO bc3_enrichment_jobs VALUES ('job-legacy', 'key-legacy', 'hash', 'pending')
+                INSERT INTO bc3_enrichment_jobs
+                VALUES ('job-legacy', 'key-legacy', 'hash', 'pending')
             """
                 )
             )
@@ -217,12 +218,14 @@ def test_migration_09_adds_github_review_default_on_fresh_tables(migration09_eng
     with migration09_engine.begin() as connection:
         connection.execute(
             text(
-                "CREATE TABLE bc3_enrichment_previews (preview_id TEXT PRIMARY KEY, github_approval_count INTEGER)"
+                "CREATE TABLE bc3_enrichment_previews ("
+                "preview_id TEXT PRIMARY KEY, github_approval_count INTEGER)"
             )
         )
         connection.execute(
             text(
-                "CREATE TABLE catalog_import_snapshots (snapshot_id TEXT PRIMARY KEY, github_approval_count INTEGER)"
+                "CREATE TABLE catalog_import_snapshots ("
+                "snapshot_id TEXT PRIMARY KEY, github_approval_count INTEGER)"
             )
         )
         connection.execute(text(MIGRATION_09.read_text()))
@@ -243,7 +246,8 @@ def test_migration_09_adds_github_review_default_on_fresh_tables(migration09_eng
         assert (
             connection.execute(
                 text(
-                    "SELECT approval_mode FROM bc3_enrichment_previews WHERE preview_id = 'fresh-bc3'"
+                    "SELECT approval_mode FROM bc3_enrichment_previews "
+                    "WHERE preview_id = 'fresh-bc3'"
                 )
             ).scalar_one()
             == "github_review"
@@ -251,7 +255,8 @@ def test_migration_09_adds_github_review_default_on_fresh_tables(migration09_eng
         assert (
             connection.execute(
                 text(
-                    "SELECT approval_mode FROM catalog_import_snapshots WHERE snapshot_id = 'fresh-catalog'"
+                    "SELECT approval_mode FROM catalog_import_snapshots "
+                    "WHERE snapshot_id = 'fresh-catalog'"
                 )
             ).scalar_one()
             == "github_review"
@@ -309,37 +314,43 @@ def test_migration_09_backfills_null_preserves_sole_mode_and_is_repeatable(migra
         assert (
             connection.execute(
                 text(
-                    "SELECT approval_mode FROM bc3_enrichment_previews WHERE preview_id = 'null-bc3'"
+                    "SELECT approval_mode FROM bc3_enrichment_previews "
+                    "WHERE preview_id = 'null-bc3'"
                 )
             ).scalar_one()
             == "github_review"
         )
         assert connection.execute(
             text(
-                "SELECT approval_mode, github_approval_count FROM bc3_enrichment_previews WHERE preview_id = 'sole-bc3'"
+                "SELECT approval_mode, github_approval_count "
+                "FROM bc3_enrichment_previews WHERE preview_id = 'sole-bc3'"
             )
         ).one() == ("sole_maintainer", None)
         assert connection.execute(
             text(
-                "SELECT approval_mode, github_approval_count FROM bc3_enrichment_previews WHERE preview_id = 'count-bc3'"
+                "SELECT approval_mode, github_approval_count "
+                "FROM bc3_enrichment_previews WHERE preview_id = 'count-bc3'"
             )
         ).one() == ("github_review", 3)
         assert (
             connection.execute(
                 text(
-                    "SELECT approval_mode FROM catalog_import_snapshots WHERE snapshot_id = 'null-catalog'"
+                    "SELECT approval_mode FROM catalog_import_snapshots "
+                    "WHERE snapshot_id = 'null-catalog'"
                 )
             ).scalar_one()
             == "github_review"
         )
         assert connection.execute(
             text(
-                "SELECT approval_mode, github_approval_count FROM catalog_import_snapshots WHERE snapshot_id = 'sole-catalog'"
+                "SELECT approval_mode, github_approval_count "
+                "FROM catalog_import_snapshots WHERE snapshot_id = 'sole-catalog'"
             )
         ).one() == ("sole_maintainer", None)
         assert connection.execute(
             text(
-                "SELECT approval_mode, github_approval_count FROM catalog_import_snapshots WHERE snapshot_id = 'count-catalog'"
+                "SELECT approval_mode, github_approval_count "
+                "FROM catalog_import_snapshots WHERE snapshot_id = 'count-catalog'"
             )
         ).one() == ("github_review", 3)
 

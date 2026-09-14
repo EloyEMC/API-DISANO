@@ -114,6 +114,7 @@ def test_openapi_documents_enrichment_requests_responses_security_and_replay_con
     paths = document["paths"]
     enrichment_prefix = "/api/productos/bc3/v1/enrichment"
     preview = paths[f"{enrichment_prefix}/preview"]["post"]
+    approve = paths[f"{enrichment_prefix}/approve"]["post"]
     apply = paths[f"{enrichment_prefix}/apply"]["post"]
     status = paths[f"{enrichment_prefix}/jobs/{{job_id}}"]["get"]
 
@@ -121,6 +122,7 @@ def test_openapi_documents_enrichment_requests_responses_security_and_replay_con
         paths["/api/productos/bc3/v1"]["get"],
         paths["/api/productos/bc3/v1/{codigo}"]["get"],
         preview,
+        approve,
         apply,
         status,
     )
@@ -134,6 +136,15 @@ def test_openapi_documents_enrichment_requests_responses_security_and_replay_con
     assert idempotency["in"] == "header"
     assert idempotency["required"] is True
 
+    approval_key = next(
+        parameter
+        for parameter in approve["parameters"]
+        if parameter["name"] == "X-BC3-Approval-Key"
+    )
+    assert approval_key["in"] == "header"
+    assert approval_key["required"] is False
+    assert any(parameter["name"] == "X-BC3-Approval-Key" for parameter in apply["parameters"])
+
     preview_request = _schema(
         document,
         preview["requestBody"]["content"]["application/json"]["schema"],
@@ -141,6 +152,18 @@ def test_openapi_documents_enrichment_requests_responses_security_and_replay_con
     preview_response = _schema(
         document,
         preview["responses"]["200"]["content"]["application/json"]["schema"],
+    )
+    approve_request = _schema(
+        document,
+        approve["requestBody"]["content"]["application/json"]["schema"],
+    )
+    approve_response = _schema(
+        document,
+        approve["responses"]["200"]["content"]["application/json"]["schema"],
+    )
+    apply_request = _schema(
+        document,
+        apply["requestBody"]["content"]["application/json"]["schema"],
     )
     apply_response = _schema(
         document,
@@ -151,8 +174,31 @@ def test_openapi_documents_enrichment_requests_responses_security_and_replay_con
         status["responses"]["200"]["content"]["application/json"]["schema"],
     )
 
-    assert set(preview_request["properties"]) == {"items"}
-    assert set(preview_response["properties"]) == {"items", "missing_codes"}
+    assert set(preview_request["properties"]) == {"items", "github_pr"}
+    assert set(preview_request["required"]) == {"items", "github_pr"}
+    assert set(preview_response["properties"]) == {
+        "preview_id",
+        "status",
+        "expires_at",
+        "request_hash",
+        "items",
+        "missing_codes",
+        "github_pr",
+        "github_approval_status",
+        "github_approval_count",
+        "github_approval_mode",
+    }
+    assert set(approve_request["properties"]) == {"preview_id", "github_pr"}
+    assert set(approve_request["required"]) == {"preview_id", "github_pr"}
+    assert set(approve_response["properties"]) == {
+        "preview_id",
+        "status",
+        "github_pr",
+        "github_approval_count",
+        "github_approval_mode",
+    }
+    assert set(apply_request["properties"]) == {"items", "github_pr", "preview_id"}
+    assert set(apply_request["required"]) == {"items", "github_pr", "preview_id"}
     assert set(apply_response["properties"]) == {
         "updated_codes",
         "unchanged_codes",
